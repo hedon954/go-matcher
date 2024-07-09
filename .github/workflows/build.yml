@@ -51,8 +51,27 @@ jobs:
         run: gofmt -l .
       - name: Check the package for errors
         run: go build ./...
-      - name: Test with Go
-        run: go test -v ./...
+      - name: Run tests with coverage
+        run: |
+          go test -v -coverprofile=coverage.out ./...
+          go tool cover -func=coverage.out
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          files: coverage.out
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: true
+          verbose: true
+      - name: Check test coverage
+        run: |
+          coverage=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
+          echo "Total coverage: $coverage%"
+          coverage_threshold=50.0
+          if (( $(echo "$coverage < $coverage_threshold" | bc -l) )); then
+            echo "Test coverage ($coverage%) is below the threshold ($coverage_threshold%)."
+            exit 1
       - name: Get tags info
         id: get_tag_message
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
