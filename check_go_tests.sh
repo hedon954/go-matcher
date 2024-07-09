@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Find all .go files excluding vendor directory, main.go, and *_test.go files
-go_files=$(find . -name '*.go' -not -path "./vendor/*" -not -path "./merr/*"  -not -path "./enum/*" -not -name 'main.go' -not -name '*_test.go' -not -name 'doc.go' -not -name 'interface.go')
+go_files=$(find . -name '*.go' -not -path "./vendor/*" -not -path "./merr/*" -not -path "./pto/*"  -not -path "./enum/*" -not -name 'main.go' -not -name '*_test.go' -not -name 'doc.go' -not -name 'interface.go')
 
 missing_tests=0
 

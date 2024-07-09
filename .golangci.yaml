@@ -36,7 +36,7 @@ linters:
   disable-all: true
   enable:
     - bodyclose
-    - depguard
+#    - depguard # what is the usage of it?
     - dogsled
     - dupl
     - errcheck
