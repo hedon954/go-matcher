@@ -71,7 +71,7 @@ jobs:
           coverage_threshold=50.0
           if (( $(echo "$coverage < $coverage_threshold" | bc -l) )); then
             echo "Test coverage ($coverage%) is below the threshold ($coverage_threshold%)."
-#            exit 1
+          fi
       - name: Get tags info
         id: get_tag_message
         run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
