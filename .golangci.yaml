@@ -1,58 +1,82 @@
-# https://golangci-lint.run/
-run:
-  timeout: 10m
-  tests: false
-
 linters-settings:
+  dupl:
+    threshold: 100
   funlen:
-    # Checks the number of lines in a function.
-    # If lower than 0, disable the check.
-    # Default: 60
-    lines: 120
-    # Checks the number of statements in a function.
-    # If lower than 0, disable the check.
-    # Default: 40
-    statements: 40
+    lines: 100
+    statements: 50
+  goconst:
+    min-len: 2
+    min-occurrences: 2
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - experimental
+      - opinionated
+      - performance
+      - style
+    disabled-checks:
+      - dupImport # https://github.com/go-critic/go-critic/issues/845
+      - ifElseChain
+      - octalLiteral
+      - whyNoLint
+      - wrapperFunc
+      - exposedSyncMutex
+  gocyclo:
+    min-complexity: 15
+  goimports:
+    local-prefixes: github.com/golangci/golangci-lint
+  lll:
+    line-length: 140
+  misspell:
+    locale: US
 
-# list all linters by run `golangci-lint help linters`
 linters:
-  enable-all: true
-  disable:
-    # gochecknoglobals: Checks that no globals are present in Go code
-    - gochecknoglobals
-    # gochecknoinits: Checks that no init functions are present in Go code
+  # please, do not use `enable-all`: it's deprecated and will be removed soon.
+  # inverted configuration with `enable-all` and `disable` is not scalable during updates of golangci-lint
+  disable-all: true
+  enable:
+    - bodyclose
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck
+    - funlen
     - gochecknoinits
-    # Checks that errors returned from external packages are wrapped
-    - wrapcheck
-    # checks that the length of a variable's name matches its scope
-    - varnamelen
-    # Checks the struct tags.
-    - tagliatelle
-    # An analyzer to detect magic numbers.
-    - gomnd
-    # Accept Interfaces, Return Concrete Types
-    - ireturn
-    # The owner seems to have abandoned the linter. Replaced by exhaustruct.
-    - exhaustivestruct
-    # Golang linter to check the errors handling expressions
-    - goerr113
-    # finds forced type assertions
-    - forcetypeassert
-    # Checks if all structure fields are initialized
-    - exhaustruct
-    # Reports long lines
-    - lll
-    # Inspects source code for security problems
-    - gosec
-    # Tool for detection of FIXME, TODO and other comment keywords
-    - godox
-    # Check if comments end in a period
-    - godot
-    # Finds slice declarations that could potentially be pre-allocated
-    - prealloc
-    # Gci controls golang package import order and makes it always deterministic.
-    - gci
-    # Gofumpt checks whether code was gofumpt-ed.
-    - gofumpt
-    # Provides diagnostics that check for bugs, performance and style issues.
+    - goconst
     - gocritic
+    - gocyclo
+    - gofmt
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - misspell
+    - nakedret
+    - rowserrcheck
+    - exportloopref
+    - staticcheck
+    - stylecheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - whitespace
+
+  # don't enable:
+  # - gochecknoglobals
+  # - gocognit
+  # - godox
+  # - maligned
+  # - prealloc
+
+issues:
+  # Excluding configuration per-path, per-linter, per-text and per-source
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gomnd
+
