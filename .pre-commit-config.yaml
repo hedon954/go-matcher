@@ -8,21 +8,26 @@ repos:
       - id: check-yaml # fix yaml format file.
       - id: check-added-large-files # let you know which file has large file size.
   - repo: https://github.com/dnephin/pre-commit-golang
-    rev: v0.5.0
+    rev: v0.5.1
     hooks:
+      - id: go-mod-tidy # run go mod tidy -v.
       - id: go-fmt # automatically formats Go source code of your whole project.
       - id: go-imports # automatically update your Go import lines (add missing and remove unreferenced imports).
+      - id: go-vet # examines Go source code and reports suspicious constructs.
+      - id: go-cyclo # calculates cyclomatic complexities of functions in Go source code.
+      - id: go-critic # a high quality linter for Go source code.
       - id: golangci-lint # run linter.
       - id: go-unit-tests # run go test command.
-#  - repo: local
-#    hooks:
-#      - id: typos
-#        name: typos
-#        description: check typo
-#        entry: bash -c 'typos'
-#        language: rust
-#        files: \.*$
-#        pass_filenames: false
+      - id: go-build # run go build command.
+  - repo: local
+    hooks:
+      - id: typos
+        name: typos
+        description: check typo
+        entry: bash -c 'typos'
+        language: golang
+        files: \.*$
+        pass_filenames: false
 #      - id: check-go-tests
 #        name: Check Go Test Files
 #        entry: ./check_go_tests.sh
