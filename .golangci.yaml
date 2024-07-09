@@ -1,0 +1,14 @@
+# https://golangci-lint.run/
+linters-settings:
+  staticcheck:
+    checks: ["all"]
+
+linters:
+  enable:
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - errcheck
+  disable:
+    - godot
+    - gocyclo

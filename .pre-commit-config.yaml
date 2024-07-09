@@ -1,0 +1,30 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.3.0
+    hooks:
+      - id: trailing-whitespace  # handle any whitespace of the end of line and the new line.
+      - id: end-of-file-fixer # remove EOF of your whole files project.
+        files: \.go$
+      - id: check-yaml # fix yaml format file.
+      - id: check-added-large-files # let you know which file has large file size.
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.0
+    hooks:
+      - id: go-fmt # automatically formats Go source code of your whole project.
+      - id: go-imports # automatically update your Go import lines (add missing and remove unreferenced imports).
+      - id: golangci-lint # run linter.
+      - id: go-unit-tests # run go test command.
+#  - repo: local
+#    hooks:
+#      - id: typos
+#        name: typos
+#        description: check typo
+#        entry: bash -c 'typos'
+#        language: rust
+#        files: \.*$
+#        pass_filenames: false
+#      - id: check-go-tests
+#        name: Check Go Test Files
+#        entry: ./check_go_tests.sh
+#        language: script
+#        files: \.go$
