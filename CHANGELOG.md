@@ -3,7 +3,7 @@
 ---
 ## [0.0.2-init](https://github.com/hedon954/go-matcher/compare/v0.0.1-init..v0.0.2-init) - 2024-07-09
 
-Init project with pre commit hooks and Github Actions.
+Init project with pre commit hooks and GitHub Actions.
 
 ### ⛰️ Features
 
