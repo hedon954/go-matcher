@@ -1,21 +1,21 @@
 package common
 
-type OnlineState int
+type PlayerOnlineState int
 
 const (
-	OnlineStateOffline OnlineState = 1
-	OnlineStateOnline  OnlineState = 2
-	OnlineStateGroup   OnlineState = 3
-	OnlineStateQueue   OnlineState = 4
-	OnlineStateGame    OnlineState = 5
-	OnlineStateSettle  OnlineState = 6
+	PlayerOnlineStateOffline PlayerOnlineState = 1
+	PlayerOnlineStateOnline  PlayerOnlineState = 2
+	PlayerOnlineStateGroup   PlayerOnlineState = 3
+	PlayerOnlineStateQueue   PlayerOnlineState = 4
+	PlayerOnlineStateGame    PlayerOnlineState = 5
+	PlayerOnlineStateSettle  PlayerOnlineState = 6
 )
 
-type VoiceState int
+type PlayerVoiceState int
 
 const (
-	VoiceStateOff VoiceState = 0
-	VoiceStateOn  VoiceState = 1
+	PlayerVoiceStateOff PlayerVoiceState = 0
+	PlayerVoiceStateOn  PlayerVoiceState = 1
 )
 
 type Player interface {

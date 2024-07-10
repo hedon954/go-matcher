@@ -12,8 +12,8 @@ type Base struct {
 	sync.RWMutex
 	uid               string
 	GroupID           int64
-	onlineState       OnlineState
-	voiceState        VoiceState
+	onlineState       PlayerOnlineState
+	voiceState        PlayerVoiceState
 	WithCouple        bool
 	GameMode          int
 	ModeVersion       int
@@ -25,8 +25,8 @@ type Base struct {
 func NewBase(pInfo *pto.PlayerInfo) *Base {
 	return &Base{
 		uid:               pInfo.UID,
-		onlineState:       OnlineStateOnline,
-		voiceState:        VoiceStateOff,
+		onlineState:       PlayerOnlineStateOnline,
+		voiceState:        PlayerVoiceStateOff,
 		GameMode:          pInfo.GameMode,
 		MatchStrategy:     pInfo.MatchStrategy,
 		ModeVersion:       pInfo.ModeVersion,
@@ -42,10 +42,10 @@ func (b *Base) UID() string {
 	return b.uid
 }
 
-func (b *Base) GetOnlineState() OnlineState {
+func (b *Base) GetOnlineState() PlayerOnlineState {
 	return b.onlineState
 }
 
-func (b *Base) SetOnlineState(state OnlineState) {
+func (b *Base) SetOnlineState(state PlayerOnlineState) {
 	b.onlineState = state
 }
