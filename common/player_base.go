@@ -49,3 +49,11 @@ func (b *Base) GetOnlineState() PlayerOnlineState {
 func (b *Base) SetOnlineState(state PlayerOnlineState) {
 	b.onlineState = state
 }
+
+func (b *Base) GetVoiceState() PlayerVoiceState {
+	return b.voiceState
+}
+
+func (b *Base) SetVoiceState(state PlayerVoiceState) {
+	b.voiceState = state
+}

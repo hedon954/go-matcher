@@ -1,6 +1,0 @@
-mode: set
-matcher/main.go:7.13,9.2 1 0
-matcher/player/base.go:13.30,15.2 1 0
-matcher/player/base.go:17.29,19.2 1 0
-matcher/examples/add/add.go:3.24,5.2 1 1
-matcher/examples/add/main.go:7.13,9.2 1 0
