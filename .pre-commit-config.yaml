@@ -17,10 +17,16 @@ repos:
       - id: go-cyclo # calculates cyclomatic complexities of functions in Go source code.
       - id: go-critic # a high quality linter for Go source code.
       - id: golangci-lint # run linter.
-      - id: go-unit-tests # run go test command.
       - id: go-build # run go build command.
   - repo: local
     hooks:
+      - id: go-unit-tests
+        name: go-unit-tests
+        description: run go tests with race detector
+        entry: bash -c 'go test -race ./...'
+        language: golang
+        files: \.*$
+        pass_filenames: false
       - id: typos
         name: typos
         description: check typo

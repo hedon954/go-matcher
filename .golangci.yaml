@@ -29,6 +29,13 @@ linters-settings:
     line-length: 140
   misspell:
     locale: US
+  mnd:
+    checks: # "argument", "case", "condition", "operation", "return", "assign"
+      - case
+      - return
+      - assign
+      - condition
+      - operation
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.
