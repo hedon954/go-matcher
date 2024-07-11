@@ -42,15 +42,15 @@ func Test_Manager_Should_Work(t *testing.T) {
 		GameMode:          enum.GameModeGoat,
 		ModeVersion:       1,
 		MatchStrategy:     enum.MatchStrategyGlicko2,
-		UID:               p1UID,
+		Uid:               p1UID,
 		UnityNamespacePre: "goat_game",
 	})
 	assert.Nil(t, err)
 	assert.NotNil(t, p)
 	assert.Equal(t, p1UID, p.UID())
 	assert.Equal(t, 1, len(mgr.players))
-	assert.NotNil(t, p.Inner())
-	assert.Equal(t, common.PlayerOnlineStateOnline, p.Inner().GetOnlineState())
+	assert.NotNil(t, p.Base())
+	assert.Equal(t, common.PlayerOnlineStateOnline, p.Base().GetOnlineState())
 
 	// case: get player
 	p1 := mgr.GetPlayer(p1UID)

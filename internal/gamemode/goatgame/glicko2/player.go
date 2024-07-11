@@ -7,14 +7,14 @@ import (
 )
 
 type Player struct {
-	*common.Base
+	*common.PlayerBase
 }
 
-func NewPlayer(base *common.Base) (*Player, error) {
+func NewPlayer(base *common.PlayerBase) (*Player, error) {
 	if base == nil {
 		return nil, errors.New("base player must be inited")
 	}
-	p := &Player{Base: base}
+	p := &Player{PlayerBase: base}
 	// TODO: other op...
 	return p, nil
 }

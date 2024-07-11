@@ -36,6 +36,24 @@ linters-settings:
       - assign
       - condition
       - operation
+  stylecheck:
+    checks:
+      - ST1000
+      - ST1001
+      - ST1002
+      # 不要启用 ST1003
+      - ST1004
+      - ST1005
+      - ST1006
+      - ST1008
+      - ST1010
+      - ST1011
+      - ST1012
+      - ST1013
+      - ST1015
+      - ST1016
+      - ST1017
+      - ST1018
 
 linters:
   # please, do not use `enable-all`: it's deprecated and will be removed soon.

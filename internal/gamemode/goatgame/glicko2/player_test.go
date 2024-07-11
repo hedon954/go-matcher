@@ -10,7 +10,7 @@ import (
 
 func TestNewPlayer(t *testing.T) {
 	type args struct {
-		base *common.Base
+		base *common.PlayerBase
 	}
 	tests := []struct {
 		name    string
@@ -29,9 +29,9 @@ func TestNewPlayer(t *testing.T) {
 		{
 			name: "base is not nil should work",
 			args: args{
-				base: common.NewBase(&pto.PlayerInfo{}),
+				base: common.NewPlayerBase(&pto.PlayerInfo{}),
 			},
-			want:    &Player{Base: common.NewBase(&pto.PlayerInfo{})},
+			want:    &Player{PlayerBase: common.NewPlayerBase(&pto.PlayerInfo{})},
 			wantErr: false,
 		},
 	}

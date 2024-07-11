@@ -8,13 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBase_ShouldWork(t *testing.T) {
+func TestPlayerBase_ShouldWork(t *testing.T) {
 	// case: new base
-	p := NewBase(&pto.PlayerInfo{
-		UID: "uid",
+	p := NewPlayerBase(&pto.PlayerInfo{
+		Uid: "Uid",
 	})
-	assert.Equal(t, p, p.Inner())
-	assert.Equal(t, "uid", p.UID())
+	assert.Equal(t, p, p.Base())
+	assert.Equal(t, "Uid", p.UID())
 	assert.Equal(t, PlayerOnlineStateOnline, p.GetOnlineState())
 	assert.Equal(t, PlayerVoiceStateOff, p.GetVoiceState())
 

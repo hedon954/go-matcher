@@ -6,11 +6,11 @@ import (
 	"matcher/pto"
 )
 
-// Base 是 Player 的基础类，所有游戏模式和所有匹配策略共用
-type Base struct {
-	// 在 Base 的内部方法中不要进行同步处理，统一交给外部方法调用
+// PlayerBase 是 Player 的基础类，所有游戏模式和所有匹配策略共用
+type PlayerBase struct {
+	// 在 PlayerBase 的内部方法中不要进行同步处理，统一交给外部方法调用
 	sync.RWMutex
-	uid               string
+	Uid               string
 	GroupID           int64
 	onlineState       PlayerOnlineState
 	voiceState        PlayerVoiceState
@@ -22,9 +22,9 @@ type Base struct {
 	UnityNamespacePre string
 }
 
-func NewBase(pInfo *pto.PlayerInfo) *Base {
-	return &Base{
-		uid:               pInfo.UID,
+func NewPlayerBase(pInfo *pto.PlayerInfo) *PlayerBase {
+	return &PlayerBase{
+		Uid:               pInfo.Uid,
 		onlineState:       PlayerOnlineStateOnline,
 		voiceState:        PlayerVoiceStateOff,
 		GameMode:          pInfo.GameMode,
@@ -34,26 +34,30 @@ func NewBase(pInfo *pto.PlayerInfo) *Base {
 	}
 }
 
-func (b *Base) Inner() *Base {
+func (b *PlayerBase) Base() *PlayerBase {
 	return b
 }
 
-func (b *Base) UID() string {
-	return b.uid
+func (b *PlayerBase) UID() string {
+	return b.Uid
 }
 
-func (b *Base) GetOnlineState() PlayerOnlineState {
+func (b *PlayerBase) GetOnlineState() PlayerOnlineState {
 	return b.onlineState
 }
 
-func (b *Base) SetOnlineState(state PlayerOnlineState) {
+func (b *PlayerBase) SetOnlineState(state PlayerOnlineState) {
 	b.onlineState = state
 }
 
-func (b *Base) GetVoiceState() PlayerVoiceState {
+func (b *PlayerBase) GetVoiceState() PlayerVoiceState {
 	return b.voiceState
 }
 
-func (b *Base) SetVoiceState(state PlayerVoiceState) {
+func (b *PlayerBase) SetVoiceState(state PlayerVoiceState) {
 	b.voiceState = state
+}
+
+func (b *PlayerBase) VersionMatched(b2 Player) bool {
+	return b.GameMode == b2.Base().GameMode && b.ModeVersion == b2.Base().ModeVersion
 }

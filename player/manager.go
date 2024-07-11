@@ -16,12 +16,11 @@ type Manager struct {
 }
 
 func NewManager() *Manager {
-	const capacity = 1024
-	return &Manager{players: make(map[string]common.Player, capacity)}
+	return &Manager{players: make(map[string]common.Player, 1024)}
 }
 
 func (m *Manager) CreatePlayer(pInfo *pto.PlayerInfo) (common.Player, error) {
-	playerBase := common.NewBase(pInfo)
+	playerBase := common.NewPlayerBase(pInfo)
 
 	var p common.Player
 	var err error

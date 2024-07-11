@@ -6,7 +6,7 @@ type PlayerInfo struct {
 	ModeVersion   int
 	MatchStrategy int
 
-	UID           string
+	Uid           string
 	Platform      int
 	ClientVersion string
 	HotVersion    string

@@ -8,7 +8,7 @@ import (
 	"matcher/internal/gamemode/goatgame/glicko2"
 )
 
-func CreatePlayer(base *common.Base) (common.Player, error) {
+func CreatePlayer(base *common.PlayerBase) (common.Player, error) {
 	switch base.MatchStrategy {
 	case enum.MatchStrategyGlicko2:
 		return glicko2.NewPlayer(base)
