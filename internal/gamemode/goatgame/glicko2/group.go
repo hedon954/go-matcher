@@ -1,8 +1,8 @@
 package glicko2
 
 import (
-	"matcher/common"
-	"matcher/config"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/config"
 )
 
 type Group struct {

@@ -3,9 +3,9 @@ package player
 import (
 	"testing"
 
-	"matcher/common"
-	"matcher/enum"
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/enum"
+	"github.com/hedon954/go-matcher/pto"
 
 	"github.com/stretchr/testify/assert"
 )

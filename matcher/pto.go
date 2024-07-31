@@ -1,35 +1,9 @@
 package matcher
 
 import (
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/def"
+	"github.com/hedon954/go-matcher/pto"
 )
-
-type InviteFriend struct {
-	InviteUid string
-	FriendUid string
-	Source    pto.InvitationSrcType
-	Platform  int
-	NoCheck   bool
-}
-
-type CheckInviteFriend struct {
-	Platform    int
-	GameMode    int
-	ModeVersion int
-	InviteUid   string
-	FriendUid   string
-	Source      pto.InvitationSrcType
-	NoCheck     bool
-}
-
-type HandleInvite struct {
-	InviteUid  string // 谁邀请你的
-	HandleType int
-	SrcType    pto.InvitationSrcType
-	Player     *pto.PlayerInfo // 当前玩家
-	Message    string
-	Platform   int
-}
 
 type MatchReply struct {
 	GroupID  int
@@ -43,36 +17,6 @@ type CancelMatch struct {
 	RoomMember int
 }
 
-type UploadAttr struct {
-	Uid             string
-	SkinID          int
-	Rank            int
-	SkinSkills      []*SkinSkill
-	KillEffect      int
-	Platform        int
-	SkinIdList      []int
-	ShowLevel       int
-	ShowSkill       string
-	ShowValue       int
-	QualifyingLevel int
-	Nickname        string
-	AccPoint        int
-	RatedLevel      int
-	BountyTitle     string
-	PropId          int
-	ClothesId       int
-	SuitId          int
-	TeamBroadcastId int
-	TeamBubbleId    int
-	KuromiInfo      *KuromiInfo
-	GoatInfo        *GoatInfo
-}
-
-type SkinSkill struct {
-	SkillType int     `json:"skill_type"`
-	Value     float64 `json:"value"`
-}
-
 type KuromiInfo struct {
 	TotalPvpCount int
 	TodayPvpCount int
@@ -84,10 +28,10 @@ type GoatInfo struct {
 }
 
 type ChatInvite struct {
-	InviteUid string
-	FriendUid string
-	ChatType  int
-	Platform  int
+	InviteeUid string
+	FriendUid  string
+	ChatType   def.ChatType
+	Platform   int
 }
 
 type ChatInviteRsp struct {

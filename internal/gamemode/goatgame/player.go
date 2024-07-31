@@ -3,9 +3,9 @@ package goatgame
 import (
 	"fmt"
 
-	"matcher/common"
-	"matcher/enum"
-	"matcher/internal/gamemode/goatgame/glicko2"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/enum"
+	"github.com/hedon954/go-matcher/internal/gamemode/goatgame/glicko2"
 )
 
 func CreatePlayer(base *common.PlayerBase) (common.Player, error) {

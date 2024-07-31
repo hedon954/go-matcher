@@ -3,7 +3,7 @@ package common
 import (
 	"testing"
 
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/pto"
 
 	"github.com/stretchr/testify/assert"
 )

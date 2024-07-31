@@ -3,7 +3,7 @@ package glicko2
 import (
 	"errors"
 
-	"matcher/common"
+	"github.com/hedon954/go-matcher/common"
 )
 
 type Player struct {

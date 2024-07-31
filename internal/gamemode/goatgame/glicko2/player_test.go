@@ -4,8 +4,8 @@ import (
 	"reflect"
 	"testing"
 
-	"matcher/common"
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/pto"
 )
 
 func TestNewPlayer(t *testing.T) {

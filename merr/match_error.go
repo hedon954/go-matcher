@@ -28,6 +28,9 @@ var (
 	ErrCantKickSelf         = errors.New("不能踢自己")
 	ErrPermissionDeny       = errors.New("权限不足")
 	ErrOnlyOwnerCanMatch    = errors.New("只能由队长开始匹配")
+	ErrInvalidMessage       = errors.New("此内容包含违规信息，发送失败")
+	ErrUserBanned           = errors.New("你被禁赛了")
+	ErrGameOffline          = errors.New("玩法已下线")
 )
 
 // 以下错误需重点关注，应该永远不会出现

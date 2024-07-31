@@ -7,25 +7,7 @@ Go-macther is a game mather implement in Go, which supports add game mode and ma
 
 
 ## Before writing code
-### Install `pre-commit`
-```bash
-brew install pre-commit
-pre-commit install
-```
-### Install `golangci-lint`
-```bash
-brew install golangci-lint
-```
 
-### Install `go-imports`
 ```bash
-go install golang.org/x/tools/cmd/goimports@latest
-```
-### Install `typos-cli`
-```bash
-cargo install typos-cli
-```
-### Install `git-cliff`
-```bash
-cargo install git-cliff
+bash ./setup_pre_commit.sh
 ```

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sync"
 
-	"matcher/common"
-	"matcher/enum"
-	"matcher/internal/gamemode/goatgame"
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/enum"
+	"github.com/hedon954/go-matcher/internal/gamemode/goatgame"
+	"github.com/hedon954/go-matcher/pto"
 )
 
 type Manager struct {

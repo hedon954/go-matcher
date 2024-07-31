@@ -11,12 +11,6 @@ repos:
     rev: v0.5.1
     hooks:
       - id: go-mod-tidy # run go mod tidy -v.
-      - id: go-fmt # automatically formats Go source code of your whole project.
-      - id: go-imports # automatically update your Go import lines (add missing and remove unreferenced imports).
-      - id: go-vet # examines Go source code and reports suspicious constructs.
-      - id: go-cyclo # calculates cyclomatic complexities of functions in Go source code.
-      - id: go-critic # a high quality linter for Go source code.
-      - id: golangci-lint # run linter.
       - id: go-build # run go build command.
   - repo: local
     hooks:
@@ -24,6 +18,13 @@ repos:
         name: go-unit-tests
         description: run go tests with race detector
         entry: bash -c 'go test -race ./...'
+        language: golang
+        files: \.*$
+        pass_filenames: false
+      - id: golangci-lint
+        name: golangci-lint
+        description: run golangci-lint
+        entry: golangci-lint run -v .
         language: golang
         files: \.*$
         pass_filenames: false

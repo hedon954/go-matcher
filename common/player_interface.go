@@ -1,12 +1,16 @@
 package common
 
+import (
+	"github.com/hedon954/go-matcher/pto"
+)
+
 type PlayerOnlineState int
 
 const (
 	PlayerOnlineStateOffline PlayerOnlineState = 1
 	PlayerOnlineStateOnline  PlayerOnlineState = 2
 	PlayerOnlineStateGroup   PlayerOnlineState = 3
-	PlayerOnlineStateQueue   PlayerOnlineState = 4
+	PlayerOnlineStateQueuing PlayerOnlineState = 4
 	PlayerOnlineStateGame    PlayerOnlineState = 5
 	PlayerOnlineStateSettle  PlayerOnlineState = 6
 )
@@ -32,6 +36,8 @@ type Player interface {
 
 	// VersionMatched 判断玩家版本是否一致，只有版本一致的玩家才可以在一起玩
 	VersionMatched(Player) bool
+	SetWithCouple(b bool)
+	SetAttr(attr *pto.UploadAttr) error
 }
 
 type OnlinePlayer interface {

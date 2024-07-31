@@ -1,16 +1,17 @@
 package common
 
 import (
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/pto"
 )
 
 // 队伍状态
 type GroupState int
 
 const (
-	GroupStateInvite  GroupState = 1
-	GroupStateQueuing GroupState = 2
-	GroupStateMatched GroupState = 3
+	GroupStateDissolve GroupState = 0
+	GroupStateInvite   GroupState = 1
+	GroupStateQueuing  GroupState = 2
+	GroupStateMatched  GroupState = 3
 )
 
 // 组队卡片来源
@@ -36,11 +37,14 @@ const (
 
 type Group interface {
 	GroupID() int64
-	Inner() *GroupBase
+	Base() *GroupBase
 	CheckState(validStates ...GroupState) error
 	CheckInvite() error
 	AddInvitedPlayer(uid string)
 	CheckHandleInviteExpired(uid string, srcType pto.InvitationSrcType) error
 	IsFull() bool
 	GetMatchStrategy() int
+	GetGameMode() int
+	GetModeVersion() int
+	InitUnReadyMap()
 }

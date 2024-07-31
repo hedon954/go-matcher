@@ -3,23 +3,21 @@ package common
 import (
 	"sync"
 
-	"matcher/config"
-	"matcher/merr"
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/config"
+	"github.com/hedon954/go-matcher/merr"
+	"github.com/hedon954/go-matcher/pto"
 )
 
 type GroupBase struct {
 	// 在 GroupBase 的内部方法中不要进行同步处理，统一交给外部方法调用
 	sync.RWMutex
-	ID            int64
-	Name          string
-	players       []Player
-	state         GroupState
-	OwnerUID      string
-	Platform      int
-	GameMode      int
-	ModeVersion   int
-	MatchStrategy int
+	ID                int64
+	Name              string
+	players           []Player
+	state             GroupState
+	OwnerUID          string
+	NearbyJoinAllowed bool
+	RecentJoinAllowed bool
 
 	// Config 队伍的相关配置
 	Config config.GroupConfig
@@ -43,20 +41,24 @@ type GroupBase struct {
 
 	// 每次匹配的独立数据
 	MatchID string
+
+	// 角色
+	Roles map[string]int // TODO: 定义角色枚举
 }
 
 func NewGroupBase(id int64, p Player, c config.GroupConfig) *GroupBase {
 	b := &GroupBase{
 		ID:              id,
-		players:         make([]Player, 0),
 		state:           GroupStateInvite,
 		OwnerUID:        p.UID(),
+		players:         make([]Player, 0),
 		InvitedPlayers:  make(map[string]bool),
 		NearbyInviteMap: make(map[string][]string),
 		UnReadyUsers:    make(map[string]bool),
+		CoupleMap:       make(map[string]bool),
+		Roles:           make(map[string]int),
 		Config:          c,
 	}
-	b.copyDataFromPlayer(p)
 	b.AddPlayer(p)
 	return b
 }
@@ -65,21 +67,29 @@ func (b *GroupBase) GroupID() int64 {
 	return b.ID
 }
 
-func (b *GroupBase) Inner() *GroupBase {
+func (b *GroupBase) Base() *GroupBase {
 	return b
 }
 
-// copyDataFromPlayer 将一些公共数据从 Player 中复制到 Group 中
-// TODO: 这种东西能消除最好，因为没有 Player 的话 Group 也没有存在的意义了，所以 Group 需要的信息都可以从 Player 获取
-func (b *GroupBase) copyDataFromPlayer(p Player) {
-	baseP := p.Base()
-	b.GameMode = baseP.ModeVersion
-	b.ModeVersion = baseP.ModeVersion
-	b.MatchStrategy = baseP.MatchStrategy
+func (b *GroupBase) GetMatchStrategy() int {
+	if len(b.players) == 0 {
+		return 0
+	}
+	return b.players[0].Base().MatchStrategy
 }
 
-func (b *GroupBase) GetMatchStrategy() int {
-	return b.MatchStrategy
+func (b *GroupBase) GetGameMode() int {
+	if len(b.players) == 0 {
+		return 0
+	}
+	return b.players[0].Base().GameMode
+}
+
+func (b *GroupBase) GetModeVersion() int {
+	if len(b.players) == 0 {
+		return 0
+	}
+	return b.players[0].Base().ModeVersion
 }
 
 func (b *GroupBase) GetPlayers() []Player {
@@ -166,6 +176,15 @@ func (b *GroupBase) IsOwner(uid string) bool {
 	return b.OwnerUID == uid
 }
 
+func (b *GroupBase) GetOwner() Player {
+	for _, p := range b.players {
+		if p.UID() == b.OwnerUID {
+			return p
+		}
+	}
+	return nil
+}
+
 func (b *GroupBase) IsFull() bool {
 	return b.PlayerCount() >= b.Config.PlayerLimit
 }
@@ -180,40 +199,6 @@ func (b *GroupBase) CheckInvite() error {
 		return merr.ErrGroupFull
 	}
 	return nil
-}
-
-// BroadcastUsers 将队伍信息同步给玩家
-func (b *GroupBase) BroadcastUsers() {
-	state := b.GetState()
-	if state != GroupStateInvite && state != GroupStateQueuing {
-		return
-	}
-	// TODO: m.pm.PushGroupUser(b.UIDs(), b.GetGroupUsers())
-
-	// TODO: 下面的是否可以一起处理
-	// TODO: broadcastGroupState
-	// TODO: broadcastGroupName
-	// TODO: broadcastGroupBetaInfo
-}
-
-// BroadcastUsers 将队伍信息同步给玩家
-func (b *GroupBase) BroadcastVoiceState() {
-	state := b.GetState()
-	if state != GroupStateInvite && state != GroupStateQueuing {
-		return
-	}
-	if b.PlayerCount() == 0 {
-		return
-	}
-	// voiceStates := make([]*pto.UserVoiceState, 0, b.PlayerCount())
-	// for _, p := range b.players {
-	// 	userVoiceState := &pto.UserVoiceState{
-	// 		Uid:   p.UID(),
-	// 		State: int(p.Base().GetVoiceState()),
-	// 	}
-	// 	voiceStates = append(voiceStates, userVoiceState)
-	// }
-	// TODO: m.pm.PushGroupVoiceState(g.GetUids(), voiceStates)
 }
 
 func (b *GroupBase) GetGroupUsers() []pto.GroupUser {
@@ -263,4 +248,17 @@ func (b *GroupBase) AddNearby(uid1, uid2 string) {
 
 func (b *GroupBase) MarkSrcShare() {
 	b.InvitedPlayers[string(SrcShare)] = true
+}
+
+func (b *GroupBase) SetCoupleInfo() {
+	for _, p := range b.players {
+		if _, ok := b.CoupleMap[p.UID()]; ok {
+			p.SetWithCouple(true)
+		}
+	}
+}
+
+func (b *GroupBase) InitUnReadyMap() {
+	// 需要准备的游戏模式重写该方法，默认不需要准备
+	b.UnReadyUsers = make(map[string]bool)
 }

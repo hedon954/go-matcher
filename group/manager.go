@@ -5,27 +5,36 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"matcher/common"
-	"matcher/enum"
-	"matcher/internal/gamemode/goatgame"
-	"matcher/player"
-	"matcher/pto"
+	"github.com/hedon954/go-matcher/common"
+	"github.com/hedon954/go-matcher/enum"
+	"github.com/hedon954/go-matcher/internal/gamemode/goatgame"
+	"github.com/hedon954/go-matcher/player"
+	"github.com/hedon954/go-matcher/pto"
 )
 
 type Manager struct {
 	playerMgr *player.Manager
 
 	sync.RWMutex
-	groups      map[int64]common.Group
+	groups map[int64]common.Group
+
+	// groupIDIter is a counter used to generate unique group IDs.
+	// Before we shut down the server, we need to store the current groupID,
+	// and then restart the server from the stored groupID.
+	// This is done to avoid conflicts with group IDs that were generated before the server was shut down.
 	groupIDIter atomic.Int64
 }
 
-func NewManager() *Manager {
-	return &Manager{
+// NewManager creates a group manager, `groupIDStart`: the starting group ID.
+func NewManager(groupIDStart int64) *Manager {
+	mgr := &Manager{
 		groups: make(map[int64]common.Group, 1024),
 	}
+	mgr.groupIDIter.Store(groupIDStart)
+	return mgr
 }
 
+// CreateGroup creates a group according to `pto.PlayerInfo`.
 func (m *Manager) CreateGroup(info *pto.PlayerInfo) (common.Group, error) {
 	groupID := m.GenGroupID()
 
@@ -61,7 +70,7 @@ func (m *Manager) CreateGroup(info *pto.PlayerInfo) (common.Group, error) {
 		return nil, err
 	}
 
-	g.Inner().SetState(common.GroupStateInvite)
+	g.Base().SetState(common.GroupStateInvite)
 
 	m.playerMgr.AddPlayer(p)
 	m.AddGroup(groupID, g)
