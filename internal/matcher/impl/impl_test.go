@@ -27,6 +27,15 @@ func newCreateGroupParam(uid string) *pto.CreateGroup {
 	}
 }
 
+func newEnterGroupParam(uid string) *pto.PlayerInfo {
+	return &pto.PlayerInfo{
+		UID:           uid,
+		GameMode:      GameMode,
+		ModeVersion:   ModeVersion,
+		MatchStrategy: MatchStrategy,
+	}
+}
+
 func TestImpl_CreateGroup(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 	param := newCreateGroupParam(UID)
@@ -62,11 +71,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Equal(t, constant.MatchStrategy(10010), g3.GetCaptain().Base().MatchStrategy)
 
 	// add another player to the group
-	p2, err := impl.playerMgr.CreatePlayer(&pto.PlayerInfo{
-		UID:           "uid2",
-		GameMode:      GameMode,
-		MatchStrategy: MatchStrategy,
-	})
+	p2, err := impl.playerMgr.CreatePlayer(newEnterGroupParam(UID + "2"))
 	assert.Nil(t, err)
 	err = g3.Base().AddPlayer(p2)
 	p2.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
@@ -107,6 +112,18 @@ func TestImpl_ExitGroup(t *testing.T) {
 	p.Base().GroupID = g.GroupID()
 
 	// 3. if player state is not in group, should return error
+	p.Base().SetOnlineState(entry.PlayerOnlineStateOffline)
+	err = impl.ExitGroup(UID)
+	assert.Equal(t, merr.ErrPlayerOffline, err)
+	p.Base().SetOnlineState(entry.PlayerOnlineStateOnline)
+	err = impl.ExitGroup(UID)
+	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+	p.Base().SetOnlineState(entry.PlayerOnlineStateInGame)
+	err = impl.ExitGroup(UID)
+	assert.Equal(t, merr.ErrPlayerInGame, err)
+	p.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
+	err = impl.ExitGroup(UID)
+	assert.Equal(t, merr.ErrPlayerInMatch, err)
 	p.Base().SetOnlineState(entry.PlayerOnlineStateInSettle)
 	err = impl.ExitGroup(UID)
 	assert.Equal(t, merr.ErrPlayerInSettle, err)
@@ -134,12 +151,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
 
 	// make the group to have two players
-	enterInfo := &pto.PlayerInfo{
-		UID:           UID + "2",
-		GameMode:      GameMode,
-		ModeVersion:   ModeVersion,
-		MatchStrategy: MatchStrategy,
-	}
+	enterInfo := newEnterGroupParam(UID + "2")
 	err = impl.EnterGroup(enterInfo, g.GroupID())
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
@@ -154,6 +166,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+	assert.Equal(t, false, g.Base().PlayerExists(UID+"2"))
 	err = impl.EnterGroup(enterInfo, g.GroupID()) // add back
 	assert.Nil(t, err)
 
@@ -171,12 +184,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 func TestImpl_EnterGroup(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 
-	info := &pto.PlayerInfo{
-		UID:           UID,
-		GameMode:      GameMode,
-		ModeVersion:   ModeVersion,
-		MatchStrategy: MatchStrategy,
-	}
+	info := newEnterGroupParam(UID)
 
 	const GroupID = 1
 
@@ -258,6 +266,16 @@ func TestImpl_EnterGroup(t *testing.T) {
 	assert.Equal(t, UID+"2", g.GetCaptain().UID())
 	assert.Equal(t, 0, len(g2.Base().GetPlayers()))
 	assert.Nil(t, impl.groupMgr.Get(g2.GroupID()))
+
+	// 9. add another 4 players to group, the last one should return error
+	err = impl.EnterGroup(newEnterGroupParam(UID+"3"), g.GroupID())
+	assert.Nil(t, err)
+	err = impl.EnterGroup(newEnterGroupParam(UID+"4"), g.GroupID())
+	assert.Nil(t, err)
+	err = impl.EnterGroup(newEnterGroupParam(UID+"5"), g.GroupID())
+	assert.Nil(t, err)
+	err = impl.EnterGroup(newEnterGroupParam(UID+"6"), g.GroupID())
+	assert.Equal(t, merr.ErrGroupFull, err)
 }
 
 func TestImpl_DissolveGroup(t *testing.T) {
@@ -272,12 +290,7 @@ func TestImpl_DissolveGroup(t *testing.T) {
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
 
-	err = impl.EnterGroup(&pto.PlayerInfo{
-		UID:           UID + "2",
-		GameMode:      GameMode,
-		ModeVersion:   ModeVersion,
-		MatchStrategy: MatchStrategy,
-	}, g.GroupID())
+	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
 
