@@ -68,7 +68,6 @@ linters:
     - dupl
     - errcheck
     - funlen
-    - gochecknoinits
     - goconst
     - gocritic
     - gocyclo
@@ -106,4 +105,8 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
-
+  exclude-dirs:
+    - vendor
+  new: true
+  new-from-rev: "HEAD~1"
+  whole-files: false
