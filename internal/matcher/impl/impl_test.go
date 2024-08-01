@@ -7,6 +7,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,8 +71,24 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Equal(t, constant.GameMode(1), g3.GetCaptain().Base().GameMode)
 	assert.Equal(t, constant.MatchStrategy(10010), g3.GetCaptain().Base().MatchStrategy)
 
-	// add another player to the group
+	// 4. if the player state is not `online` or `group`, should return error
 	p2, err := impl.playerMgr.CreatePlayer(newEnterGroupParam(UID + "2"))
+	assert.Nil(t, err)
+	p2.Base().SetOnlineState(entry.PlayerOnlineStateOffline)
+	_, err = impl.CreateGroup(newCreateGroupParam(p2.Base().UID()))
+	assert.Equal(t, merr.ErrPlayerOffline, err)
+	p2.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
+	_, err = impl.CreateGroup(newCreateGroupParam(p2.Base().UID()))
+	assert.Equal(t, merr.ErrPlayerInMatch, err)
+	p2.Base().SetOnlineState(entry.PlayerOnlineStateInGame)
+	_, err = impl.CreateGroup(newCreateGroupParam(p2.Base().UID()))
+	assert.Equal(t, merr.ErrPlayerInGame, err)
+	p2.Base().SetOnlineState(entry.PlayerOnlineStateInSettle)
+	_, err = impl.CreateGroup(newCreateGroupParam(p2.Base().UID()))
+	assert.Equal(t, merr.ErrPlayerInSettle, err)
+
+	// add another player to the group
+	p2, err = impl.playerMgr.CreatePlayer(newEnterGroupParam(UID + "2"))
 	assert.Nil(t, err)
 	err = g3.Base().AddPlayer(p2)
 	p2.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
