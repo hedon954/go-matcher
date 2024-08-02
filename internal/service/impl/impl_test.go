@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -424,7 +425,7 @@ func TestImpl_KickPlayer(t *testing.T) {
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 }
 
-func TestImpl_HandoverCaptain(t *testing.T) {
+func TestImpl_ChangeRole(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 
 	// create two temp group
@@ -434,41 +435,50 @@ func TestImpl_HandoverCaptain(t *testing.T) {
 	assert.Nil(t, err)
 
 	// 1. if the captain not exists, should return error
-	err = impl.HandoverCaptain(UID+"1", UID+"2")
+	err = impl.ChangeRole(UID+"1", UID+"2", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 2. if the target player not exists, should return error
-	err = impl.HandoverCaptain(UID, UID+"1")
+	err = impl.ChangeRole(UID, UID+"1", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 3. if the group not exists, should return error
 	impl.groupMgr.Delete(g.GroupID()) // delete temp
-	err = impl.HandoverCaptain(UID, UID+"2")
+	err = impl.ChangeRole(UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrGroupNotExists, err)
 	impl.groupMgr.Add(g.GroupID(), g) // add back
 
 	// 4. if the group state is not `invite`, should return error
 	g.Base().SetState(entry.GroupStateMatch) // set temp
-	err = impl.HandoverCaptain(UID, UID+"2")
+	err = impl.ChangeRole(UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrGroupInMatch, err)
 	g.Base().SetState(entry.GroupStateGame)
-	err = impl.HandoverCaptain(UID, UID+"2")
+	err = impl.ChangeRole(UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrGroupInGame, err)
 	g.Base().SetState(entry.GroupStateDissolved)
-	err = impl.HandoverCaptain(UID, UID+"2")
+	err = impl.ChangeRole(UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrGroupDissolved, err)
 	g.Base().SetState(entry.GroupStateInvite) // set back
 
 	// 5. if the target player not in group, should return error
-	err = impl.HandoverCaptain(UID, UID+"3")
+	err = impl.ChangeRole(UID, UID+"3", entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
 
 	// 6. if current player not the captain, should return error
-	err = impl.HandoverCaptain(UID+"2", UID)
+	err = impl.ChangeRole(UID+"2", UID, entry.GroupRoleCaptain)
 	assert.Equal(t, merr.ErrNotCaptain, err)
 
+	// 7. failed to change to unknown role
+	err = impl.ChangeRole(UID, UID+"2", entry.GroupRole(-1))
+	assert.Equal(t, errors.New("Unsupported role: -1"), err)
+
+	// 8. success to change role to entry.GroupRoleCaptain
+	testImplChangeRoleCaptain(impl, g, t)
+}
+
+func testImplChangeRoleCaptain(impl *Impl, g entry.Group, t *testing.T) {
 	// 7. success
-	err = impl.HandoverCaptain(UID, UID+"2")
+	err := impl.ChangeRole(UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Nil(t, err)
 	assert.Equal(t, UID+"2", g.GetCaptain().UID())
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))

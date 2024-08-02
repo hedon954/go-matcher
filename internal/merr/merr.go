@@ -14,7 +14,7 @@ var (
 	ErrVersionNotMatch             = errors.New("Version Not Match")
 	ErrPlayerNotExists             = errors.New("Player Not Exists")
 	ErrKickSelf                    = errors.New("Cannot Kick Self")
-	ErrHandoverSelf                = errors.New("Cannot Handover Captain to Self")
+	ErrChangeSelfRole              = errors.New("Cannot Change Self Role")
 	ErrNotCaptain                  = errors.New("You Not Capatin")
 	ErrPermissionDeny              = errors.New("Permission Deny")
 

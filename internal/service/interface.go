@@ -36,9 +36,8 @@ type Service interface {
 	// KickPlayer kicks the kicked player from the group
 	KickPlayer(captainUID, kickedUID string) error
 
-	// HandoverCaptain handovers the captain of the group to the target player
-	// TODO: is it named ChangeRole better?
-	HandoverCaptain(captainUID, targetUID string) error
+	// ChangeRole changes the role of the target player
+	ChangeRole(captainUID, targetUID string, role entry.GroupRole) error
 
 	// SetNearbyJoinGroup sets whether the group can be joined by nearby players
 	SetNearbyJoinGroup(captainUID string, allow bool) error

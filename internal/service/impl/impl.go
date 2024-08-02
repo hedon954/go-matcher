@@ -159,7 +159,7 @@ func (impl *Impl) ExitGroup(uid string) error {
 		return nil
 	}
 
-	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+	if err = g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
 
@@ -222,9 +222,13 @@ func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
 	return impl.kickPlayer(kicked, g)
 }
 
-func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
+func (impl *Impl) ChangeRole(captainUID, targetUID string, role entry.GroupRole) error {
 	if captainUID == targetUID {
-		return merr.ErrHandoverSelf
+		return merr.ErrChangeSelfRole
+	}
+
+	if err := impl.checkRole(role); err != nil {
+		return err
 	}
 
 	captain, g, err := impl.getPlayerAndGroup(captainUID)

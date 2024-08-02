@@ -65,7 +65,6 @@ type GroupBase struct {
 	// to avoid deadlocks.
 	sync.RWMutex
 	state   GroupState
-	captain Player
 	players []Player
 
 	// MatchID is a unique id to identify each match action.
@@ -123,7 +122,20 @@ func (g *GroupBase) IsFull() bool {
 }
 
 func (g *GroupBase) GetCaptain() Player {
-	return g.captain
+	uid := ""
+	for key, role := range g.roles {
+		if role == GroupRoleCaptain {
+			uid = key
+			break
+		}
+	}
+	for _, p := range g.players {
+		if p.UID() == uid {
+			return p
+		}
+	}
+
+	panic("unreachable: group lack of captain")
 }
 
 func (g *GroupBase) CanPlayTogether(player Player) bool {
@@ -138,8 +150,10 @@ func (g *GroupBase) AddPlayer(p Player) error {
 		return merr.ErrGroupFull
 	}
 	if len(g.players) == 0 {
-		g.captain = p
+		g.roles[p.UID()] = GroupRoleCaptain
 	}
+	p.Base().GroupID = g.GroupID()
+	p.Base().SetOnlineState(PlayerOnlineStateInGroup)
 	for i, player := range g.players {
 		if player.UID() == p.UID() {
 			g.players[i] = p
@@ -166,16 +180,18 @@ func (g *GroupBase) RemovePlayer(p Player) (empty bool) {
 	for index, player := range g.players {
 		if player.UID() == p.UID() {
 			g.players = append(g.players[:index], g.players[index+1:]...)
+			break
 		}
 	}
 
 	if len(g.players) == 0 {
-		g.captain = nil
+		g.roles = make(map[string]GroupRole, g.playerLimit)
 		return true
 	} else {
-		if g.captain.UID() == p.UID() {
-			g.captain = g.players[0]
+		if g.roles[p.UID()] == GroupRoleCaptain {
+			g.SetCaptain(g.players[0])
 		}
+		delete(g.roles, p.UID())
 		return false
 	}
 }
@@ -202,7 +218,12 @@ func (g *GroupBase) GetState() GroupState {
 }
 
 func (g *GroupBase) SetCaptain(p Player) {
-	g.captain = p
+	for key, role := range g.roles {
+		if role == GroupRoleCaptain {
+			g.roles[key] = GroupRoleMember
+		}
+	}
+	g.roles[p.UID()] = GroupRoleCaptain
 }
 
 func (g *GroupBase) CheckState(valids ...GroupState) error {
@@ -229,7 +250,7 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 func (g *GroupBase) GetPlayerInfos() pto.GroupUser {
 	return pto.GroupUser{
 		GroupID:  g.groupID,
-		Owner:    g.captain.UID(),
+		Owner:    g.GetCaptain().UID(),
 		GameMode: int(g.GameMode),
 		// TODO: other info
 	}
