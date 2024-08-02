@@ -8,8 +8,8 @@ import (
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
 )
 
-// Impl implements a default matcher,
-// in most cases, you don't need to implement your own matcher.
+// Impl implements a default service,
+// in most cases, you don't need to implement your own service.
 type Impl struct {
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr

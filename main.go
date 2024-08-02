@@ -1,4 +1,4 @@
-// Package main is the entry of matcher
+// Package main is the entry of service
 package main
 
 func main() {}

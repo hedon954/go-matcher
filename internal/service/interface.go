@@ -1,11 +1,11 @@
-package matcher
+package service
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
-type Matcher interface {
+type Service interface {
 	// CreateGroup creates a new group with the given parameters
 	CreateGroup(param *pto.CreateGroup) (entry.Group, error)
 
