@@ -14,6 +14,8 @@ var (
 	ErrVersionNotMatch             = errors.New("Version Not Match")
 	ErrPlayerNotExists             = errors.New("Player Not Exists")
 	ErrKickSelf                    = errors.New("Cannot Kick Self")
+	ErrHandoverSelf                = errors.New("Cannot Handover Captain to Self")
+	ErrNotCaptain                  = errors.New("You Not Capatin")
 
 	ErrPlayerOffline    = errors.New("Player Offline")
 	ErrPlayerNotInGroup = errors.New("Create Group First")

@@ -16,6 +16,8 @@ type Group interface {
 	// IsFull checks if the group is full.
 	IsFull() bool
 
+	// SetCaptain sets the captain of the group.
+	SetCaptain(Player)
 	// GetCaptain returns the captain in the group.
 	GetCaptain() Player
 

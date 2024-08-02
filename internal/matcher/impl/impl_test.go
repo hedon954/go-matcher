@@ -409,3 +409,6 @@ func TestImpl_KickPlayer(t *testing.T) {
 	assert.Equal(t, UID, g.GetCaptain().UID())
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 }
+
+func TestImpl_HandoverCaptain(t *testing.T) {
+}

@@ -6,16 +6,40 @@ import (
 )
 
 type Matcher interface {
+	// CreateGroup creates a new group with the given parameters
 	CreateGroup(param *pto.CreateGroup) (entry.Group, error)
+
+	// EnterGroup makes the player join the existed group with the given groupID
 	EnterGroup(info *pto.PlayerInfo, groupID int64) error
+
+	// ExitGroup makes the player leave the group
 	ExitGroup(uid string) error
+
+	// Invite invites the invitee to join the group
 	Invite(inviterUID, inviteeUID string) error
-	AcceptInvite(inviterUID string, groupID int64) error
-	RefuseInvite(inviterUID string, groupID int64, refuseMsg string) error
-	CancelMatch(uid string) error
-	ReadyToMatch(uid string) error
-	DissolveGroup(uid string) error
-	KickPlayer(captainUID, kickedUID string) error
+
+	// AcceptInvite accepts the invite and enter the group
+	AcceptInvite(inviteeUID string, groupID int64) error
+
+	// RefuseInvite refuses the invite from the inviter
+	RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error
+
+	// StartMatch starts to add the group to matching queue
 	StartMatch(captainUID string) error
+
+	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
+	CancelMatch(uid string) error
+
+	// ReadyToMatch makes the player ready to match
+	ReadyToMatch(uid string) error
+
+	// UnreadyToMatch makes the player unready to match
+	DissolveGroup(uid string) error
+
+	// KickPlayer kicks the kicked player from the group
+	KickPlayer(captainUID, kickedUID string) error
+
+	// HandoverCaptain handovers the captain of the group to the target player
+	// TODO: is it named ChangeRole better?
 	HandoverCaptain(captainUID, targetUID string) error
 }

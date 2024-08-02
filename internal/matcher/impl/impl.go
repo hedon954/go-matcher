@@ -172,12 +172,12 @@ func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
 	panic("implement me")
 }
 
-func (impl *Impl) AcceptInvite(inviterUID string, groupID int64) error {
+func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (impl *Impl) RefuseInvite(inviterUID string, groupID int64, refuseMsg string) error {
+func (impl *Impl) RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error {
 	// TODO implement me
 	panic("implement me")
 }
@@ -262,6 +262,33 @@ func (impl *Impl) StartMatch(captainUID string) error {
 }
 
 func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
-	// TODO implement me
-	panic("implement me")
+	if captainUID == targetUID {
+		return merr.ErrHandoverSelf
+	}
+
+	captain := impl.playerMgr.Get(captainUID)
+	if captain == nil {
+		return merr.ErrPlayerNotExists
+	}
+	target := impl.playerMgr.Get(targetUID)
+	if target == nil {
+		return merr.ErrPlayerNotExists
+	}
+	g := impl.groupMgr.Get(captain.Base().GroupID)
+	if g == nil {
+		return merr.ErrGroupNotExists
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if g.GetCaptain() != captain {
+		return merr.ErrNotCaptain
+	}
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	return impl.handoverCaptain(captain, target, g)
 }
