@@ -84,6 +84,8 @@ type GroupBase struct {
 	Configs GroupConfig
 
 	// InviteRecords holds the invite records of the group.
+	// key: uid
+	// value: expire time (s)
 	InviteRecords map[string]int64
 }
 

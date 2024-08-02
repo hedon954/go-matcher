@@ -330,7 +330,8 @@ func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
 	}
 
 	// TODO: how to check if can play together?
-	return impl.invite(inviter, inviteeUID, g)
+	impl.invite(inviter, inviteeUID, g)
+	return nil
 }
 
 func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
