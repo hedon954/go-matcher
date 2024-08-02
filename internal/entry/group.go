@@ -10,14 +10,20 @@ import (
 
 // Group represents a group of players.
 type Group interface {
-	Base() *GroupBase
+	// GroupID returns the unique group id.
 	GroupID() int64
+
+	// Base returns the base information of the group.
+	// Here we define a concrete struct `GroupBase`
+	// to hold the common fields to avoid lots getter and setter method.
+	Base() *GroupBase
 
 	// IsFull checks if the group is full.
 	IsFull() bool
 
 	// SetCaptain sets the captain of the group.
 	SetCaptain(Player)
+
 	// GetCaptain returns the captain in the group.
 	GetCaptain() Player
 
@@ -26,6 +32,9 @@ type Group interface {
 
 	// GetPlayerInfos 获取队伍用户信息
 	GetPlayerInfos() pto.GroupUser
+
+	// CanStartMatch checks if the group can start to match.
+	CanStartMatch() bool
 }
 
 type GroupState int8
@@ -195,4 +204,8 @@ func (g *GroupBase) GetPlayerInfos() pto.GroupUser {
 		GameMode: int(g.GameMode),
 		// TODO: other info
 	}
+}
+
+func (g *GroupBase) CanStartMatch() bool {
+	return true
 }
