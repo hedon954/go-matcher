@@ -21,8 +21,8 @@ func (m *Client) PushGroupUsers(uids []string, users pto.GroupUser) {
 	}
 }
 
-func (m *Client) PushInviteFriend(param *pto.InviteFriend) {
-	fmt.Println("PushInviteFriend to ", param.FriendUid, " ", param)
+func (m *Client) PushInviteMsg(param *pto.InviteMsg) {
+	fmt.Println("PushInviteMsg to ", param.InviteeUID, ", inviter: ", param.InviterUID, ", source: ", param.Source)
 }
 
 func (m *Client) PushHandleInvite(inviter string, invitee string, msg int, message string) error {

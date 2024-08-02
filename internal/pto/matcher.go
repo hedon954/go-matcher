@@ -61,12 +61,10 @@ const (
 	DefaultInviteRefuseMsg    = "不好意思，现在不方便，下次约。"
 )
 
-type InviteFriend struct {
-	InviteUid string
-	FriendUid string
-	Source    EnterGroupSourceType
-	Platform  int
-	NoCheck   bool
+type InviteMsg struct {
+	InviterUID string
+	InviteeUID string
+	Source     EnterGroupSourceType
 }
 
 type HandleInvite struct {

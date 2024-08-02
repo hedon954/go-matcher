@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
@@ -58,6 +59,17 @@ func createTempGroup(uid string, impl *Impl, t *testing.T) (entry.Player, entry.
 	assert.Equal(t, 1, len(g.Base().GetPlayers()))
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, p.Base().GetOnlineState())
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+	return p, g
+}
+
+func createFullGroup(impl *Impl, t *testing.T) (entry.Player, entry.Group) {
+	captainUID := uuid.NewString()
+	p, g := createTempGroup(captainUID, impl, t)
+	for i := 0; i < PlayerLimit-1; i++ {
+		err := impl.EnterGroup(newEnterGroupParam(uuid.NewString()), g.GroupID())
+		assert.Nil(t, err)
+	}
+	assert.Equal(t, true, g.IsFull())
 	return p, g
 }
 
@@ -551,4 +563,45 @@ func TestImpl_SetRecentJoinGroup(t *testing.T) {
 	err = impl.SetRecentJoinGroup(UID, false)
 	assert.Nil(t, err)
 	assert.False(t, g.Base().AllowRecentJoin())
+}
+
+func TestImpl_Invite(t *testing.T) {
+	const nowSec = 100
+	nowFunc := func() int64 { return nowSec }
+	impl := NewDefault(PlayerLimit, WithNowFunc(nowFunc))
+
+	// create a temp group
+	_, g := createTempGroup(UID, impl, t)
+
+	// 1. if the inviter is not exists, should return error
+	err := impl.Invite(UID+"1", UID+"2")
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if the group is not exists, should return error
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.Invite(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 3. if the group state is not `invite`, should return error
+	g.Base().SetState(entry.GroupStateMatch)
+	err = impl.Invite(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetState(entry.GroupStateGame)
+	err = impl.Invite(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetState(entry.GroupStateDissolved)
+	err = impl.Invite(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetState(entry.GroupStateInvite) // set back
+
+	// 4. if the group is full, should return error
+	p2, _ := createFullGroup(impl, t)
+	err = impl.Invite(p2.UID(), UID)
+	assert.Equal(t, merr.ErrGroupFull, err)
+
+	// 5. invite success and save invite record
+	err = impl.Invite(UID, UID+"2")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(nowSec+entry.InviteExpireSec), g.Base().InviteRecords[UID+"2"])
 }

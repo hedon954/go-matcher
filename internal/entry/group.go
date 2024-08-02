@@ -37,6 +37,10 @@ type Group interface {
 	CanStartMatch() bool
 }
 
+const (
+	InviteExpireSec = 60 * 5
+)
+
 type GroupState int8
 
 const (
@@ -70,15 +74,17 @@ type GroupBase struct {
 	// MatchID is a unique id to identify each match action.
 	MatchID string
 
-	playerLimit int
-
 	// roles holds the roles of the players in the group.
 	roles map[string]GroupRole
 
-	NearbyInviteMap map[string][]string
-
 	// Settings holds the settings of the group.
 	Settings GroupSettings
+
+	// Configs holds the config of the group.
+	Configs GroupConfig
+
+	// InviteRecords holds the invite records of the group.
+	InviteRecords map[string]int64
 }
 
 // GroupSettings defines the settings of a group.
@@ -90,20 +96,25 @@ type GroupSettings struct {
 	necentJoinAllowed bool
 }
 
+type GroupConfig struct {
+	PlayerLimit     int
+	InviteExpireSec int64
+}
+
 // NewGroupBase creates a new GroupBase.
 func NewGroupBase(
 	groupID int64, playerLimit int, mode constant.GameMode, modeVersion int64, strategy constant.MatchStrategy,
 ) *GroupBase {
 	g := &GroupBase{
-		groupID:         groupID,
-		state:           GroupStateInvite,
-		playerLimit:     playerLimit,
-		GameMode:        mode,
-		ModeVersion:     modeVersion,
-		MatchStrategy:   strategy,
-		players:         make([]Player, 0, playerLimit),
-		roles:           make(map[string]GroupRole, playerLimit),
-		NearbyInviteMap: make(map[string][]string, playerLimit),
+		groupID:       groupID,
+		state:         GroupStateInvite,
+		GameMode:      mode,
+		ModeVersion:   modeVersion,
+		MatchStrategy: strategy,
+		players:       make([]Player, 0, playerLimit),
+		roles:         make(map[string]GroupRole, playerLimit),
+		InviteRecords: make(map[string]int64, playerLimit),
+		Configs:       GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
 	}
 
 	return g
@@ -118,7 +129,7 @@ func (g *GroupBase) GroupID() int64 {
 }
 
 func (g *GroupBase) IsFull() bool {
-	return len(g.players) >= g.playerLimit
+	return len(g.players) >= g.Configs.PlayerLimit
 }
 
 func (g *GroupBase) GetCaptain() Player {
@@ -176,6 +187,10 @@ func (g *GroupBase) UIDs() []string {
 	return res
 }
 
+func (g *GroupBase) PlayerLimit() int {
+	return g.Configs.PlayerLimit
+}
+
 func (g *GroupBase) RemovePlayer(p Player) (empty bool) {
 	for index, player := range g.players {
 		if player.UID() == p.UID() {
@@ -185,7 +200,7 @@ func (g *GroupBase) RemovePlayer(p Player) (empty bool) {
 	}
 
 	if len(g.players) == 0 {
-		g.roles = make(map[string]GroupRole, g.playerLimit)
+		g.roles = make(map[string]GroupRole, g.PlayerLimit())
 		return true
 	} else {
 		if g.roles[p.UID()] == GroupRoleCaptain {
@@ -274,4 +289,8 @@ func (g *GroupBase) AllowNearbyJoin() bool {
 
 func (g *GroupBase) AllowRecentJoin() bool {
 	return g.Settings.necentJoinAllowed
+}
+
+func (g *GroupBase) AddInviteRecord(inviteeUID string, nowUnix int64) {
+	g.InviteRecords[inviteeUID] = nowUnix + g.Configs.InviteExpireSec
 }

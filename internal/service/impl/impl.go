@@ -1,6 +1,8 @@
 package impl
 
 import (
+	"time"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
@@ -17,14 +19,28 @@ type Impl struct {
 	connectorClient *connector.Client
 
 	playerLimit int
+	nowFunc     func() int64
 }
 
-func NewDefault(playerLimit int) *Impl {
+type Option func(*Impl)
+
+func WithNowFunc(f func() int64) Option {
+	return func(impl *Impl) {
+		impl.nowFunc = f
+	}
+}
+
+func NewDefault(playerLimit int, options ...Option) *Impl {
 	impl := &Impl{
 		playerMgr:       repository.NewPlayerMgr(),
 		groupMgr:        repository.NewGroupMgr(0), // TODO: confirm the groupIDStart
 		connectorClient: connector.New(),           // TODO: DI
 		playerLimit:     playerLimit,
+		nowFunc:         time.Now().Unix,
+	}
+
+	for _, opt := range options {
+		opt(impl)
 	}
 	return impl
 }
@@ -293,7 +309,28 @@ func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
 }
 
 func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
-	panic("implement me")
+	if err := impl.checkInviteeState(inviteeUID); err != nil {
+		return err
+	}
+
+	inviter, g, err := impl.getPlayerAndGroup(inviterUID)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	if g.IsFull() {
+		return merr.ErrGroupFull
+	}
+
+	// TODO: how to check if can play together?
+	return impl.invite(inviter, inviteeUID, g)
 }
 
 func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
