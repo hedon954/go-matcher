@@ -291,8 +291,3 @@ func (impl *Impl) CancelMatch(uid string) error {
 	// TODO implement me
 	panic("implement me")
 }
-
-func (impl *Impl) ReadyToMatch(uid string) error {
-	// TODO implement me
-	panic("implement me")
-}

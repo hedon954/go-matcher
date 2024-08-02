@@ -30,9 +30,6 @@ type Service interface {
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(uid string) error
 
-	// ReadyToMatch makes the player ready to match
-	ReadyToMatch(uid string) error
-
 	// UnreadyToMatch makes the player unready to match
 	DissolveGroup(uid string) error
 
