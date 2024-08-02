@@ -1,4 +1,4 @@
-package manager
+package repository
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -9,7 +9,7 @@ type RoomMgr struct {
 	*collection.Manager[int64, entry.Room]
 }
 
-// RoomMgr creates a room manager.
+// RoomMgr creates a room repository.
 func NewRoomMgr() *RoomMgr {
 	mgr := &RoomMgr{
 		Manager: collection.New[int64, entry.Room](),

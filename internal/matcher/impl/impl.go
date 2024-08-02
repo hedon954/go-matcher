@@ -2,17 +2,17 @@ package impl
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/manager"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
 )
 
 // Impl implements a default matcher,
 // in most cases, you don't need to implement your own matcher.
 type Impl struct {
-	playerMgr *manager.PlayerMgr
-	groupMgr  *manager.GroupMgr
+	playerMgr *repository.PlayerMgr
+	groupMgr  *repository.GroupMgr
 
 	connectorClient *connector.Client
 
@@ -21,9 +21,9 @@ type Impl struct {
 
 func NewDefault(playerLimit int) *Impl {
 	impl := &Impl{
-		playerMgr:       manager.NewPlayerMgr(),
-		groupMgr:        manager.NewGroupMgr(0), // TODO: confirm the groupIDStart
-		connectorClient: connector.New(),        // TODO: DI
+		playerMgr:       repository.NewPlayerMgr(),
+		groupMgr:        repository.NewGroupMgr(0), // TODO: confirm the groupIDStart
+		connectorClient: connector.New(),           // TODO: DI
 		playerLimit:     playerLimit,
 	}
 	return impl

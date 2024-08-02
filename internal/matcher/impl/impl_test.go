@@ -175,7 +175,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 
 	// 6. if group has multi-players, and the player no captain exit group,
 	// should return success and the group capatin should not change,
-	// also, the player should be removed from the manager.
+	// also, the player should be removed from the repository.
 	err = impl.ExitGroup(UID + "2")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().GetPlayers()))
@@ -335,7 +335,7 @@ func TestImpl_DissolveGroup(t *testing.T) {
 	assert.Equal(t, merr.ErrOnlyCaptainCanDissolveGroup, err)
 
 	// 5. if the player is the captain, should success,
-	// and all the group's players should be deleted from the player manager.
+	// and all the group's players should be deleted from the player repository.
 	err = impl.DissolveGroup(UID)
 	assert.Nil(t, err)
 	assert.Equal(t, 0, len(g.Base().GetPlayers()))

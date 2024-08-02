@@ -1,4 +1,4 @@
-package manager
+package repository
 
 import (
 	"sync/atomic"
@@ -18,7 +18,7 @@ type GroupMgr struct {
 	groupIDIter atomic.Int64
 }
 
-// NewGroupMgr creates a group manager, `groupIDStart`: the starting group ID.
+// NewGroupMgr creates a group repository, `groupIDStart`: the starting group ID.
 func NewGroupMgr(groupIDStart int64) *GroupMgr {
 	mgr := &GroupMgr{
 		Manager: collection.New[int64, entry.Group](),

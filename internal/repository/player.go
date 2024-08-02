@@ -1,4 +1,4 @@
-package manager
+package repository
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
