@@ -167,31 +167,6 @@ func (impl *Impl) ExitGroup(uid string) error {
 	return impl.exitGroup(p, g)
 }
 
-func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (impl *Impl) RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (impl *Impl) CancelMatch(uid string) error {
-	// TODO implement me
-	panic("implement me")
-}
-
-func (impl *Impl) ReadyToMatch(uid string) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 func (impl *Impl) DissolveGroup(uid string) error {
 	p := impl.playerMgr.Get(uid)
 	if p == nil {
@@ -256,11 +231,6 @@ func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
 	return impl.kickPlayer(kicked, g)
 }
 
-func (impl *Impl) StartMatch(captainUID string) error {
-	// TODO implement me
-	panic("implement me")
-}
-
 func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
 	if captainUID == targetUID {
 		return merr.ErrHandoverSelf
@@ -295,4 +265,34 @@ func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
 	}
 
 	return impl.handoverCaptain(captain, target, g)
+}
+
+func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (impl *Impl) RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (impl *Impl) StartMatch(captainUID string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (impl *Impl) CancelMatch(uid string) error {
+	// TODO implement me
+	panic("implement me")
+}
+
+func (impl *Impl) ReadyToMatch(uid string) error {
+	// TODO implement me
+	panic("implement me")
 }
