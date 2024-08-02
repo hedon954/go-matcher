@@ -411,4 +411,57 @@ func TestImpl_KickPlayer(t *testing.T) {
 }
 
 func TestImpl_HandoverCaptain(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// create two temp group2
+	g, err := impl.CreateGroup(newCreateGroupParam(UID))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(g.Base().GetPlayers()))
+	assert.Equal(t, UID, g.GetCaptain().UID())
+	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
+	assert.Nil(t, err)
+
+	_, err = impl.CreateGroup(newCreateGroupParam(UID + "3"))
+	assert.Nil(t, err)
+
+	// 1. if the captain not exists, should return error
+	err = impl.HandoverCaptain(UID+"1", UID+"2")
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if the target player not exists, should return error
+	err = impl.HandoverCaptain(UID, UID+"1")
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 3. if the group not exists, should return error
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.HandoverCaptain(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 4. if the group state is not `invite`, should return error
+	g.Base().SetState(entry.GroupStateMatch) // set temp
+	err = impl.HandoverCaptain(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetState(entry.GroupStateGame)
+	err = impl.HandoverCaptain(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetState(entry.GroupStateDissolved)
+	err = impl.HandoverCaptain(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetState(entry.GroupStateInvite) // set back
+
+	// 5. if the target player not in group, should return error
+	err = impl.HandoverCaptain(UID, UID+"3")
+	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+
+	// 6. if current player not the captain, should return error
+	err = impl.HandoverCaptain(UID+"2", UID)
+	assert.Equal(t, merr.ErrNotCaptain, err)
+
+	// 7. success
+	err = impl.HandoverCaptain(UID, UID+"2")
+	assert.Nil(t, err)
+	assert.Equal(t, UID+"2", g.GetCaptain().UID())
+	assert.Equal(t, 2, len(g.Base().GetPlayers()))
+	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
 }

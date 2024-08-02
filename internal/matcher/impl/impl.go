@@ -282,6 +282,10 @@ func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
+	if !g.Base().PlayerExists(targetUID) {
+		return merr.ErrPlayerNotInGroup
+	}
+
 	if g.GetCaptain() != captain {
 		return merr.ErrNotCaptain
 	}
