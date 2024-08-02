@@ -26,7 +26,7 @@ func (impl *Impl) createGroup(param *pto.CreateGroup, p entry.Player) (entry.Gro
 		return nil, err
 	}
 
-	if err = g.Base().AddPlayer(p); err != nil {
+	if err := g.Base().AddPlayer(p); err != nil {
 		panic("add player to group failed when create group")
 	}
 

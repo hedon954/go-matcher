@@ -7,11 +7,10 @@ import (
 )
 
 func (impl *Impl) checkRole(role entry.GroupRole) error {
-	switch role {
-	case entry.GroupRoleCaptain:
+	if role == entry.GroupRoleCaptain {
 		return nil
 	}
-	return fmt.Errorf("Unsupported role: %d", role)
+	return fmt.Errorf("unsupported role: %d", role)
 }
 
 func (impl *Impl) handoverCaptain(captain entry.Player, target entry.Player, g entry.Group) error {

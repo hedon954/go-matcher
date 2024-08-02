@@ -38,7 +38,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 	p.Base().Lock()
 	defer p.Base().Unlock()
 
-	if err = p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
+	if err := p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
 		return nil, err
 	}
 
@@ -91,12 +91,12 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 
 	p.Base().Lock()
 	defer p.Base().Unlock()
-	if err = p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
+	if err := p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
 		return err
 	}
 
 	// check source validation
-	if err = impl.checkEnterSourceValidation(g, info.Source); err != nil {
+	if err := impl.checkEnterSourceValidation(g, info.Source); err != nil {
 		return err
 	}
 
@@ -106,7 +106,7 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 		if p.Base().GroupID == groupID {
 			// if p can not play together, should exit the origin group
 			if !g.CanPlayTogether(p) {
-				if err = impl.exitGroup(p, g); err != nil {
+				if err := impl.exitGroup(p, g); err != nil {
 					return err
 				}
 			} else {
@@ -125,7 +125,7 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 			if originGroup != nil {
 				originGroup.Base().Lock()
 				defer originGroup.Base().Unlock()
-				if err = impl.exitGroup(p, originGroup); err != nil {
+				if err := impl.exitGroup(p, originGroup); err != nil {
 					return err
 				}
 			}
@@ -159,7 +159,7 @@ func (impl *Impl) ExitGroup(uid string) error {
 		return nil
 	}
 
-	if err = g.Base().CheckState(entry.GroupStateInvite); err != nil {
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
 
@@ -251,7 +251,7 @@ func (impl *Impl) ChangeRole(captainUID, targetUID string, role entry.GroupRole)
 		return merr.ErrNotCaptain
 	}
 
-	if err = g.Base().CheckState(entry.GroupStateInvite); err != nil {
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
 
@@ -293,14 +293,6 @@ func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
 }
 
 func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
-	inviter, g, err := impl.getPlayerAndGroup(inviterUID)
-	if err != nil {
-		return err
-	}
-	inviter = inviter
-	g = g
-
-	// TODO implement me
 	panic("implement me")
 }
 

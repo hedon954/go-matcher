@@ -470,7 +470,7 @@ func TestImpl_ChangeRole(t *testing.T) {
 
 	// 7. failed to change to unknown role
 	err = impl.ChangeRole(UID, UID+"2", entry.GroupRole(-1))
-	assert.Equal(t, errors.New("Unsupported role: -1"), err)
+	assert.Equal(t, errors.New("unsupported role: -1"), err)
 
 	// 8. success to change role to entry.GroupRoleCaptain
 	testImplChangeRoleCaptain(impl, g, t)
