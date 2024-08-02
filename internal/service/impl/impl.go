@@ -293,6 +293,13 @@ func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
 }
 
 func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
+	inviter, g, err := impl.getPlayerAndGroup(inviterUID)
+	if err != nil {
+		return err
+	}
+	inviter = inviter
+	g = g
+
 	// TODO implement me
 	panic("implement me")
 }

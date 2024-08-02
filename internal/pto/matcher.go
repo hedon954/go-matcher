@@ -15,7 +15,7 @@ type PlayerInfo struct {
 
 type EnterGroup struct {
 	PlayerInfo
-	Source InvitationSrcType
+	Source EnterGroupSourceType
 }
 
 type CreateGroup struct {
@@ -38,19 +38,19 @@ type GroupUser struct {
 	ShowList    []int
 }
 
-// 邀请渠道
-type InvitationSrcType int
+// EnterGroupSourceType is the source type of entering a group.
+type EnterGroupSourceType int
 
 const (
-	InvitationSrcSingleChat InvitationSrcType = 1  // 组队页面(好友tab)
-	InvitationSrcClanRank   InvitationSrcType = 2  // 排位赛(聊天)
-	InvitationSrcClanRace   InvitationSrcType = 3  // 战队赛(聊天)
-	InvitationSrcNearBy     InvitationSrcType = 4  // 附近的人
-	InvitationSrcShare      InvitationSrcType = 5  // 应用外邀请
-	InvitationSrcRace       InvitationSrcType = 7  // 公开赛
-	InvitationSrcRecent     InvitationSrcType = 8  // 最近tab
-	InvitationSrcClan       InvitationSrcType = 9  // 战队tab
-	InvitationSrcChannel    InvitationSrcType = 10 // 世界频道
+	EnterGroupSourceTypeInvite                            = 0 // invited by other
+	EnterGroupSourceTypeNearby       EnterGroupSourceType = 1 // from recent list
+	EnterGroupSourceTypeRecent       EnterGroupSourceType = 2 // from nearby list
+	EnterGroupSourceTypeFriend       EnterGroupSourceType = 3 // from friend list
+	EnterGroupSourceTypeWorldChannel EnterGroupSourceType = 4 // from world channel
+	EnterGroupSourceTypeClanChannel  EnterGroupSourceType = 5 // from clan channel
+	EnterGroupSourceTypeShare        EnterGroupSourceType = 6 // from share link
+
+	// TODO: add more
 )
 
 // 好友游戏邀请处理类型：接受或拒绝
@@ -64,7 +64,7 @@ const (
 type InviteFriend struct {
 	InviteUid string
 	FriendUid string
-	Source    InvitationSrcType
+	Source    EnterGroupSourceType
 	Platform  int
 	NoCheck   bool
 }
@@ -72,7 +72,7 @@ type InviteFriend struct {
 type HandleInvite struct {
 	InviteUid  string // 谁邀请你的
 	HandleType int
-	SrcType    InvitationSrcType
+	SrcType    EnterGroupSourceType
 	Player     *PlayerInfo // 当前玩家
 	Message    string
 	Platform   int
@@ -109,7 +109,7 @@ type CheckInviteFriend struct {
 	ModeVersion int
 	InviteUid   string
 	FriendUid   string
-	Source      InvitationSrcType
+	Source      EnterGroupSourceType
 	NoCheck     bool
 }
 

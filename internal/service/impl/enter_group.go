@@ -6,13 +6,13 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
-func (impl *Impl) checkEnterSourceValidation(g entry.Group, source pto.InvitationSrcType) error {
+func (impl *Impl) checkEnterSourceValidation(g entry.Group, source pto.EnterGroupSourceType) error {
 	switch source {
-	case pto.InvitationSrcNearBy:
+	case pto.EnterGroupSourceTypeNearby:
 		if !g.Base().AllowNearbyJoin() {
 			return merr.ErrGroupDenyNearbyJoin
 		}
-	case pto.InvitationSrcRecent:
+	case pto.EnterGroupSourceTypeRecent:
 		if !g.Base().AllowRecentJoin() {
 			return merr.ErrGroupDenyRecentJoin
 		}

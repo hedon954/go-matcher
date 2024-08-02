@@ -34,7 +34,7 @@ func newEnterGroupParam(uid string) *pto.EnterGroup {
 	}
 }
 
-func newEnterGroupParamWithSrc(uid string, source pto.InvitationSrcType) *pto.EnterGroup {
+func newEnterGroupParamWithSrc(uid string, source pto.EnterGroupSourceType) *pto.EnterGroup {
 	return &pto.EnterGroup{
 		PlayerInfo: *newPlayerInfo(uid),
 		Source:     source,
@@ -299,14 +299,14 @@ func TestImpl_EnterGroup(t *testing.T) {
 	assert.Equal(t, 0, len(g2.Base().GetPlayers()))
 	assert.Nil(t, impl.groupMgr.Get(g2.GroupID()))
 
-	// 9. if group denies to enter from nearby and source is `pto.InvitationSrcNearBy`, should return error
+	// 9. if group denies to enter from nearby and source is `pto.EnterGroupSourceTypeNearby`, should return error
 	g.Base().SetAllowNearbyJoin(false)
-	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.InvitationSrcNearBy), g.GroupID())
+	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.EnterGroupSourceTypeNearby), g.GroupID())
 	assert.Equal(t, merr.ErrGroupDenyNearbyJoin, err)
 
-	// 10. if group denies to enter from recent and source is `pto.InvitationSrcRecent`, should return error
+	// 10. if group denies to enter from recent and source is `pto.EnterGroupSourceTypeRecent`, should return error
 	g.Base().SetAllowRecentJoin(false)
-	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.InvitationSrcRecent), g.GroupID())
+	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.EnterGroupSourceTypeRecent), g.GroupID())
 	assert.Equal(t, merr.ErrGroupDenyRecentJoin, err)
 
 	// 11. add another 4 players to group, the last one should return error
