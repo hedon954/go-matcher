@@ -46,6 +46,13 @@ const (
 	GroupStateDissolved GroupState = 3
 )
 
+type GroupRole int8
+
+const (
+	GroupRoleMember  GroupRole = 0
+	GroupRoleCaptain GroupRole = 1
+)
+
 // GroupBase holds the common fields of a Group for all kinds of game mode and match strategy.
 type GroupBase struct {
 	groupID       int64
@@ -61,7 +68,27 @@ type GroupBase struct {
 	captain Player
 	players []Player
 
+	// MatchID is a unique id to identify each match action.
+	MatchID string
+
 	playerLimit int
+
+	// roles holds the roles of the players in the group.
+	roles map[string]GroupRole
+
+	NearbyInviteMap map[string][]string
+
+	// Settings holds the settings of the group.
+	Settings GroupSettings
+}
+
+// GroupSettings defines the settings of a group.
+type GroupSettings struct {
+	// nearbyJoinAllowed indicates whether nearby players can join the group.
+	nearbyJoinAllowed bool
+
+	// necentJoinAllowed indicates whether recent players can join the group.
+	necentJoinAllowed bool
 }
 
 // NewGroupBase creates a new GroupBase.
@@ -69,13 +96,15 @@ func NewGroupBase(
 	groupID int64, playerLimit int, mode constant.GameMode, modeVersion int64, strategy constant.MatchStrategy,
 ) *GroupBase {
 	g := &GroupBase{
-		groupID:       groupID,
-		state:         GroupStateInvite,
-		players:       make([]Player, 0, playerLimit),
-		playerLimit:   playerLimit,
-		GameMode:      mode,
-		ModeVersion:   modeVersion,
-		MatchStrategy: strategy,
+		groupID:         groupID,
+		state:           GroupStateInvite,
+		playerLimit:     playerLimit,
+		GameMode:        mode,
+		ModeVersion:     modeVersion,
+		MatchStrategy:   strategy,
+		players:         make([]Player, 0, playerLimit),
+		roles:           make(map[string]GroupRole, playerLimit),
+		NearbyInviteMap: make(map[string][]string, playerLimit),
 	}
 
 	return g
@@ -208,4 +237,20 @@ func (g *GroupBase) GetPlayerInfos() pto.GroupUser {
 
 func (g *GroupBase) CanStartMatch() bool {
 	return true
+}
+
+func (g *GroupBase) SetAllowNearbyJoin(allow bool) {
+	g.Settings.nearbyJoinAllowed = allow
+}
+
+func (g *GroupBase) SetAllowRecentJoin(allow bool) {
+	g.Settings.necentJoinAllowed = allow
+}
+
+func (g *GroupBase) AllowNearbyJoin() bool {
+	return g.Settings.nearbyJoinAllowed
+}
+
+func (g *GroupBase) AllowRecentJoin() bool {
+	return g.Settings.necentJoinAllowed
 }

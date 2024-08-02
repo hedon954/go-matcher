@@ -10,7 +10,7 @@ type Service interface {
 	CreateGroup(param *pto.CreateGroup) (entry.Group, error)
 
 	// EnterGroup makes the player join the existed group with the given groupID
-	EnterGroup(info *pto.PlayerInfo, groupID int64) error
+	EnterGroup(info *pto.EnterGroup, groupID int64) error
 
 	// ExitGroup makes the player leave the group
 	ExitGroup(uid string) error
@@ -39,4 +39,10 @@ type Service interface {
 	// HandoverCaptain handovers the captain of the group to the target player
 	// TODO: is it named ChangeRole better?
 	HandoverCaptain(captainUID, targetUID string) error
+
+	// SetNearbyJoinGroup sets whether the group can be joined by nearby players
+	SetNearbyJoinGroup(captainUID string, allow bool) error
+
+	// SetRecentJoinGroup sets whether the group can be joined by recent players
+	SetRecentJoinGroup(captainUID string, allow bool) error
 }

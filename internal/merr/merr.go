@@ -16,6 +16,7 @@ var (
 	ErrKickSelf                    = errors.New("Cannot Kick Self")
 	ErrHandoverSelf                = errors.New("Cannot Handover Captain to Self")
 	ErrNotCaptain                  = errors.New("You Not Capatin")
+	ErrPermissionDeny              = errors.New("Permission Deny")
 
 	ErrPlayerOffline    = errors.New("Player Offline")
 	ErrPlayerNotInGroup = errors.New("Create Group First")
@@ -27,4 +28,7 @@ var (
 	ErrGroupInInvite = errors.New("Group Not Matching")
 	ErrGroupInMatch  = errors.New("Group Matching")
 	ErrGroupInGame   = errors.New("Group Gaming")
+
+	ErrGroupDenyNearbyJoin = errors.New("Group Deny Nearby Join")
+	ErrGroupDenyRecentJoin = errors.New("Group Deny Recent Join")
 )

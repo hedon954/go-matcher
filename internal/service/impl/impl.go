@@ -72,7 +72,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 	return g, nil
 }
 
-func (impl *Impl) EnterGroup(info *pto.PlayerInfo, groupID int64) error {
+func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 	g := impl.groupMgr.Get(groupID)
 	if g == nil {
 		return merr.ErrGroupDissolved
@@ -84,7 +84,7 @@ func (impl *Impl) EnterGroup(info *pto.PlayerInfo, groupID int64) error {
 		return err
 	}
 
-	p, err := impl.getPlayer(info)
+	p, err := impl.getPlayer(&info.PlayerInfo)
 	if err != nil {
 		return err
 	}
@@ -92,6 +92,11 @@ func (impl *Impl) EnterGroup(info *pto.PlayerInfo, groupID int64) error {
 	p.Base().Lock()
 	defer p.Base().Unlock()
 	if err = p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
+		return err
+	}
+
+	// check source validation
+	if err = impl.checkEnterSourceValidation(g, info.Source); err != nil {
 		return err
 	}
 
@@ -137,14 +142,9 @@ func (impl *Impl) EnterGroup(info *pto.PlayerInfo, groupID int64) error {
 }
 
 func (impl *Impl) ExitGroup(uid string) error {
-	p := impl.playerMgr.Get(uid)
-	if p == nil {
-		return merr.ErrPlayerNotInGroup
-	}
-
-	g := impl.groupMgr.Get(p.Base().GroupID)
-	if g == nil {
-		return merr.ErrPlayerNotInGroup
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
 	}
 
 	p.Base().Lock()
@@ -168,14 +168,9 @@ func (impl *Impl) ExitGroup(uid string) error {
 }
 
 func (impl *Impl) DissolveGroup(uid string) error {
-	p := impl.playerMgr.Get(uid)
-	if p == nil {
-		return merr.ErrPlayerNotInGroup
-	}
-
-	g := impl.groupMgr.Get(p.Base().GroupID)
-	if g == nil {
-		return merr.ErrGroupNotExists
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
 	}
 
 	g.Base().Lock()
@@ -197,17 +192,13 @@ func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
 		return merr.ErrKickSelf
 	}
 
-	captain := impl.playerMgr.Get(captainUID)
-	if captain == nil {
-		return merr.ErrPlayerNotExists
+	captain, g, err := impl.getPlayerAndGroup(captainUID)
+	if err != nil {
+		return err
 	}
 	kicked := impl.playerMgr.Get(kickedUID)
 	if kicked == nil {
 		return merr.ErrPlayerNotExists
-	}
-	g := impl.groupMgr.Get(captain.Base().GroupID)
-	if g == nil {
-		return merr.ErrGroupNotExists
 	}
 
 	g.Base().Lock()
@@ -236,17 +227,13 @@ func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
 		return merr.ErrHandoverSelf
 	}
 
-	captain := impl.playerMgr.Get(captainUID)
-	if captain == nil {
-		return merr.ErrPlayerNotExists
+	captain, g, err := impl.getPlayerAndGroup(captainUID)
+	if err != nil {
+		return err
 	}
 	target := impl.playerMgr.Get(targetUID)
 	if target == nil {
 		return merr.ErrPlayerNotExists
-	}
-	g := impl.groupMgr.Get(captain.Base().GroupID)
-	if g == nil {
-		return merr.ErrGroupNotExists
 	}
 
 	g.Base().Lock()
@@ -260,11 +247,45 @@ func (impl *Impl) HandoverCaptain(captainUID, targetUID string) error {
 		return merr.ErrNotCaptain
 	}
 
-	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+	if err = g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
 
 	return impl.handoverCaptain(captain, target, g)
+}
+
+func (impl *Impl) SetNearbyJoinGroup(captainUID string, allow bool) error {
+	p, g, err := impl.getPlayerAndGroup(captainUID)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if g.GetCaptain() != p {
+		return merr.ErrPermissionDeny
+	}
+
+	g.Base().SetAllowNearbyJoin(allow)
+	return nil
+}
+
+func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
+	p, g, err := impl.getPlayerAndGroup(captainUID)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if g.GetCaptain() != p {
+		return merr.ErrPermissionDeny
+	}
+
+	g.Base().SetAllowRecentJoin(allow)
+	return nil
 }
 
 func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
@@ -290,4 +311,17 @@ func (impl *Impl) StartMatch(captainUID string) error {
 func (impl *Impl) CancelMatch(uid string) error {
 	// TODO implement me
 	panic("implement me")
+}
+
+// getPlayerAndGroup returns the player and group of the given uid.
+func (impl *Impl) getPlayerAndGroup(uid string) (entry.Player, entry.Group, error) {
+	p := impl.playerMgr.Get(uid)
+	if p == nil {
+		return nil, nil, merr.ErrPlayerNotExists
+	}
+	g := impl.groupMgr.Get(p.Base().GroupID)
+	if g == nil {
+		return nil, nil, merr.ErrGroupNotExists
+	}
+	return p, g, nil
 }

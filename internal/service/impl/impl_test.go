@@ -7,7 +7,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
-
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,13 +27,37 @@ func newCreateGroupParam(uid string) *pto.CreateGroup {
 	}
 }
 
-func newEnterGroupParam(uid string) *pto.PlayerInfo {
+func newEnterGroupParam(uid string) *pto.EnterGroup {
+	return &pto.EnterGroup{
+		PlayerInfo: *newPlayerInfo(uid),
+	}
+}
+
+func newEnterGroupParamWithSrc(uid string, source pto.InvitationSrcType) *pto.EnterGroup {
+	return &pto.EnterGroup{
+		PlayerInfo: *newPlayerInfo(uid),
+		Source:     source,
+	}
+}
+
+func newPlayerInfo(uid string) *pto.PlayerInfo {
 	return &pto.PlayerInfo{
 		UID:           uid,
 		GameMode:      GameMode,
 		ModeVersion:   ModeVersion,
 		MatchStrategy: MatchStrategy,
 	}
+}
+
+func createTempGroup(uid string, impl *Impl, t *testing.T) (entry.Player, entry.Group) {
+	g, err := impl.CreateGroup(newCreateGroupParam(uid))
+	assert.Nil(t, err)
+	p := impl.playerMgr.Get(uid)
+	assert.Equal(t, g.GroupID(), p.Base().GroupID)
+	assert.Equal(t, 1, len(g.Base().GetPlayers()))
+	assert.Equal(t, entry.PlayerOnlineStateInGroup, p.Base().GetOnlineState())
+	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+	return p, g
 }
 
 func TestImpl_CreateGroup(t *testing.T) {
@@ -72,7 +95,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Equal(t, constant.MatchStrategy(10010), g3.GetCaptain().Base().MatchStrategy)
 
 	// 4. if the player state is not `online` or `group`, should return error
-	p2, err := impl.playerMgr.CreatePlayer(newEnterGroupParam(UID + "2"))
+	p2, err := impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
 	assert.Nil(t, err)
 	p2.Base().SetOnlineState(entry.PlayerOnlineStateOffline)
 	_, err = impl.CreateGroup(newCreateGroupParam(p2.Base().UID()))
@@ -88,7 +111,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Equal(t, merr.ErrPlayerInSettle, err)
 
 	// add another player to the group
-	p2, err = impl.playerMgr.CreatePlayer(newEnterGroupParam(UID + "2"))
+	p2, err = impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
 	assert.Nil(t, err)
 	err = g3.Base().AddPlayer(p2)
 	p2.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
@@ -112,20 +135,15 @@ func TestImpl_ExitGroup(t *testing.T) {
 
 	// 1. if player is not exists, should return error
 	err := impl.ExitGroup(UID)
-	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// create a temp group
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
-	assert.Nil(t, err)
-	p := impl.playerMgr.Get(UID)
-	assert.Equal(t, g.GroupID(), p.Base().GroupID)
-	assert.Equal(t, entry.PlayerOnlineStateInGroup, p.Base().GetOnlineState())
-	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+	p, g := createTempGroup(UID, impl, t)
 
 	// 2. if group is not existed, should return error
 	p.Base().GroupID = 0
 	err = impl.ExitGroup(UID)
-	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
 	p.Base().GroupID = g.GroupID()
 
 	// 3. if player state is not in group, should return error
@@ -210,11 +228,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 	assert.Equal(t, merr.ErrGroupDissolved, err)
 
 	// create a temp group
-	g, err := impl.CreateGroup(newCreateGroupParam(UID + "2"))
-	assert.Nil(t, err)
-	assert.Equal(t, int64(1), g.GroupID())
-	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
-	assert.Equal(t, UID+"2", g.GetCaptain().UID())
+	_, g := createTempGroup(UID+"2", impl, t)
 
 	// 2. if the group state is not invite, should return error
 	g.Base().SetState(entry.GroupStateMatch)
@@ -284,7 +298,17 @@ func TestImpl_EnterGroup(t *testing.T) {
 	assert.Equal(t, 0, len(g2.Base().GetPlayers()))
 	assert.Nil(t, impl.groupMgr.Get(g2.GroupID()))
 
-	// 9. add another 4 players to group, the last one should return error
+	// 9. if group denies to enter from nearby and source is `pto.InvitationSrcNearBy`, should return error
+	g.Base().SetAllowNearbyJoin(false)
+	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.InvitationSrcNearBy), g.GroupID())
+	assert.Equal(t, merr.ErrGroupDenyNearbyJoin, err)
+
+	// 10. if group denies to enter from recent and source is `pto.InvitationSrcRecent`, should return error
+	g.Base().SetAllowRecentJoin(false)
+	err = impl.EnterGroup(newEnterGroupParamWithSrc(UID+"3", pto.InvitationSrcRecent), g.GroupID())
+	assert.Equal(t, merr.ErrGroupDenyRecentJoin, err)
+
+	// 11. add another 4 players to group, the last one should return error
 	err = impl.EnterGroup(newEnterGroupParam(UID+"3"), g.GroupID())
 	assert.Nil(t, err)
 	err = impl.EnterGroup(newEnterGroupParam(UID+"4"), g.GroupID())
@@ -299,21 +323,14 @@ func TestImpl_DissolveGroup(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 
 	// create a group and make it have multi-players
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(g.Base().GetPlayers()))
-	assert.Equal(t, UID, g.GetCaptain().UID())
-	assert.Equal(t, int64(1), g.GroupID())
-	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
-	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
-
-	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
+	_, g := createTempGroup(UID, impl, t)
+	err := impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
 
 	// 1. if the player not exists, should return error
 	err = impl.DissolveGroup(UID + "3")
-	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 2. if the group not exists, should return error
 	impl.playerMgr.Add(UID+"3", entry.NewPlayerBase(&pto.PlayerInfo{}))
@@ -349,13 +366,10 @@ func TestImpl_KickPlayer(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 
 	// create a temp group
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(g.Base().GetPlayers()))
-	assert.Equal(t, UID, g.GetCaptain().UID())
+	_, g := createTempGroup(UID, impl, t)
 
 	// 1. if captain equals to kicked player, should return error
-	err = impl.KickPlayer(UID, UID)
+	err := impl.KickPlayer(UID, UID)
 	assert.Equal(t, merr.ErrKickSelf, err)
 
 	// 2. if the captain not exists, should return error
@@ -413,15 +427,10 @@ func TestImpl_KickPlayer(t *testing.T) {
 func TestImpl_HandoverCaptain(t *testing.T) {
 	impl := NewDefault(PlayerLimit)
 
-	// create two temp group2
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(g.Base().GetPlayers()))
-	assert.Equal(t, UID, g.GetCaptain().UID())
-	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
-	assert.Nil(t, err)
-
-	_, err = impl.CreateGroup(newCreateGroupParam(UID + "3"))
+	// create two temp group
+	_, g := createTempGroup(UID, impl, t)
+	_, _ = createTempGroup(UID+"3", impl, t)
+	err := impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
 	assert.Nil(t, err)
 
 	// 1. if the captain not exists, should return error
@@ -464,4 +473,72 @@ func TestImpl_HandoverCaptain(t *testing.T) {
 	assert.Equal(t, UID+"2", g.GetCaptain().UID())
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+}
+
+func TestImpl_SetNearbyJoinGroup(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// create a temp group
+	_, g := createTempGroup(UID, impl, t)
+	assert.False(t, g.Base().AllowNearbyJoin())
+
+	// 1. if the player is not exists, should return error
+	err := impl.SetNearbyJoinGroup(UID+"1", true)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if the group is not exists, should return error
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.SetNearbyJoinGroup(UID, true)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 3. if the player is not the capatin, should return error
+	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
+	assert.Nil(t, err)
+	err = impl.SetNearbyJoinGroup(UID+"2", true)
+	assert.Equal(t, merr.ErrPermissionDeny, err)
+
+	// 4. set true success
+	err = impl.SetNearbyJoinGroup(UID, true)
+	assert.Nil(t, err)
+	assert.True(t, g.Base().AllowNearbyJoin())
+
+	// 5. set false success
+	err = impl.SetNearbyJoinGroup(UID, false)
+	assert.Nil(t, err)
+	assert.False(t, g.Base().AllowNearbyJoin())
+}
+
+func TestImpl_SetRecentJoinGroup(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// create a temp group
+	_, g := createTempGroup(UID, impl, t)
+	assert.False(t, g.Base().AllowRecentJoin())
+
+	// 1. if the player is not exists, should return error
+	err := impl.SetRecentJoinGroup(UID+"1", true)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if the group is not exists, should return error
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.SetRecentJoinGroup(UID, true)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 3. if the player is not the capatin, should return error
+	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
+	assert.Nil(t, err)
+	err = impl.SetRecentJoinGroup(UID+"2", true)
+	assert.Equal(t, merr.ErrPermissionDeny, err)
+
+	// 4. set true success
+	err = impl.SetRecentJoinGroup(UID, true)
+	assert.Nil(t, err)
+	assert.True(t, g.Base().AllowRecentJoin())
+
+	// 5. set false success
+	err = impl.SetRecentJoinGroup(UID, false)
+	assert.Nil(t, err)
+	assert.False(t, g.Base().AllowRecentJoin())
 }

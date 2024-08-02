@@ -13,6 +13,11 @@ type PlayerInfo struct {
 	MatchStrategy constant.MatchStrategy
 }
 
+type EnterGroup struct {
+	PlayerInfo
+	Source InvitationSrcType
+}
+
 type CreateGroup struct {
 	PlayerInfo
 }
