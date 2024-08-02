@@ -218,8 +218,42 @@ func (impl *Impl) DissolveGroup(uid string) error {
 }
 
 func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
-	// TODO implement me
-	panic("implement me")
+	if captainUID == kickedUID {
+		return merr.ErrKickSelf
+	}
+
+	captain := impl.playerMgr.Get(captainUID)
+	if captain == nil {
+		return merr.ErrPlayerNotExists
+	}
+	kicked := impl.playerMgr.Get(kickedUID)
+	if kicked == nil {
+		return merr.ErrPlayerNotExists
+	}
+	g := impl.groupMgr.Get(captain.Base().GroupID)
+	if g == nil {
+		return merr.ErrGroupNotExists
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if g.GetCaptain() != captain {
+		return merr.ErrOnlyCaptainCanKickPlayer
+	}
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	if !g.Base().PlayerExists(kickedUID) {
+		return merr.ErrPlayerNotInGroup
+	}
+
+	kicked.Base().Lock()
+	defer kicked.Base().Unlock()
+
+	return impl.kickPlayer(kicked, g)
 }
 
 func (impl *Impl) StartMatch(captainUID string) error {

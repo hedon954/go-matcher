@@ -95,7 +95,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 2, len(g3.Base().GetPlayers()))
 
-	// 4. change the group captain, then create group, should create a new group and exit the old group
+	// 5. change the group captain, then create group, should create a new group and exit the old group
 	g3.Base().SetCaptain(p2)
 	assert.Equal(t, p2, g3.GetCaptain())
 	g4, err := impl.CreateGroup(param)
@@ -342,5 +342,70 @@ func TestImpl_DissolveGroup(t *testing.T) {
 	assert.Equal(t, entry.GroupStateDissolved, g.Base().GetState())
 	assert.Nil(t, impl.groupMgr.Get(g.GroupID()))
 	assert.Nil(t, impl.playerMgr.Get(UID))
+	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
+}
+
+func TestImpl_KickPlayer(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// create a temp group
+	g, err := impl.CreateGroup(newCreateGroupParam(UID))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(g.Base().GetPlayers()))
+	assert.Equal(t, UID, g.GetCaptain().UID())
+
+	// 1. if captain equals to kicked player, should return error
+	err = impl.KickPlayer(UID, UID)
+	assert.Equal(t, merr.ErrKickSelf, err)
+
+	// 2. if the captain not exists, should return error
+	err = impl.KickPlayer(UID+"1", UID+"2")
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 3. if the kicked player not exists, should return error
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// add UID+"2" to group
+	err = impl.EnterGroup(newEnterGroupParam(UID+"2"), g.GroupID())
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(g.Base().GetPlayers()))
+	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID+"2").Base().GetOnlineState())
+
+	// 4. if the group not exists, should return error
+	impl.groupMgr.Delete(g.GroupID())
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 5. if the kicked player not in group, should return false
+	g2, err := impl.CreateGroup(newCreateGroupParam(UID + "3"))
+	assert.Nil(t, err)
+	err = impl.KickPlayer(UID, UID+"3")
+	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
+	assert.Equal(t, UID+"3", g2.GetCaptain().UID())
+
+	// 5. if the group state is not `invite`, should return error
+	g.Base().SetState(entry.GroupStateMatch)
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetState(entry.GroupStateGame)
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetState(entry.GroupStateDissolved)
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetState(entry.GroupStateInvite) // set back
+
+	// 6. if the player is not the captain, should return error
+	err = impl.KickPlayer(UID+"2", UID)
+	assert.Equal(t, merr.ErrOnlyCaptainCanKickPlayer, err)
+
+	// 7. if the player is the captain, should success,
+	err = impl.KickPlayer(UID, UID+"2")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(g.Base().GetPlayers()))
+	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
+	assert.Equal(t, UID, g.GetCaptain().UID())
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 }

@@ -64,3 +64,7 @@ func (m *Client) PushGroupVoiceState(uids []string, states []*pto.UserVoiceState
 		fmt.Println("PushGroupVoiceState to ", uid, " ", states)
 	}
 }
+
+func (m *Client) PushKick(uid string, groupID int64) {
+	fmt.Println("PushKick to ", uid, " groupID: ", groupID)
+}

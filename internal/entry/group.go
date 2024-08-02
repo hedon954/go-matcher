@@ -179,6 +179,8 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 		return merr.ErrGroupInMatch
 	case GroupStateGame:
 		return merr.ErrGroupInGame
+	case GroupStateDissolved:
+		return merr.ErrGroupDissolved
 	}
 
 	panic("unreachable")

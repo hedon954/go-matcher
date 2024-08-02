@@ -10,7 +10,10 @@ var (
 	ErrGroupDissolved              = errors.New("Group Dissolved")
 	ErrGroupNotExists              = errors.New("Group Not Exists")
 	ErrOnlyCaptainCanDissolveGroup = errors.New("Only Captain Can Dissolve Group")
+	ErrOnlyCaptainCanKickPlayer    = errors.New("Only Captain Can Kick Player")
 	ErrVersionNotMatch             = errors.New("Version Not Match")
+	ErrPlayerNotExists             = errors.New("Player Not Exists")
+	ErrKickSelf                    = errors.New("Cannot Kick Self")
 
 	ErrPlayerOffline    = errors.New("Player Offline")
 	ErrPlayerNotInGroup = errors.New("Create Group First")
