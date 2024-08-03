@@ -5,7 +5,7 @@ import (
 )
 
 // PlayerInfo defines the common information of a player.
-// It is alwayes used to initial a player.
+// It is always used to initial a player.
 type PlayerInfo struct {
 	UID           string
 	GameMode      constant.GameMode

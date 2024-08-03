@@ -3,7 +3,6 @@ package entry
 import (
 	"sync"
 
-	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 )
@@ -12,6 +11,7 @@ import (
 type Player interface {
 	Base() *PlayerBase
 	UID() string
+	GetPlayerInfo() *pto.PlayerInfo
 }
 
 // PlayerOnlineState is the state of a player.
@@ -38,28 +38,28 @@ const (
 // PlayerBase holds the common fields of a Player for all kinds of game mode and match strategy.
 type PlayerBase struct {
 	sync.RWMutex
-	uid           string
-	GroupID       int64
-	onlineState   PlayerOnlineState
-	VoiceState    PlayerVoiceState
-	GameMode      constant.GameMode
-	ModeVersion   int64
-	MatchStrategy constant.MatchStrategy
+	uid         string
+	GroupID     int64
+	onlineState PlayerOnlineState
+	VoiceState  PlayerVoiceState
 
 	// TODO: other common attributes
+	pto.PlayerInfo
 }
 
 func NewPlayerBase(info *pto.PlayerInfo) *PlayerBase {
 	b := &PlayerBase{
-		uid:           info.UID,
-		onlineState:   PlayerOnlineStateOnline,
-		VoiceState:    PlayerVoiceStateMute,
-		GameMode:      info.GameMode,
-		ModeVersion:   info.ModeVersion,
-		MatchStrategy: info.MatchStrategy,
+		uid:         info.UID,
+		onlineState: PlayerOnlineStateOnline,
+		VoiceState:  PlayerVoiceStateMute,
+		PlayerInfo:  *info,
 	}
 
 	return b
+}
+
+func (p *PlayerBase) GetPlayerInfo() *pto.PlayerInfo {
+	return &p.PlayerInfo
 }
 
 func (p *PlayerBase) Base() *PlayerBase {

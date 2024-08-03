@@ -28,7 +28,7 @@ type Group interface {
 	GetCaptain() Player
 
 	// CanPlayTogether checks if the player can play with the group's players.
-	CanPlayTogether(Player) bool
+	CanPlayTogether(*pto.PlayerInfo) error
 
 	// GetPlayerInfos 获取队伍用户信息
 	GetPlayerInfos() pto.GroupUser
@@ -151,11 +151,17 @@ func (g *GroupBase) GetCaptain() Player {
 	panic("unreachable: group lack of captain")
 }
 
-func (g *GroupBase) CanPlayTogether(player Player) bool {
-	if g.GameMode != player.Base().GameMode || g.ModeVersion != player.Base().ModeVersion {
-		return false
+func (g *GroupBase) CanPlayTogether(info *pto.PlayerInfo) error {
+	if g.GameMode != info.GameMode {
+		return merr.ErrGameModeNotMatch
 	}
-	return true
+	if g.ModeVersion < info.ModeVersion {
+		return merr.ErrGroupVersionTooLow
+	}
+	if g.ModeVersion > info.ModeVersion {
+		return merr.ErrPlayerVersionTooLow
+	}
+	return nil
 }
 
 func (g *GroupBase) AddPlayer(p Player) error {

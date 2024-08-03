@@ -121,19 +121,20 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 		// already in targeted group
 		if p.Base().GroupID == groupID {
 			// if p can not play together, should exit the origin group
-			if !g.CanPlayTogether(p) {
+			if err := g.CanPlayTogether(&info.PlayerInfo); err != nil {
 				if err := impl.exitGroup(p, g); err != nil {
 					return err
 				}
 			} else {
-				// can play together, just broadcast the group player infos
+				// can play together, refresh the player info and  broadcast the group player infos
+				p.Base().PlayerInfo = info.PlayerInfo
 				impl.connectorClient.PushGroupUsers(g.Base().UIDs(), g.GetPlayerInfos())
 				return nil
 			}
 		} else {
 			// check if player can play together with the group's players
-			if !g.CanPlayTogether(p) {
-				return merr.ErrVersionNotMatch
+			if err := g.CanPlayTogether(&info.PlayerInfo); err != nil {
+				return err
 			}
 
 			// not in targeted group, should exit the origin group
@@ -149,9 +150,12 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 	}
 
 	// check if player can play together with the group's players
-	if !g.CanPlayTogether(p) {
-		return merr.ErrVersionNotMatch
+	if err := g.CanPlayTogether(&info.PlayerInfo); err != nil {
+		return err
 	}
+
+	// refresh the player info
+	p.Base().PlayerInfo = info.PlayerInfo
 
 	// enter the targeted group
 	return impl.enterGroup(p, g)
@@ -334,9 +338,36 @@ func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
 	return nil
 }
 
-func (impl *Impl) AcceptInvite(inviterUID, inviteeUID string, groupID int64) error {
-	// TODO implement me
-	panic("implement me")
+func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error {
+	g := impl.groupMgr.Get(groupID)
+	if g == nil {
+		return merr.ErrGroupDissolved
+	}
+
+	invitee := impl.playerMgr.Get(inviteeInfo.UID)
+	if invitee != nil {
+		invitee.Base().Lock()
+		defer invitee.Base().Unlock()
+		if err := invitee.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
+			return err
+		}
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if !g.Base().PlayerExists(inviterUID) {
+		return merr.ErrInvitationExpired
+	}
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	if err := g.CanPlayTogether(inviteeInfo); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error {

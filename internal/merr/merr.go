@@ -15,8 +15,12 @@ var (
 	ErrPlayerNotExists             = errors.New("player not exists")
 	ErrKickSelf                    = errors.New("cannot kick self")
 	ErrChangeSelfRole              = errors.New("cannot change self role")
-	ErrNotCaptain                  = errors.New("you not capatin")
+	ErrNotCaptain                  = errors.New("you not captain")
 	ErrPermissionDeny              = errors.New("permission deny")
+	ErrInvitationExpired           = errors.New("invitation expired")
+	ErrGameModeNotMatch            = errors.New("game mode not match")
+	ErrGroupVersionTooLow          = errors.New("group version too low")
+	ErrPlayerVersionTooLow         = errors.New("player version too low")
 
 	ErrPlayerOffline    = errors.New("player offline")
 	ErrPlayerNotInGroup = errors.New("create group first")
