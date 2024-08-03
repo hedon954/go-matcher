@@ -334,14 +334,31 @@ func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
 	return nil
 }
 
-func (impl *Impl) AcceptInvite(inviteeUID string, groupID int64) error {
+func (impl *Impl) AcceptInvite(inviterUID, inviteeUID string, groupID int64) error {
 	// TODO implement me
 	panic("implement me")
 }
 
-func (impl *Impl) RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error {
-	// TODO implement me
-	panic("implement me")
+func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error {
+	const defaultRefuseMsg = "Sorry, I'm not available at the moment."
+
+	g := impl.groupMgr.Get(groupID)
+	if g == nil {
+		return nil
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if g.Base().GetState() == entry.GroupStateDissolved {
+		return nil
+	}
+	g.Base().DelInviteRecord(inviteeUID)
+	if refuseMsg == "" {
+		refuseMsg = defaultRefuseMsg
+	}
+	impl.connectorClient.PushHandleInvite(inviterUID, inviteeUID, false, refuseMsg)
+	return nil
 }
 
 func (impl *Impl) StartMatch(captainUID string) error {

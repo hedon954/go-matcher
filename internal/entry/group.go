@@ -83,10 +83,10 @@ type GroupBase struct {
 	// Configs holds the config of the group.
 	Configs GroupConfig
 
-	// InviteRecords holds the invite records of the group.
+	// inviteRecords holds the invite records of the group.
 	// key: uid
 	// value: expire time (s)
-	InviteRecords map[string]int64
+	inviteRecords map[string]int64
 }
 
 // GroupSettings defines the settings of a group.
@@ -94,8 +94,8 @@ type GroupSettings struct {
 	// nearbyJoinAllowed indicates whether nearby players can join the group.
 	nearbyJoinAllowed bool
 
-	// necentJoinAllowed indicates whether recent players can join the group.
-	necentJoinAllowed bool
+	// RecentJoinAllowed indicates whether recent players can join the group.
+	recentJoinAllowed bool
 }
 
 type GroupConfig struct {
@@ -115,7 +115,7 @@ func NewGroupBase(
 		MatchStrategy: strategy,
 		players:       make([]Player, 0, playerLimit),
 		roles:         make(map[string]GroupRole, playerLimit),
-		InviteRecords: make(map[string]int64, playerLimit),
+		inviteRecords: make(map[string]int64, playerLimit),
 		Configs:       GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
 	}
 
@@ -282,7 +282,7 @@ func (g *GroupBase) SetAllowNearbyJoin(allow bool) {
 }
 
 func (g *GroupBase) SetAllowRecentJoin(allow bool) {
-	g.Settings.necentJoinAllowed = allow
+	g.Settings.recentJoinAllowed = allow
 }
 
 func (g *GroupBase) AllowNearbyJoin() bool {
@@ -290,9 +290,20 @@ func (g *GroupBase) AllowNearbyJoin() bool {
 }
 
 func (g *GroupBase) AllowRecentJoin() bool {
-	return g.Settings.necentJoinAllowed
+	return g.Settings.recentJoinAllowed
 }
 
 func (g *GroupBase) AddInviteRecord(inviteeUID string, nowUnix int64) {
-	g.InviteRecords[inviteeUID] = nowUnix + g.Configs.InviteExpireSec
+	g.inviteRecords[inviteeUID] = nowUnix + g.Configs.InviteExpireSec
+}
+
+func (g *GroupBase) DelInviteRecord(inviteeUID string) {
+	delete(g.inviteRecords, inviteeUID)
+}
+
+func (g *GroupBase) GetInviteRecords() map[string]int64 {
+	return g.inviteRecords
+}
+func (g *GroupBase) GetInviteExpireTimeStamp(uid string) int64 {
+	return g.inviteRecords[uid]
 }

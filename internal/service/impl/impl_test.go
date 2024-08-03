@@ -603,5 +603,28 @@ func TestImpl_Invite(t *testing.T) {
 	// 5. invite success and save invite record
 	err = impl.Invite(UID, UID+"2")
 	assert.Nil(t, err)
-	assert.Equal(t, int64(nowSec+entry.InviteExpireSec), g.Base().InviteRecords[UID+"2"])
+	assert.Equal(t, int64(nowSec+entry.InviteExpireSec), g.Base().GetInviteExpireTimeStamp(UID+"2"))
+}
+
+func TestImpl_RefuseInvite(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// 1. if the group not exists, just return nil
+	err := impl.RefuseInvite(UID, UID+"1", 1, "")
+	assert.Nil(t, err)
+
+	// 2. return the group state is dissolved, just return nil
+	p, g := createTempGroup(UID+"1", impl, t)
+	g.Base().SetState(entry.GroupStateDissolved) // set temp
+	err = impl.RefuseInvite(UID, UID+"1", 1, "")
+	assert.Nil(t, err)
+	g.Base().SetState(entry.GroupStateInvite) // set back
+
+	// 3. push refuse msg to the inviter and the invite record should be deleted
+	err = impl.Invite(p.UID(), UID)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(g.Base().GetInviteRecords()))
+	err = impl.RefuseInvite(p.UID(), UID, g.GroupID(), "")
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(g.Base().GetInviteRecords()))
 }

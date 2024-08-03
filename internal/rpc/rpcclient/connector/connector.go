@@ -25,9 +25,8 @@ func (m *Client) PushInviteMsg(param *pto.InviteMsg) {
 	fmt.Println("PushInviteMsg to ", param.InviteeUID, ", inviter: ", param.InviterUID, ", source: ", param.Source)
 }
 
-func (m *Client) PushHandleInvite(inviter string, invitee string, msg int, message string) error {
-	fmt.Println("PushHandleInvite to ", inviter, " ", invitee, " ", msg, " ", message)
-	return nil
+func (m *Client) PushHandleInvite(inviter string, invitee string, accept bool, message string) {
+	fmt.Println("PushHandleInvite to ", inviter, " ", invitee, " ", accept, " ", message)
 }
 
 func (m *Client) UpdateOnlineState(uids []string, state int) {

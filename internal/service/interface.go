@@ -15,23 +15,17 @@ type Service interface {
 	// ExitGroup makes the player leave the group
 	ExitGroup(uid string) error
 
+	// DissolveGroup dissolves a group and remove all players of the group
+	DissolveGroup(uid string) error
+
 	// Invite invites the invitee to join the group
 	Invite(inviterUID, inviteeUID string) error
 
 	// AcceptInvite accepts the invite and enter the group
-	AcceptInvite(inviteeUID string, groupID int64) error
+	AcceptInvite(inviterUID, inviteeUID string, groupID int64) error
 
 	// RefuseInvite refuses the invite from the inviter
-	RefuseInvite(inviteeUID string, groupID int64, refuseMsg string) error
-
-	// StartMatch starts to add the group to matching queue
-	StartMatch(captainUID string) error
-
-	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
-	CancelMatch(uid string) error
-
-	// UnreadyToMatch makes the player unready to match
-	DissolveGroup(uid string) error
+	RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error
 
 	// KickPlayer kicks the kicked player from the group
 	KickPlayer(captainUID, kickedUID string) error
@@ -44,4 +38,10 @@ type Service interface {
 
 	// SetRecentJoinGroup sets whether the group can be joined by recent players
 	SetRecentJoinGroup(captainUID string, allow bool) error
+
+	// StartMatch starts to add the group to matching queue
+	StartMatch(captainUID string) error
+
+	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
+	CancelMatch(uid string) error
 }
