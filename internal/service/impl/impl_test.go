@@ -785,3 +785,85 @@ func TestImpl_SetVoiceState(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, entry.PlayerVoiceStateUnmute, p.Base().GetVoiceState())
 }
+
+func TestImpl_StartMatch(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// 1. if player not exists, should return err
+	err := impl.StartMatch(UID)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	p, g := createTempGroup(UID, impl, t)
+	err = impl.StartMatch(p.UID())
+	assert.Nil(t, err)
+	assert.Equal(t, entry.GroupStateMatch, g.Base().GetState())
+
+	// 2. if group not exists, should return err
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.StartMatch(p.UID())
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 3. if group state is not `invite`, should return err
+	g.Base().SetState(entry.GroupStateGame)
+	err = impl.StartMatch(p.UID())
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetState(entry.GroupStateDissolved)
+	err = impl.StartMatch(p.UID())
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetState(entry.GroupStateMatch)
+	err = impl.StartMatch(p.UID())
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetState(entry.GroupStateInvite) // set back
+
+	// 4. if the player is not captain, should return err
+	err = impl.EnterGroup(newEnterGroupParam(UID+"1"), g.GroupID())
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(g.Base().GetPlayers()))
+	err = impl.StartMatch(UID + "1")
+	assert.Equal(t, merr.ErrNotCaptain, err)
+
+	// 5. if the player is captain, should success and the group state and players' state should change to `match`
+	err = impl.StartMatch(UID)
+	assert.Nil(t, err)
+	assert.Equal(t, entry.GroupStateMatch, g.Base().GetState())
+	assert.Equal(t, 2, len(g.Base().GetPlayers()))
+	assert.Equal(t, entry.PlayerOnlineStateInMatch, p.Base().GetOnlineState())
+	assert.Equal(t, entry.PlayerOnlineStateInMatch, impl.playerMgr.Get(UID+"1").Base().GetOnlineState())
+}
+
+func TestImpl_CancelMatch(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// 1. if player not exists, should return err
+	err := impl.CancelMatch(UID)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	p, g := createTempGroup(UID, impl, t)
+	err = impl.StartMatch(p.UID())
+	assert.Nil(t, err)
+	assert.Equal(t, entry.GroupStateMatch, g.Base().GetState())
+
+	// 2. if group not exists, should return err
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.CancelMatch(UID)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add  back
+
+	// 4. if group state is not `match`, should return err
+	g.Base().SetState(entry.GroupStateInvite)
+	err = impl.CancelMatch(UID)
+	assert.Equal(t, merr.ErrGroupInInvite, err)
+	g.Base().SetState(entry.GroupStateGame)
+	err = impl.CancelMatch(UID)
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetState(entry.GroupStateDissolved)
+	err = impl.CancelMatch(UID)
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetState(entry.GroupStateMatch) // set back
+
+	// 5. return success and group state changes to `invite`
+	err = impl.CancelMatch(UID)
+	assert.Nil(t, err)
+	assert.Equal(t, entry.GroupStateInvite, g.Base().GetState())
+}

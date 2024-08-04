@@ -406,8 +406,24 @@ func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, ref
 }
 
 func (impl *Impl) StartMatch(captainUID string) error {
-	// TODO implement me
-	panic("implement me")
+	p, g, err := impl.getPlayerAndGroup(captainUID)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	if g.GetCaptain() != p {
+		return merr.ErrNotCaptain
+	}
+
+	impl.startMatch(g)
+	return nil
 }
 
 func (impl *Impl) CancelMatch(uid string) error {
@@ -425,6 +441,7 @@ func (impl *Impl) CancelMatch(uid string) error {
 
 	g.Base().Lock()
 	defer g.Base().Unlock()
+
 	if err := g.Base().CheckState(entry.GroupStateMatch); err != nil {
 		return err
 	}
