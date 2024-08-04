@@ -85,6 +85,7 @@ jobs:
           OUTPUT: NEW_CHANGELOG.md
       - name: Prepend tag message and new changelog to existing CHANGELOG.md
         run: |
+          cat NEW_CHANGELOG.md
           git fetch origin main:main
           git checkout main
           if [ -f "CHANGELOG.md" ]; then
