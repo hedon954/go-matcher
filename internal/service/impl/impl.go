@@ -24,8 +24,8 @@ type Impl struct {
 	// matchChannel used to send a group to match system.
 	matchChannel chan entry.Group
 
-	// closeChannel used to hold the service closing.
-	closeChannel chan struct{}
+	// stopChannel used to hold the service closing.
+	stopChannel chan struct{}
 }
 
 type Option func(*Impl)
@@ -44,7 +44,7 @@ func NewDefault(playerLimit int, matchChannel chan entry.Group, closeChannel cha
 		playerLimit:     playerLimit,
 		nowFunc:         time.Now().Unix,
 		matchChannel:    matchChannel,
-		closeChannel:    closeChannel,
+		stopChannel:     closeChannel,
 	}
 
 	for _, opt := range options {

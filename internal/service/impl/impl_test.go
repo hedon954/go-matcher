@@ -21,8 +21,8 @@ const UID = "uid"
 
 func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	mc := make(chan entry.Group, 1024)
-	cc := make(chan struct{})
-	return NewDefault(playerLimit, mc, cc, opts...)
+	sc := make(chan struct{})
+	return NewDefault(playerLimit, mc, sc, opts...)
 }
 
 func newCreateGroupParam(uid string) *pto.CreateGroup {
