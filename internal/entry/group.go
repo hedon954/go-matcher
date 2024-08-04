@@ -10,8 +10,8 @@ import (
 
 // Group represents a group of players.
 type Group interface {
-	// GroupID returns the unique group id.
-	GroupID() int64
+	// ID returns the unique group id.
+	ID() int64
 
 	// Base returns the base information of the group.
 	// Here we define a concrete struct `GroupBase`
@@ -126,7 +126,7 @@ func (g *GroupBase) Base() *GroupBase {
 	return g
 }
 
-func (g *GroupBase) GroupID() int64 {
+func (g *GroupBase) ID() int64 {
 	return g.groupID
 }
 
@@ -171,7 +171,7 @@ func (g *GroupBase) AddPlayer(p Player) error {
 	if len(g.players) == 0 {
 		g.roles[p.UID()] = GroupRoleCaptain
 	}
-	p.Base().GroupID = g.GroupID()
+	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(PlayerOnlineStateInGroup)
 	for i, player := range g.players {
 		if player.UID() == p.UID() {

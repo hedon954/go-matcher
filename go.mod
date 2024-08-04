@@ -4,7 +4,10 @@ go 1.22
 
 require (
 	github.com/google/uuid v1.6.0
+	github.com/montanaflynn/stats v0.7.1
+	github.com/spf13/cast v1.6.0
 	github.com/stretchr/testify v1.9.0
+	github.com/zelenin/go-glicko2 v0.0.1
 )
 
 require (

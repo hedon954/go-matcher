@@ -8,7 +8,7 @@ func (impl *Impl) startMatch(g entry.Group) {
 
 	// update group state
 	base.SetState(entry.GroupStateMatch)
-	impl.connectorClient.PushGroupState(uids, g.GroupID(), base.GetState())
+	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())
 
 	// update players state
 	for _, p := range base.GetPlayers() {

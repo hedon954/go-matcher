@@ -22,6 +22,7 @@ type Impl struct {
 	nowFunc     func() int64
 
 	// matchChannel used to send a group to match system.
+	// TODO: if match system is down, we should stop the server.
 	matchChannel chan entry.Group
 }
 
@@ -80,7 +81,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 		//  if yes, return current group
 		if g.GetCaptain() != p || g.Base().GameMode != param.GameMode {
 			if g.Base().RemovePlayer(p) {
-				impl.groupMgr.Delete(g.GroupID())
+				impl.groupMgr.Delete(g.ID())
 			}
 			g, err = impl.createGroup(param, p)
 			if err != nil {

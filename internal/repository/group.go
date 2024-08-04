@@ -37,7 +37,7 @@ func (m *GroupMgr) CreateGroup(
 
 	gb := entry.NewGroupBase(m.GenGroupID(), playerLimit, mode, modeVersion, strategy)
 
-	m.Add(gb.GroupID(), gb)
+	m.Add(gb.ID(), gb)
 
 	return gb, nil
 }

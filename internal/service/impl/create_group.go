@@ -30,7 +30,7 @@ func (impl *Impl) createGroup(param *pto.CreateGroup, p entry.Player) (entry.Gro
 		panic("add player to group failed when create group")
 	}
 
-	p.Base().GroupID = g.GroupID()
+	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
 	return g, nil
 }

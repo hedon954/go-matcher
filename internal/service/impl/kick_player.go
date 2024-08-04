@@ -7,7 +7,7 @@ import (
 func (impl *Impl) kickPlayer(kicked entry.Player, g entry.Group) error {
 	kicked.Base().SetOnlineState(entry.PlayerOnlineStateOnline)
 	impl.connectorClient.UpdateOnlineState([]string{kicked.UID()}, int(entry.PlayerOnlineStateOnline))
-	impl.connectorClient.PushKick(kicked.UID(), g.GroupID())
+	impl.connectorClient.PushKick(kicked.UID(), g.ID())
 	impl.playerMgr.Delete(kicked.UID())
 
 	impl.removePlayerFromGroup(kicked, g)
