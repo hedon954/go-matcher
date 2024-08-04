@@ -80,7 +80,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         with:
           config: cliff.toml
-          args: -vv --latest
+          args: -vv --strip header
         env:
           OUTPUT: NEW_CHANGELOG.md
       - name: Prepend tag message and new changelog to existing CHANGELOG.md
