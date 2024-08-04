@@ -18,5 +18,6 @@ func (impl *Impl) startMatch(g entry.Group) {
 	}
 	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateInMatch))
 
-	// TODO: add group to matching queue
+	// push to match channel
+	impl.matchChannel <- g
 }
