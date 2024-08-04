@@ -19,6 +19,12 @@ const MatchStrategy = 10010
 const PlayerLimit = 5
 const UID = "uid"
 
+func defaultImpl(playerLimit int, opts ...Option) *Impl {
+	mc := make(chan entry.Group, 1024)
+	cc := make(chan struct{})
+	return NewDefault(playerLimit, mc, cc, opts...)
+}
+
 func newCreateGroupParam(uid string) *pto.CreateGroup {
 	return &pto.CreateGroup{
 		PlayerInfo: pto.PlayerInfo{
@@ -75,7 +81,7 @@ func createFullGroup(impl *Impl, t *testing.T) (entry.Player, entry.Group) {
 }
 
 func TestImpl_CreateGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 	param := newCreateGroupParam(UID)
 
 	// 1. no group and player, create group should be success
@@ -145,7 +151,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 }
 
 func TestImpl_ExitGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// 1. if player is not exists, should return error
 	err := impl.ExitGroup(UID)
@@ -231,7 +237,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 }
 
 func TestImpl_EnterGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	info := newEnterGroupParam(UID)
 
@@ -364,7 +370,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 }
 
 func TestImpl_DissolveGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// create a group and make it have multi-players
 	_, g := createTempGroup(UID, impl, t)
@@ -407,7 +413,7 @@ func TestImpl_DissolveGroup(t *testing.T) {
 }
 
 func TestImpl_KickPlayer(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// create a temp group
 	_, g := createTempGroup(UID, impl, t)
@@ -469,7 +475,7 @@ func TestImpl_KickPlayer(t *testing.T) {
 }
 
 func TestImpl_ChangeRole(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// create two temp group
 	_, g := createTempGroup(UID, impl, t)
@@ -529,7 +535,7 @@ func testImplChangeRoleCaptain(impl *Impl, g entry.Group, t *testing.T) {
 }
 
 func TestImpl_SetNearbyJoinGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// create a temp group
 	_, g := createTempGroup(UID, impl, t)
@@ -563,7 +569,7 @@ func TestImpl_SetNearbyJoinGroup(t *testing.T) {
 }
 
 func TestImpl_SetRecentJoinGroup(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// create a temp group
 	_, g := createTempGroup(UID, impl, t)
@@ -599,7 +605,7 @@ func TestImpl_SetRecentJoinGroup(t *testing.T) {
 func TestImpl_Invite(t *testing.T) {
 	const nowSec = 100
 	nowFunc := func() int64 { return nowSec }
-	impl := NewDefault(PlayerLimit, WithNowFunc(nowFunc))
+	impl := defaultImpl(PlayerLimit, WithNowFunc(nowFunc))
 
 	// create a temp group
 	_, g := createTempGroup(UID, impl, t)
@@ -638,7 +644,7 @@ func TestImpl_Invite(t *testing.T) {
 }
 
 func TestImpl_RefuseInvite(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// 1. if the group not exists, just return nil
 	err := impl.RefuseInvite(UID, UID+"1", 1, "")
@@ -661,7 +667,7 @@ func TestImpl_RefuseInvite(t *testing.T) {
 }
 
 func TestImpl_AcceptInvite(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	inviteeInfo := newPlayerInfo(UID + "1")
 
@@ -760,7 +766,7 @@ func TestImpl_AcceptInvite(t *testing.T) {
 }
 
 func TestImpl_SetVoiceState(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// 1. if player not exists, should return err
 	err := impl.SetVoiceState(UID, entry.PlayerVoiceStateMute)
@@ -787,7 +793,7 @@ func TestImpl_SetVoiceState(t *testing.T) {
 }
 
 func TestImpl_StartMatch(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// 1. if player not exists, should return err
 	err := impl.StartMatch(UID)
@@ -833,7 +839,7 @@ func TestImpl_StartMatch(t *testing.T) {
 }
 
 func TestImpl_CancelMatch(t *testing.T) {
-	impl := NewDefault(PlayerLimit)
+	impl := defaultImpl(PlayerLimit)
 
 	// 1. if player not exists, should return err
 	err := impl.CancelMatch(UID)
