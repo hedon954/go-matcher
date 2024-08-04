@@ -62,9 +62,11 @@ const (
 )
 
 type InviteMsg struct {
-	InviterUID string
-	InviteeUID string
-	Source     EnterGroupSourceType
+	InviterUID  string
+	InviteeUID  string
+	Source      EnterGroupSourceType
+	GameMode    constant.GameMode
+	ModeVersion int64
 }
 
 type HandleInvite struct {

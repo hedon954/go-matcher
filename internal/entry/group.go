@@ -313,3 +313,6 @@ func (g *GroupBase) GetInviteRecords() map[string]int64 {
 func (g *GroupBase) GetInviteExpireTimeStamp(uid string) int64 {
 	return g.inviteRecords[uid]
 }
+func (g *GroupBase) IsInviteExpired(uid string, nowUnix int64) bool {
+	return g.inviteRecords[uid] <= nowUnix
+}

@@ -356,6 +356,9 @@ func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, g
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
+	// no matter what the result it is, delete the invitation record to the invitee
+	defer g.Base().DelInviteRecord(inviteeInfo.UID)
+
 	if !g.Base().PlayerExists(inviterUID) {
 		return merr.ErrInvitationExpired
 	}
@@ -364,9 +367,19 @@ func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, g
 		return err
 	}
 
+	if g.IsFull() {
+		return merr.ErrGroupFull
+	}
+
+	if g.Base().IsInviteExpired(inviteeInfo.UID, impl.nowFunc()) {
+		return merr.ErrInvitationExpired
+	}
+
 	if err := g.CanPlayTogether(inviteeInfo); err != nil {
 		return err
 	}
+
+	impl.acceptInvite(inviterUID, inviteeInfo.UID)
 	return nil
 }
 
@@ -388,7 +401,7 @@ func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, ref
 	if refuseMsg == "" {
 		refuseMsg = defaultRefuseMsg
 	}
-	impl.connectorClient.PushHandleInvite(inviterUID, inviteeUID, false, refuseMsg)
+	impl.connectorClient.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
 	return nil
 }
 

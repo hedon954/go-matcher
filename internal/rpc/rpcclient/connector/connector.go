@@ -22,11 +22,15 @@ func (m *Client) PushGroupUsers(uids []string, users pto.GroupUser) {
 }
 
 func (m *Client) PushInviteMsg(param *pto.InviteMsg) {
-	fmt.Println("PushInviteMsg to ", param.InviteeUID, ", inviter: ", param.InviterUID, ", source: ", param.Source)
+	fmt.Println("PushInviteMsg: ", param)
 }
 
-func (m *Client) PushHandleInvite(inviter string, invitee string, accept bool, message string) {
-	fmt.Println("PushHandleInvite to ", inviter, " ", invitee, " ", accept, " ", message)
+func (m *Client) PushAcceptInvite(inviter, invitee string) {
+	fmt.Println("PushAcceptInvite: ", inviter, invitee)
+}
+
+func (m *Client) PushRefuseInvite(inviter, invitee, refuseMsg string) {
+	fmt.Println("PushRefuseInvite: ", inviter, invitee, refuseMsg)
 }
 
 func (m *Client) UpdateOnlineState(uids []string, state int) {

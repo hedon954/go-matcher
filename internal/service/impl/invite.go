@@ -24,8 +24,10 @@ func (impl *Impl) checkInviteeState(inviteeUID string) error {
 func (impl *Impl) invite(inviter entry.Player, inviteeUID string, g entry.Group) {
 	g.Base().AddInviteRecord(inviteeUID, impl.nowFunc())
 	impl.connectorClient.PushInviteMsg(&pto.InviteMsg{
-		InviterUID: inviter.UID(),
-		InviteeUID: inviteeUID,
-		Source:     pto.EnterGroupSourceTypeInvite,
+		InviterUID:  inviter.UID(),
+		InviteeUID:  inviteeUID,
+		Source:      pto.EnterGroupSourceTypeInvite,
+		GameMode:    g.Base().GameMode,
+		ModeVersion: g.Base().ModeVersion,
 	})
 }

@@ -3,6 +3,7 @@ package impl
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -660,10 +661,7 @@ func TestImpl_RefuseInvite(t *testing.T) {
 }
 
 func TestImpl_AcceptInvite(t *testing.T) {
-	const nowSec int64 = 100
-	impl := NewDefault(PlayerLimit, WithNowFunc(func() int64 {
-		return nowSec
-	}))
+	impl := NewDefault(PlayerLimit)
 
 	inviteeInfo := newPlayerInfo(UID + "1")
 
@@ -672,6 +670,8 @@ func TestImpl_AcceptInvite(t *testing.T) {
 	assert.Equal(t, merr.ErrGroupDissolved, err)
 
 	inviter, g := createTempGroup(UID, impl, t)
+	err = impl.Invite(inviter.UID(), inviteeInfo.UID)
+	assert.Nil(t, err)
 
 	// 2. if the inviter is not in the group, should return err
 	err = impl.AcceptInvite(UID+"2", inviteeInfo, g.GroupID())
@@ -708,10 +708,53 @@ func TestImpl_AcceptInvite(t *testing.T) {
 	impl.playerMgr.Delete(UID + "1") // delete temp player
 
 	// 5. if invitee can not player with group, should return err
+	// 5.1 player version too low
+	err = impl.Invite(inviter.UID(), invitee.UID())
+	assert.Nil(t, err)
+	invitee.Base().ModeVersion = ModeVersion - 1
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Equal(t, merr.ErrPlayerVersionTooLow, err)
+	// 5.2 group version too low
+	err = impl.Invite(inviter.UID(), invitee.UID())
+	assert.Nil(t, err)
+	invitee.Base().ModeVersion = ModeVersion + 1
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Equal(t, merr.ErrGroupVersionTooLow, err)
+	// 5.3 game mode not match
+	err = impl.Invite(inviter.UID(), invitee.UID())
+	assert.Nil(t, err)
+	invitee.Base().GameMode = -1
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Equal(t, merr.ErrGameModeNotMatch, err)
+	invitee.Base().ModeVersion = ModeVersion // set back
+	invitee.Base().GameMode = GameMode       // set back
 
 	// 6. if the invitation has expired, should return err
+	// 6.1 not invitation record
+	g.Base().DelInviteRecord(invitee.UID()) // delete temp
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Equal(t, merr.ErrInvitationExpired, err)
+	// 6.2 invitation expired
+	g.Base().AddInviteRecord(invitee.UID(), time.Now().Unix()-entry.InviteExpireSec-1)
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Equal(t, merr.ErrInvitationExpired, err)
+	g.Base().AddInviteRecord(invitee.UID(), time.Now().Unix()) // set back
 
 	// 7. if the group is full, should return err
+	fullGroupInviter, fullGroup := createFullGroup(impl, t) // create a temp full group
+	err = impl.Invite(fullGroup.GetCaptain().UID(), inviteeInfo.UID)
+	assert.Equal(t, merr.ErrGroupFull, err)
+	err = impl.ExitGroup(fullGroupInviter.UID()) // exit one player
+	assert.Nil(t, err)
+	err = impl.Invite(fullGroup.GetCaptain().UID(), inviteeInfo.UID) // send invite
+	assert.Nil(t, err)
+	err = impl.EnterGroup(newEnterGroupParam(fullGroupInviter.UID()), fullGroup.GroupID()) // another player enter the group make group full
+	assert.Nil(t, err)
+	err = impl.AcceptInvite(fullGroup.GetCaptain().UID(), inviteeInfo, fullGroup.GroupID()) // now the group is full, so can not accept invite
+	assert.Equal(t, merr.ErrGroupFull, err)
 
 	// 8. return success and delete the invite record
+	err = impl.AcceptInvite(inviter.UID(), invitee.GetPlayerInfo(), g.GroupID())
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), g.Base().GetInviteExpireTimeStamp(invitee.UID()))
 }
