@@ -50,16 +50,10 @@ func (m *Client) GroupDissolved(uids []string, groupID int64) {
 	}
 }
 
-func (m *Client) PushGroupState(uids []string, groupID int64, state entry.GroupState, name, cancelUID string) {
+func (m *Client) PushGroupState(uids []string, groupID int64, state entry.GroupState) {
 	for _, uid := range uids {
-		fmt.Println("PushGroupState to ", uid, " groupID: ", groupID, " state: ", state, " name: ", name,
-			" cancelUID: ", cancelUID)
+		fmt.Println("PushGroupState to ", uid, " groupID: ", groupID, " state: ", state)
 	}
-}
-
-func (m *Client) CheckInviteFriend(p *pto.CheckInviteFriend) error {
-	fmt.Println("CheckInviteFriend to ", p)
-	return nil
 }
 
 func (m *Client) PushVoiceState(uids []string, states *pto.UserVoiceState) {

@@ -3,8 +3,12 @@ package impl
 import "github.com/hedon954/go-matcher/internal/entry"
 
 func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
-	g.Base().SetState(entry.GroupStateInvite)
+	base := g.Base()
 
-	// add dissolve group timer
-	impl.connectorClient.PushCancelMatch(g.Base().UIDs(), cancelUID)
+	base.SetState(entry.GroupStateInvite)
+
+	uids := base.UIDs()
+	impl.connectorClient.PushGroupState(uids, g.GroupID(), base.GetState())
+	impl.connectorClient.PushCancelMatch(base.UIDs(), cancelUID)
+	// TODO: add dissolve group timer
 }
