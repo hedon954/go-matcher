@@ -114,6 +114,6 @@ type CheckInviteFriend struct {
 }
 
 type UserVoiceState struct {
-	Uid   string
+	UID   string
 	State int
 }

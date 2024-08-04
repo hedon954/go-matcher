@@ -411,8 +411,48 @@ func (impl *Impl) StartMatch(captainUID string) error {
 }
 
 func (impl *Impl) CancelMatch(uid string) error {
-	// TODO implement me
-	panic("implement me")
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
+	}
+
+	p.Base().Lock()
+	defer p.Base().Unlock()
+
+	if err := p.Base().CheckOnlineState(entry.PlayerOnlineStateInMatch); err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+	if err := g.Base().CheckState(entry.GroupStateMatch); err != nil {
+		return err
+	}
+
+	impl.cancelMatch(uid, g)
+	return nil
+}
+
+func (impl *Impl) SetVoiceState(uid string, state entry.PlayerVoiceState) error {
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
+	}
+
+	p.Base().Lock()
+	defer p.Base().Unlock()
+
+	vs := p.Base().GetVoiceState()
+	if vs == state {
+		return nil
+	}
+	p.Base().SetVoiceState(state)
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	impl.connectorClient.PushVoiceState(g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
+	return nil
 }
 
 // getPlayerAndGroup returns the player and group of the given uid.

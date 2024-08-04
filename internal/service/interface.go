@@ -39,6 +39,9 @@ type Service interface {
 	// SetRecentJoinGroup sets whether the group can be joined by recent players
 	SetRecentJoinGroup(captainUID string, allow bool) error
 
+	// SetVoiceState sets whether the player can speak in the group
+	SetVoiceState(uid string, state entry.PlayerVoiceState) error
+
 	// StartMatch starts to add the group to matching queue
 	StartMatch(captainUID string) error
 

@@ -62,12 +62,18 @@ func (m *Client) CheckInviteFriend(p *pto.CheckInviteFriend) error {
 	return nil
 }
 
-func (m *Client) PushGroupVoiceState(uids []string, states []*pto.UserVoiceState) {
+func (m *Client) PushVoiceState(uids []string, states *pto.UserVoiceState) {
 	for _, uid := range uids {
-		fmt.Println("PushGroupVoiceState to ", uid, " ", states)
+		fmt.Println("PushVoiceState to ", uid, " ", states)
 	}
 }
 
 func (m *Client) PushKick(uid string, groupID int64) {
 	fmt.Println("PushKick to ", uid, " groupID: ", groupID)
+}
+
+func (m *Client) PushCancelMatch(uids []string, cancelUID string) {
+	for _, uid := range uids {
+		fmt.Println("PushCancelMatch to ", uid, " cancelUID: ", cancelUID)
+	}
 }

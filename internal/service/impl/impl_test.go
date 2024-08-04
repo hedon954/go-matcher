@@ -758,3 +758,30 @@ func TestImpl_AcceptInvite(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), g.Base().GetInviteExpireTimeStamp(invitee.UID()))
 }
+
+func TestImpl_SetVoiceState(t *testing.T) {
+	impl := NewDefault(PlayerLimit)
+
+	// 1. if player not exists, should return err
+	err := impl.SetVoiceState(UID, entry.PlayerVoiceStateMute)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	p, g := createTempGroup(UID, impl, t)
+	assert.Equal(t, entry.PlayerVoiceStateMute, p.Base().GetVoiceState())
+
+	// 2. if group not exists, should return err
+	impl.groupMgr.Delete(g.GroupID()) // delete temp
+	err = impl.SetVoiceState(UID, entry.PlayerVoiceStateMute)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.groupMgr.Add(g.GroupID(), g) // add back
+
+	// 3. if state no change, should do nothing and success
+	err = impl.SetVoiceState(UID, entry.PlayerVoiceStateMute)
+	assert.Nil(t, err)
+	assert.Equal(t, entry.PlayerVoiceStateMute, p.Base().GetVoiceState())
+
+	// 4. change state successfully
+	err = impl.SetVoiceState(UID, entry.PlayerVoiceStateUnmute)
+	assert.Nil(t, err)
+	assert.Equal(t, entry.PlayerVoiceStateUnmute, p.Base().GetVoiceState())
+}
