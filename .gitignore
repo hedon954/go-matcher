@@ -2,3 +2,5 @@
 .vscode/**
 main
 **coverage.out*
+*groups-*.json
+.DS_Store

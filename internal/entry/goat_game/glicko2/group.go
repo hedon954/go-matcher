@@ -1,4 +1,4 @@
-package goatgameglicko2
+package glicko2
 
 import (
 	"fmt"
@@ -12,6 +12,10 @@ import (
 
 type Group struct {
 	entry.Group
+}
+
+func (g *Group) QueueKey() string {
+	return fmt.Sprintf("%d-%d", g.Base().GameMode, g.Base().ModeVersion)
 }
 
 func (g *Group) GetID() string {

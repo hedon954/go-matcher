@@ -6,6 +6,7 @@ func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
 	base := g.Base()
 
 	base.SetState(entry.GroupStateInvite)
+	base.MatchID = ""
 
 	uids := base.UIDs()
 	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())

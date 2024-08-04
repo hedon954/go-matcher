@@ -3,16 +3,22 @@ package matcher
 import (
 	"log/slog"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
+
+	glicko2Algo "github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
 type Matcher struct {
-	groupChannel chan entry.Group
+	glicko2Matcher *glicko2.Matcher
+	groupChannel   chan entry.Group
 }
 
-func New(groupChannel chan entry.Group) *Matcher {
+func New(groupChannel chan entry.Group, glicko2Match *glicko2.Matcher) *Matcher {
 	m := &Matcher{
-		groupChannel: groupChannel,
+		groupChannel:   groupChannel,
+		glicko2Matcher: glicko2Match,
 	}
 	return m
 }
@@ -32,5 +38,10 @@ func (m *Matcher) handle(g entry.Group) {
 		}
 	}()
 
-	// TODO
+	switch g.Base().MatchStrategy {
+	case constant.MatchStrategyGlicko2:
+		m.glicko2Matcher.Match(g.(glicko2Algo.Group))
+	default:
+		slog.Error("unknown match strategy", slog.Any("group", g), slog.Int("strategy", int(g.Base().MatchStrategy)))
+	}
 }

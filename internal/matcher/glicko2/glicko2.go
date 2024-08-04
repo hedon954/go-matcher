@@ -112,3 +112,15 @@ func (m *Matcher) RLock() {
 func (m *Matcher) RUnlock() {
 	m.mLock.RUnlock()
 }
+
+func (m *Matcher) Match(g glicko2.Group) {
+	matcher, err := m.NewMatcher("", nil, nil, nil, nil)
+	if err != nil {
+		slog.Error("match by glicko2 error", slog.Any("group", g), slog.String("err", err.Error()))
+		return
+	}
+	if err = matcher.AddGroups(g); err != nil {
+		slog.Error("add group to glicko2 error", slog.Any("group", g), slog.String("err", err.Error()))
+		return
+	}
+}

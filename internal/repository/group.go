@@ -5,6 +5,7 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/goat_game"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
@@ -31,15 +32,20 @@ func NewGroupMgr(groupIDStart int64) *GroupMgr {
 func (m *GroupMgr) CreateGroup(
 	playerLimit int, mode constant.GameMode, modeVersion int64, strategy constant.MatchStrategy,
 ) (
-	entry.Group, error,
+	g entry.Group, err error,
 ) {
-	// TODO: factory method
-
-	gb := entry.NewGroupBase(m.GenGroupID(), playerLimit, mode, modeVersion, strategy)
-
-	m.Add(gb.ID(), gb)
-
-	return gb, nil
+	base := entry.NewGroupBase(m.GenGroupID(), playerLimit, mode, modeVersion, strategy)
+	switch mode {
+	case constant.GameModeGoatGame:
+		g, err = goat_game.CreateGroup(base)
+	default:
+		g = base
+	}
+	if err != nil {
+		return nil, err
+	}
+	m.Add(g.ID(), g)
+	return g, nil
 }
 
 func (m *GroupMgr) GenGroupID() int64 {

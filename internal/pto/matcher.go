@@ -11,6 +11,8 @@ type PlayerInfo struct {
 	GameMode      constant.GameMode
 	ModeVersion   int64
 	MatchStrategy constant.MatchStrategy
+
+	Glicko2Info Glicko2Info
 }
 
 type EnterGroup struct {

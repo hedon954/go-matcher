@@ -1,9 +1,5 @@
 package glicko2
 
-import (
-	glicko "github.com/zelenin/go-glicko2"
-)
-
 // Player 是一个玩家的抽象
 type Player interface {
 
@@ -18,9 +14,6 @@ type Player interface {
 
 	// 段位值
 	GetStar() int
-
-	// glicko-2 算法的玩家抽象示例
-	GlickoPlayer() *glicko.Player
 
 	// 开始匹配的时间
 	GetStartMatchTimeSec() int64

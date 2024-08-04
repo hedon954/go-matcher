@@ -1,18 +1,28 @@
-package goatgameglicko2
+package glicko2
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
-	glicko "github.com/zelenin/go-glicko2"
+	"github.com/hedon954/go-matcher/internal/pto"
 )
 
 type Player struct {
 	entry.Player
 	MMR            float64
 	Star           int
-	glickoPlayer   glicko.Player
 	startMatchSec  int64
 	finishMatchSec int64
 	rank           int
+}
+
+func CreatePlayer(p entry.Player, info *pto.Glicko2Info) *Player {
+	return &Player{
+		Player:         p,
+		MMR:            info.MMR,
+		Star:           info.Star,
+		startMatchSec:  info.StartMatchSec,
+		finishMatchSec: 0,
+		rank:           info.Rank,
+	}
 }
 
 func (p *Player) GetID() string {
@@ -29,10 +39,6 @@ func (p *Player) GetMMR() float64 {
 
 func (p *Player) GetStar() int {
 	return p.Star
-}
-
-func (p *Player) GlickoPlayer() *glicko.Player {
-	return &p.glickoPlayer
 }
 
 func (p *Player) GetStartMatchTimeSec() int64 {

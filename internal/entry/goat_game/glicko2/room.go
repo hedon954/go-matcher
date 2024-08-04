@@ -1,4 +1,4 @@
-package goatgameglicko2
+package glicko2
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
