@@ -20,17 +20,13 @@ func (impl *Impl) getPlayer(param *pto.PlayerInfo) (entry.Player, error) {
 
 // createGroup creates group, and adds the player to it,
 // current play would be the captain of the group.
-func (impl *Impl) createGroup(param *pto.CreateGroup, p entry.Player) (entry.Group, error) {
-	g, err := impl.groupMgr.CreateGroup(impl.playerLimit, param.GameMode, param.ModeVersion, param.MatchStrategy)
+func (impl *Impl) createGroup(p entry.Player) (entry.Group, error) {
+	g, err := impl.groupMgr.CreateGroup(impl.groupPlayerLimit, p)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := g.Base().AddPlayer(p); err != nil {
-		panic("add player to group failed when create group")
-	}
-
-	p.Base().GroupID = g.GroupID()
+	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
 	return g, nil
 }

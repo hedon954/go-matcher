@@ -1,6 +1,9 @@
 package impl
 
-import "github.com/hedon954/go-matcher/internal/entry"
+import (
+	"github.com/google/uuid"
+	"github.com/hedon954/go-matcher/internal/entry"
+)
 
 func (impl *Impl) startMatch(g entry.Group) {
 	base := g.Base()
@@ -8,7 +11,8 @@ func (impl *Impl) startMatch(g entry.Group) {
 
 	// update group state
 	base.SetState(entry.GroupStateMatch)
-	impl.connectorClient.PushGroupState(uids, g.GroupID(), base.GetState())
+	base.MatchID = uuid.NewString()
+	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())
 
 	// update players state
 	for _, p := range base.GetPlayers() {
@@ -19,5 +23,5 @@ func (impl *Impl) startMatch(g entry.Group) {
 	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateInMatch))
 
 	// push to match channel
-	impl.matchChannel <- g
+	impl.groupChannel <- g
 }

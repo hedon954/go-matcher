@@ -16,7 +16,7 @@ func (impl *Impl) dissolveGroup(g entry.Group) error {
 
 	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateOnline))
 
-	impl.groupMgr.Delete(g.GroupID())
-	impl.connectorClient.GroupDissolved(uids, g.GroupID())
+	impl.groupMgr.Delete(g.ID())
+	impl.connectorClient.GroupDissolved(uids, g.ID())
 	return nil
 }

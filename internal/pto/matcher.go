@@ -7,10 +7,12 @@ import (
 // PlayerInfo defines the common information of a player.
 // It is always used to initial a player.
 type PlayerInfo struct {
-	UID           string
-	GameMode      constant.GameMode
-	ModeVersion   int64
-	MatchStrategy constant.MatchStrategy
+	UID           string                 `json:"uid"`
+	GameMode      constant.GameMode      `json:"game_mode"`
+	ModeVersion   int64                  `json:"mode_version"`
+	MatchStrategy constant.MatchStrategy `json:"match_strategy"`
+
+	Glicko2Info *Glicko2Info `json:"glicko2_info"`
 }
 
 type EnterGroup struct {
@@ -51,14 +53,6 @@ const (
 	EnterGroupSourceTypeShare        EnterGroupSourceType = 6 // from share link
 
 	// TODO: add more
-)
-
-// 好友游戏邀请处理类型：接受或拒绝
-const (
-	InviteHandleTypeAccept    = 1
-	InviteHandleTypeRefuse    = 2
-	InviteHandleTypeRefuseMsg = 3
-	DefaultInviteRefuseMsg    = "不好意思，现在不方便，下次约。"
 )
 
 type InviteMsg struct {
@@ -116,4 +110,7 @@ type CheckInviteFriend struct {
 type UserVoiceState struct {
 	UID   string
 	State int
+}
+
+type MatchInfo struct {
 }

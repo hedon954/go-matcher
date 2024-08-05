@@ -5,13 +5,11 @@ import (
 )
 
 var (
-	ErrCreatePlayer                = errors.New("create player failed")
 	ErrGroupFull                   = errors.New("group already full")
 	ErrGroupDissolved              = errors.New("group dissolved")
 	ErrGroupNotExists              = errors.New("group not exists")
 	ErrOnlyCaptainCanDissolveGroup = errors.New("only captain can dissolve group")
 	ErrOnlyCaptainCanKickPlayer    = errors.New("only captain can kick player")
-	ErrVersionNotMatch             = errors.New("version not match")
 	ErrPlayerNotExists             = errors.New("player not exists")
 	ErrKickSelf                    = errors.New("cannot kick self")
 	ErrChangeSelfRole              = errors.New("cannot change self role")
@@ -23,7 +21,7 @@ var (
 	ErrPlayerVersionTooLow         = errors.New("player version too low")
 
 	ErrPlayerOffline    = errors.New("player offline")
-	ErrPlayerNotInGroup = errors.New("create group first")
+	ErrPlayerNotInGroup = errors.New("player not in group")
 	ErrPlayerInGroup    = errors.New("player already in group")
 	ErrPlayerInMatch    = errors.New("player matching")
 	ErrPlayerInGame     = errors.New("player gaming")

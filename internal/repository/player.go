@@ -1,7 +1,9 @@
 package repository
 
 import (
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/goat_game"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
@@ -14,12 +16,19 @@ func NewPlayerMgr() *PlayerMgr {
 	return &PlayerMgr{Manager: collection.New[string, entry.Player]()}
 }
 
-func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (entry.Player, error) {
-	// TODO: factory method
+func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (p entry.Player, err error) {
+	base := entry.NewPlayerBase(pInfo)
 
-	bp := entry.NewPlayerBase(pInfo)
+	switch pInfo.GameMode {
+	case constant.GameModeGoatGame:
+		p, err = goat_game.CreatePlayer(base, pInfo)
+	default:
+		p = base
+	}
 
-	m.Add(bp.UID(), bp)
-
-	return bp, nil
+	if err != nil {
+		return nil, err
+	}
+	m.Add(p.UID(), p)
+	return p, nil
 }

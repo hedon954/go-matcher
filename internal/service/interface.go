@@ -22,7 +22,7 @@ type Service interface {
 	Invite(inviterUID, inviteeUID string) error
 
 	// AcceptInvite accepts the invite and enter the group
-	AcceptInvite(inviterUID, inviteeUID string, groupID int64) error
+	AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error
 
 	// RefuseInvite refuses the invite from the inviter
 	RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error
@@ -47,4 +47,7 @@ type Service interface {
 
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(uid string) error
+
+	// HandleMatchResult handles the match result
+	HandleMatchResult(r entry.Room)
 }

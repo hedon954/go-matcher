@@ -10,8 +10,8 @@ import (
 
 // Group represents a group of players.
 type Group interface {
-	// GroupID returns the unique group id.
-	GroupID() int64
+	// ID returns the unique group id.
+	ID() int64
 
 	// Base returns the base information of the group.
 	// Here we define a concrete struct `GroupBase`
@@ -59,7 +59,7 @@ const (
 
 // GroupBase holds the common fields of a Group for all kinds of game mode and match strategy.
 type GroupBase struct {
-	groupID       int64
+	GroupID       int64
 	GameMode      constant.GameMode
 	ModeVersion   int64
 	MatchStrategy constant.MatchStrategy
@@ -105,14 +105,14 @@ type GroupConfig struct {
 
 // NewGroupBase creates a new GroupBase.
 func NewGroupBase(
-	groupID int64, playerLimit int, mode constant.GameMode, modeVersion int64, strategy constant.MatchStrategy,
+	groupID int64, playerLimit int, playerBase *PlayerBase,
 ) *GroupBase {
 	g := &GroupBase{
-		groupID:       groupID,
+		GroupID:       groupID,
 		state:         GroupStateInvite,
-		GameMode:      mode,
-		ModeVersion:   modeVersion,
-		MatchStrategy: strategy,
+		GameMode:      playerBase.GameMode,
+		ModeVersion:   playerBase.ModeVersion,
+		MatchStrategy: playerBase.MatchStrategy,
 		players:       make([]Player, 0, playerLimit),
 		roles:         make(map[string]GroupRole, playerLimit),
 		inviteRecords: make(map[string]int64, playerLimit),
@@ -126,8 +126,8 @@ func (g *GroupBase) Base() *GroupBase {
 	return g
 }
 
-func (g *GroupBase) GroupID() int64 {
-	return g.groupID
+func (g *GroupBase) ID() int64 {
+	return g.GroupID
 }
 
 func (g *GroupBase) IsFull() bool {
@@ -171,7 +171,7 @@ func (g *GroupBase) AddPlayer(p Player) error {
 	if len(g.players) == 0 {
 		g.roles[p.UID()] = GroupRoleCaptain
 	}
-	p.Base().GroupID = g.GroupID()
+	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(PlayerOnlineStateInGroup)
 	for i, player := range g.players {
 		if player.UID() == p.UID() {
@@ -272,7 +272,7 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 
 func (g *GroupBase) GetPlayerInfos() pto.GroupUser {
 	return pto.GroupUser{
-		GroupID:  g.groupID,
+		GroupID:  g.GroupID,
 		Owner:    g.GetCaptain().UID(),
 		GameMode: int(g.GameMode),
 		// TODO: other info

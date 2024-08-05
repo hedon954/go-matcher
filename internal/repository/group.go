@@ -5,6 +5,7 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/goat_game"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
@@ -28,18 +29,22 @@ func NewGroupMgr(groupIDStart int64) *GroupMgr {
 }
 
 // CreateGroup creates a group according to `pto.PlayerInfo`.
-func (m *GroupMgr) CreateGroup(
-	playerLimit int, mode constant.GameMode, modeVersion int64, strategy constant.MatchStrategy,
-) (
-	entry.Group, error,
+func (m *GroupMgr) CreateGroup(playerLimit int, p entry.Player) (
+	g entry.Group, err error,
 ) {
-	// TODO: factory method
-
-	gb := entry.NewGroupBase(m.GenGroupID(), playerLimit, mode, modeVersion, strategy)
-
-	m.Add(gb.GroupID(), gb)
-
-	return gb, nil
+	base := entry.NewGroupBase(m.GenGroupID(), playerLimit, p.Base())
+	switch p.Base().GameMode {
+	case constant.GameModeGoatGame:
+		g, err = goat_game.CreateGroup(base, p)
+	default:
+		g = base
+	}
+	if err != nil {
+		return nil, err
+	}
+	_ = g.Base().AddPlayer(p)
+	m.Add(g.ID(), g)
+	return g, nil
 }
 
 func (m *GroupMgr) GenGroupID() int64 {
