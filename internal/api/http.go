@@ -28,9 +28,15 @@ import (
 // @BasePath  /
 
 func SetupHTTPServer() {
-	r := gin.Default()
 	api := NewAPI()
+	r := api.setupRouter()
+	if err := r.Run(":5050"); err != nil {
+		log.Fatal(err)
+	}
+}
 
+func (api *API) setupRouter() *gin.Engine {
+	r := gin.Default()
 	mg := r.Group("/match")
 	{
 		mg.POST("/create_group", api.CreateGroup)
@@ -56,10 +62,7 @@ func SetupHTTPServer() {
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
-
-	if err := r.Run(":5050"); err != nil {
-		log.Fatal(err)
-	}
+	return r
 }
 
 type API struct {
