@@ -84,7 +84,7 @@ func NewAPI() *API {
 		teamMgr   = repository.NewTeamMgr(0)
 		roomMgr   = repository.NewRoomMgr(0)
 		configer  = &glicko2.Configer{
-			Glicko2: new(config.Glicko2Config),
+			Glicko2: new(config.Glicko2Mock),
 		}
 		glicko2Matcher = glicko2.New(roomChannel, configer, playerMgr, groupMgr, teamMgr, roomMgr)
 	)

@@ -8,31 +8,3 @@ import (
 type Glicko2 interface {
 	GetQueueArgs(mode constant.GameMode) *glicko2.QueueArgs
 }
-
-type Glicko2Config struct {
-}
-
-func (gc *Glicko2Config) GetQueueArgs(mode constant.GameMode) *glicko2.QueueArgs {
-	if mode == constant.GameModeGoatGame {
-		return &glicko2.QueueArgs{
-			MatchTimeoutSec:              50,
-			TeamPlayerLimit:              1,
-			RoomTeamLimit:                3,
-			NewerWithNewer:               false,
-			UnfriendlyTeamMMRVarianceMin: 0,
-			MaliciousTeamMMRVarianceMin:  0,
-			NormalTeamWaitTimeSec:        0,
-			UnfriendlyTeamWaitTimeSec:    0,
-			MaliciousTeamWaitTimeSec:     0,
-			MatchRanges: []glicko2.MatchRange{
-				{
-					MaxMatchSec:   0,
-					MMRGapPercent: 0,
-					CanJoinTeam:   true,
-					StarGap:       0,
-				},
-			},
-		}
-	}
-	return nil
-}
