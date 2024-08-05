@@ -439,15 +439,8 @@ func (impl *Impl) StartMatch(captainUID string) error {
 }
 
 func (impl *Impl) CancelMatch(uid string) error {
-	p, g, err := impl.getPlayerAndGroup(uid)
+	_, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
-		return err
-	}
-
-	p.Base().Lock()
-	defer p.Base().Unlock()
-
-	if err := p.Base().CheckOnlineState(entry.PlayerOnlineStateInMatch); err != nil {
 		return err
 	}
 

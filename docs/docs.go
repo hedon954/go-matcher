@@ -41,7 +41,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -79,7 +79,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -119,7 +119,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -191,7 +191,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -225,7 +225,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -263,7 +263,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -297,7 +297,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -337,7 +337,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -377,7 +377,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -417,7 +417,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -457,7 +457,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -497,7 +497,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -535,7 +535,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -586,6 +586,14 @@ const docTemplate = `{
                 },
                 "target_uid": {
                     "type": "string"
+                }
+            }
+        },
+        "api.CreateGroupRsp": {
+            "type": "object",
+            "properties": {
+                "group_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -740,6 +748,12 @@ const docTemplate = `{
         },
         "pto.CreateGroup": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"
@@ -760,6 +774,12 @@ const docTemplate = `{
         },
         "pto.EnterGroup": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"
@@ -827,6 +847,12 @@ const docTemplate = `{
         },
         "pto.PlayerInfo": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"

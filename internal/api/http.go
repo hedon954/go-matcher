@@ -1,8 +1,9 @@
 package api
 
 import (
+	"errors"
 	"log"
-	"net/http"
+	"time"
 
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config"
@@ -13,6 +14,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/impl"
+	"github.com/hedon954/go-matcher/pkg/response"
 
 	"github.com/gin-gonic/gin"
 
@@ -28,7 +30,7 @@ import (
 // @BasePath  /
 
 func SetupHTTPServer() {
-	api := NewAPI()
+	api := NewAPI(1, time.Second)
 	r := api.setupRouter()
 	if err := r.Run(":5050"); err != nil {
 		log.Fatal(err)
@@ -50,7 +52,7 @@ func (api *API) setupRouter() *gin.Engine {
 		mg.POST("/refuse_invite", api.RefuseInvite)
 		mg.POST("/set_nearby_join_group", api.SetNearbyJoinGroup)
 		mg.POST("/set_recent_join_group", api.SetRecentJoinGroup)
-		mg.POST("/set_voice_state/:uid", api.SetVoiceState)
+		mg.POST("/set_voice_state", api.SetVoiceState)
 		mg.POST("/start_match/:uid", api.StartMatch)
 		mg.POST("/cancel_match/:uid", api.CancelMatch)
 	}
@@ -74,11 +76,10 @@ type API struct {
 	rm *repository.RoomMgr
 }
 
-func NewAPI() *API {
+func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 	var (
-		groupPlayerLimit = 1
-		groupChannel     = make(chan entry.Group, 1024)
-		roomChannel      = make(chan entry.Room, 1024)
+		groupChannel = make(chan entry.Group, 1024)
+		roomChannel  = make(chan entry.Room, 1024)
 	)
 
 	var (
@@ -89,7 +90,7 @@ func NewAPI() *API {
 		configer  = &glicko2.Configer{
 			Glicko2: new(config.Glicko2Mock),
 		}
-		glicko2Matcher = glicko2.New(roomChannel, configer, playerMgr, groupMgr, teamMgr, roomMgr)
+		glicko2Matcher = glicko2.New(roomChannel, configer, matchInterval, playerMgr, groupMgr, teamMgr, roomMgr)
 	)
 
 	api := &API{
@@ -112,26 +113,21 @@ func NewAPI() *API {
 // @Accept json
 // @Produce json
 // @Param CreateGroup body pto.CreateGroup true "Create Group Request Body"
-// @Success 200 {object} int64
+// @Success 200 {object} CreateGroupRsp
 // @Failure 200 {object} string
 // @Router /match/create_group [post]
 func (api *API) CreateGroup(c *gin.Context) {
 	var req pto.CreateGroup
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	g, err := api.ms.CreateGroup(&req)
 	if err != nil {
-		c.JSON(http.StatusOK, err.Error())
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{
-		"group_id":   g.ID(),
-		"group_info": g,
-	})
+	response.GinSuccess(c, CreateGroupRsp{GroupID: g.ID()})
 }
 
 // EnterGroup godoc
@@ -143,21 +139,19 @@ func (api *API) CreateGroup(c *gin.Context) {
 // @Param EnterGroupReq body EnterGroupReq true "Enter Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/enter_group [post]
 func (api *API) EnterGroup(c *gin.Context) {
 	var req EnterGroupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.EnterGroup(&req.PlayerInfo, req.GroupID); err != nil {
-		c.JSON(http.StatusOK, err.Error())
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // ExitGroup godoc
@@ -168,17 +162,19 @@ func (api *API) EnterGroup(c *gin.Context) {
 // @Produce json
 // @Param uid path string true "User ID"
 // @Success 200 {object} string "ok"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/exit_group/{uid} [post]
 func (api *API) ExitGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.ExitGroup(uid); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+	if uid == "" {
+		response.GinParamError(c, errors.New("lack of uid param"))
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	if err := api.ms.ExitGroup(uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
 }
 
 // DissolveGroup godoc
@@ -189,17 +185,15 @@ func (api *API) ExitGroup(c *gin.Context) {
 // @Produce json
 // @Param uid path string true "User ID"
 // @Success 200 {object} string "ok"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/dissolve_group/{uid} [post]
 func (api *API) DissolveGroup(c *gin.Context) {
 	uid := c.Param("uid")
 	if err := api.ms.DissolveGroup(uid); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // KickPlayer godoc
@@ -211,23 +205,19 @@ func (api *API) DissolveGroup(c *gin.Context) {
 // @Param KickPlayerReq body KickPlayerReq true "Kick Player Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/kick_player [post]
 func (api *API) KickPlayer(c *gin.Context) {
 	var req KickPlayerReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.KickPlayer(req.CaptainUID, req.KickedUID); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // ChangeRole godoc
@@ -239,23 +229,19 @@ func (api *API) KickPlayer(c *gin.Context) {
 // @Param ChangeRoleReq body ChangeRoleReq true "Change Role Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/change_role [post]
 func (api *API) ChangeRole(c *gin.Context) {
 	var req ChangeRoleReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.ChangeRole(req.CaptainUID, req.TargetUID, req.Role); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // Invite godoc
@@ -267,23 +253,19 @@ func (api *API) ChangeRole(c *gin.Context) {
 // @Param InviteReq body InviteReq true "Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/invite [post]
 func (api *API) Invite(c *gin.Context) {
 	var req InviteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.Invite(req.InviterUID, req.InviteeUID); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // AcceptInvite godoc
@@ -295,23 +277,19 @@ func (api *API) Invite(c *gin.Context) {
 // @Param AcceptInviteReq body AcceptInviteReq true "Accept Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/accept_invite [post]
 func (api *API) AcceptInvite(c *gin.Context) {
 	var req AcceptInviteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.AcceptInvite(req.InviterUID, req.InviteeInfo, req.GroupID); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // RefuseInvite godoc
@@ -323,23 +301,19 @@ func (api *API) AcceptInvite(c *gin.Context) {
 // @Param RefuseInviteReq body RefuseInviteReq true "Refuse Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/refuse_invite [post]
 func (api *API) RefuseInvite(c *gin.Context) {
 	var req RefuseInviteReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.RefuseInvite(req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // SetNearbyJoinGroup godoc
@@ -351,23 +325,19 @@ func (api *API) RefuseInvite(c *gin.Context) {
 // @Param SetNearbyJoinGroupReq body SetNearbyJoinGroupReq true "Set Nearby Join Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/set_nearby_join_group [post]
 func (api *API) SetNearbyJoinGroup(c *gin.Context) {
 	var req SetNearbyJoinGroupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.SetNearbyJoinGroup(req.CaptainUID, req.Allow); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // SetRecentJoinGroup godoc
@@ -379,23 +349,19 @@ func (api *API) SetNearbyJoinGroup(c *gin.Context) {
 // @Param SetRecentJoinGroupReq body SetRecentJoinGroupReq true "Set Recent Join Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/set_recent_join_group [post]
 func (api *API) SetRecentJoinGroup(c *gin.Context) {
 	var req SetRecentJoinGroupReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.SetRecentJoinGroup(req.CaptainUID, req.Allow); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // SetVoiceState godoc
@@ -407,23 +373,19 @@ func (api *API) SetRecentJoinGroup(c *gin.Context) {
 // @Param SetVoiceStateReq body SetVoiceStateReq true "Set Voice State Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/set_voice_state [post]
 func (api *API) SetVoiceState(c *gin.Context) {
 	var req SetVoiceStateReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"err": err.Error(),
-		})
+		response.GinParamError(c, err)
 		return
 	}
 	if err := api.ms.SetVoiceState(req.UID, req.State); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+		response.GinError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	response.GinSuccess(c, nil)
 }
 
 // StartMatch godoc
@@ -435,17 +397,19 @@ func (api *API) SetVoiceState(c *gin.Context) {
 // @Param uid path string true "player uid"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/start_match/{uid} [post]
 func (api *API) StartMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.StartMatch(uid); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+	if uid == "" {
+		response.GinParamError(c, errors.New("lack of uid param"))
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	if err := api.ms.StartMatch(uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
 }
 
 // CancelMatch godoc
@@ -457,15 +421,17 @@ func (api *API) StartMatch(c *gin.Context) {
 // @Param uid path string true "player uid"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
-// @Failure 200 {object} string "Internal Server Error"
+// @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/cancel_match/{uid} [post]
 func (api *API) CancelMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.CancelMatch(uid); err != nil {
-		c.JSON(http.StatusOK, gin.H{
-			"err": err.Error(),
-		})
+	if uid == "" {
+		response.GinParamError(c, errors.New("lack of uid param"))
 		return
 	}
-	c.JSON(http.StatusOK, "ok")
+	if err := api.ms.CancelMatch(uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
 }

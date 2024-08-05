@@ -30,7 +30,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -68,7 +68,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -108,7 +108,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -180,7 +180,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -214,7 +214,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -252,7 +252,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -286,7 +286,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -326,7 +326,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -366,7 +366,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -406,7 +406,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -446,7 +446,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -486,7 +486,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -524,7 +524,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Internal Server Error",
+                        "description": "Concrete Error Msg",
                         "schema": {
                             "type": "string"
                         }
@@ -575,6 +575,14 @@
                 },
                 "target_uid": {
                     "type": "string"
+                }
+            }
+        },
+        "api.CreateGroupRsp": {
+            "type": "object",
+            "properties": {
+                "group_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -729,6 +737,12 @@
         },
         "pto.CreateGroup": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"
@@ -749,6 +763,12 @@
         },
         "pto.EnterGroup": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"
@@ -816,6 +836,12 @@
         },
         "pto.PlayerInfo": {
             "type": "object",
+            "required": [
+                "game_mode",
+                "match_strategy",
+                "mode_version",
+                "uid"
+            ],
             "properties": {
                 "game_mode": {
                     "$ref": "#/definitions/constant.GameMode"

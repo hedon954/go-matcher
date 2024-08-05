@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/hedon954/go-matcher/internal/config"
@@ -42,8 +43,9 @@ type Matcher struct {
 	gameModes map[constant.GameMode]*Funcs
 
 	// for debug
-	ErrCount  int
-	RoomCount int
+	ErrCount      int
+	RoomCount     atomic.Int64
+	matchInterval time.Duration
 }
 
 type Configer struct {
@@ -61,7 +63,7 @@ type Funcs struct {
 // New returns the new glicko2 matcher, and start it.
 func New(
 	roomChannelToService chan entry.Room,
-	configer *Configer,
+	configer *Configer, matchInterval time.Duration,
 	playrMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
 	teamMgr *repository.TeamMgr, roomMgr *repository.RoomMgr,
 ) *Matcher {
@@ -76,6 +78,7 @@ func New(
 		teamMgr:              teamMgr,
 		roomMgr:              roomMgr,
 		configer:             configer,
+		matchInterval:        matchInterval,
 	}
 
 	// register funcs
@@ -137,7 +140,7 @@ func (m *Matcher) NewMatcher(
 	}
 
 	m.matchers[key] = matcher
-	go matcher.Match(time.Second)
+	go matcher.Match(m.matchInterval)
 	return matcher, nil
 }
 
@@ -167,7 +170,7 @@ func (m *Matcher) handleError(err error) {
 }
 
 func (m *Matcher) handleSuccess(room glicko2.Room) {
-	m.RoomCount++
+	m.RoomCount.Add(1)
 	slog.Info("match success", slog.Any("room", room))
 	m.roomChannelToService <- room.(entry.Room)
 }

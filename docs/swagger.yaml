@@ -25,6 +25,11 @@ definitions:
     - role
     - target_uid
     type: object
+  api.CreateGroupRsp:
+    properties:
+      group_id:
+        type: integer
+    type: object
   api.EnterGroupReq:
     properties:
       group_id:
@@ -137,6 +142,11 @@ definitions:
         type: integer
       uid:
         type: string
+    required:
+    - game_mode
+    - match_strategy
+    - mode_version
+    - uid
     type: object
   pto.EnterGroup:
     properties:
@@ -152,6 +162,11 @@ definitions:
         $ref: '#/definitions/pto.EnterGroupSourceType'
       uid:
         type: string
+    required:
+    - game_mode
+    - match_strategy
+    - mode_version
+    - uid
     type: object
   pto.EnterGroupSourceType:
     enum:
@@ -199,6 +214,11 @@ definitions:
         type: integer
       uid:
         type: string
+    required:
+    - game_mode
+    - match_strategy
+    - mode_version
+    - uid
     type: object
 info:
   contact: {}
@@ -219,7 +239,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -244,7 +264,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -270,7 +290,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -317,7 +337,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
       summary: dissolve a group
@@ -339,7 +359,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -364,7 +384,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
       summary: exit a group
@@ -386,7 +406,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -412,7 +432,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -438,7 +458,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -464,7 +484,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -490,7 +510,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -516,7 +536,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":
@@ -541,7 +561,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Internal Server Error
+          description: Concrete Error Msg
           schema:
             type: string
         "400":

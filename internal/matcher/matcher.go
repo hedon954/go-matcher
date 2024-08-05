@@ -12,14 +12,14 @@ import (
 )
 
 type Matcher struct {
-	glicko2Matcher *glicko2.Matcher
+	Glicko2Matcher *glicko2.Matcher
 	groupChannel   chan entry.Group
 }
 
 func New(groupChannel chan entry.Group, glicko2Match *glicko2.Matcher) *Matcher {
 	m := &Matcher{
 		groupChannel:   groupChannel,
-		glicko2Matcher: glicko2Match,
+		Glicko2Matcher: glicko2Match,
 	}
 	return m
 }
@@ -32,6 +32,10 @@ func (m *Matcher) Start() {
 	}()
 }
 
+func (m *Matcher) Stop() {
+	m.Glicko2Matcher.Stop()
+}
+
 func (m *Matcher) handle(g entry.Group) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -41,7 +45,7 @@ func (m *Matcher) handle(g entry.Group) {
 
 	switch g.Base().MatchStrategy {
 	case constant.MatchStrategyGlicko2:
-		m.glicko2Matcher.Match(g.(glicko2Algo.Group))
+		m.Glicko2Matcher.Match(g.(glicko2Algo.Group))
 	default:
 		slog.Error("unknown match strategy", slog.Any("group", g), slog.Int("strategy", int(g.Base().MatchStrategy)))
 	}

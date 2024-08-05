@@ -5,6 +5,10 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
+type CreateGroupRsp struct {
+	GroupID int64 `json:"group_id,omitempty"`
+}
+
 type EnterGroupReq struct {
 	PlayerInfo pto.EnterGroup `json:"player_info" binding:"required"`
 	GroupID    int64          `json:"group_id" binding:"required"`
@@ -41,7 +45,7 @@ type RefuseInviteReq struct {
 	InviterUID string `json:"inviter_uid" binding:"required"`
 	InviteeUID string `json:"invitee_uid" binding:"required"`
 	GroupID    int64  `json:"group_id" binding:"required"`
-	RefuseMsg  string `json:"refuse_msg" binding:"optional"`
+	RefuseMsg  string `json:"refuse_msg"`
 }
 
 type SetNearbyJoinGroupReq struct {

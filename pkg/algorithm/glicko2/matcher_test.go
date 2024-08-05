@@ -50,31 +50,8 @@ func Test_Matcher(t *testing.T) {
 		case tr := <-roomChan:
 			now := time.Now().Unix()
 			rId := roomId.Add(1)
-			fmt.Println("-------------------------------------------------------------------")
 			fmt.Printf("| Room[%d] Match successful, cast time %ds, hasAi: %t, team count: %d\n", rId,
 				now-tr.GetStartMatchTimeSec(), tr.HasAi(), len(tr.GetTeams()))
-			for j, team := range tr.GetTeams() {
-				fmt.Printf("|   Team %d MMR: %.2f, Star: %d, isAi: %t, cost time %ds\n", j+1,
-					team.GetMMR(), team.GetStar(), team.IsAi(), now-team.GetStartMatchTimeSec())
-				for _, group := range team.GetGroups() {
-					group.SetState(GroupStateMatched)
-					fmt.Printf("|     %s MMR: %.2f, Star: %d, player count: %d, team type: %d, cost time %ds\n",
-						group.GetID(),
-						group.GetMMR(),
-						group.GetStar(),
-						len(group.GetPlayers()), group.Type(),
-						now-group.GetStartMatchTimeSec())
-					for _, player := range group.GetPlayers() {
-						fmt.Printf("|         %s MMR: %.2f, Star: %d, cost time %ds\n",
-							player.GetID(),
-							player.GetMMR(),
-							player.GetStar(),
-							now-player.GetStartMatchTimeSec())
-					}
-				}
-			}
-			fmt.Println("-------------------------------------------------------------------")
-			fmt.Println()
 		case err := <-errChan:
 			assert.Nil(t, err)
 		case <-ch:

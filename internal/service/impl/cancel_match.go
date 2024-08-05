@@ -9,7 +9,14 @@ func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
 	base.MatchID = ""
 
 	uids := base.UIDs()
+	for _, uid := range uids {
+		p := impl.playerMgr.Get(uid)
+		p.Base().Lock()
+		p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
+		p.Base().Unlock()
+	}
 	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())
 	impl.connectorClient.PushCancelMatch(base.UIDs(), cancelUID)
+
 	// TODO: add dissolve group timer
 }

@@ -12,7 +12,7 @@ func (gc *Glicko2Mock) GetQueueArgs(mode constant.GameMode) *glicko2.QueueArgs {
 	if mode == constant.GameModeGoatGame {
 		return &glicko2.QueueArgs{
 			MatchTimeoutSec:              50,
-			TeamPlayerLimit:              1,
+			TeamPlayerLimit:              2,
 			RoomTeamLimit:                3,
 			NewerWithNewer:               false,
 			UnfriendlyTeamMMRVarianceMin: 0,
