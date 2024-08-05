@@ -1,28 +1,28 @@
 package glicko2
 
-// Player 是一个玩家的抽象
+// Player is an abstract representation of a player
 type Player interface {
 
-	// 玩家ID
+	// Player ID
 	GetID() string
 
-	// 是否是 AI
+	// Is the player an AI?
 	IsAi() bool
 
-	// 获取 mmr 值
+	// Get the player's MMR value
 	GetMMR() float64
 
-	// 段位值
+	// Get the player's rank value
 	GetStar() int
 
-	// 开始匹配的时间
+	// Get the time the player started matching
 	GetStartMatchTimeSec() int64
 	SetStartMatchTimeSec(t int64)
 
-	// 结束匹配的时间
+	// Get the time the player finished matching
 	GetFinishMatchTimeSec() int64
 	SetFinishMatchTimeSec(t int64)
 
-	// 赛后在阵营内的排名
+	// Get the player's rank within their team after the match
 	GetRank() int
 }

@@ -1,33 +1,32 @@
 package glicko2
 
-// Room 是一个房间的抽象，由多个 team 组成
+// Room is an abstract representation of a room, composed of multiple teams
 type Room interface {
-
-	// 房间id
+	// Get the ID of the room
 	GetID() int64
 
-	// 获取玩家中的阵营
+	// Get the teams in the room
 	GetTeams() []Team
 
-	// 向房间中添加阵营
+	// Add a team to the room
 	AddTeam(t Team)
 
-	// 向房间中移除阵营
+	// Remove a team from the room
 	RemoveTeam(t Team)
 
-	// 获取房间的 mmr 值
+	// Get the MMR (Match Market Rating) value of the room
 	GetMMR() float64
 
-	// 房间的玩家个数
+	// Get the number of players in the room
 	PlayerCount() int
 
-	// 房间的开始匹配时间，取最早的玩家的
+	// Get the start time of the match, which is the earliest start time of the player
 	GetStartMatchTimeSec() int64
 
-	// 房间的完成匹配时间
+	// Get the end time of the match
 	GetFinishMatchTimeSec() int64
 	SetFinishMatchTimeSec(t int64)
 
-	// 是否存在 ai
+	// Check if the room contains an AI
 	HasAi() bool
 }

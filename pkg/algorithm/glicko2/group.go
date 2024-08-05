@@ -1,69 +1,71 @@
 package glicko2
 
-// GroupState 队伍状态
 type GroupState uint8
 
 const (
-	GroupStateUnready GroupState = iota // 未准备
-	GroupStateQueuing                   // 匹配中
-	GroupStateMatched                   // 匹配完成
+	GroupStateUnready GroupState = iota // Unready state
+	GroupStateQueuing                   // Matching state
+	GroupStateMatched                   // Matched state
 )
 
-// GroupType 车队类型
+// GroupType is the type of team
 type GroupType uint8
 
 const (
-	// 车队类型
+	// GroupTypeNotTeam represents no team
 	GroupTypeNotTeam GroupType = iota
+	// GroupTypeNormalTeam represents a normal team
 	GroupTypeNormalTeam
+	// GroupTypeUnfriendlyTeam represents an unfriendly team
 	GroupTypeUnfriendlyTeam
+	// GroupTypeMaliciousTeam represents a malicious team
 	GroupTypeMaliciousTeam
 )
 
-// Group 是一个队伍，
-// 玩家可以自行组队，单个玩家开始匹配的时候也会为其单独创建一个队伍，
-// 匹配前后队伍都不会被拆开。
+// Group represents a team,
+// players can form teams on their own or a single player will be assigned a team when they start matching,
+// the team before and after the match will not be broken up.
 type Group interface {
 
-	// 队伍 ID
+	// GetID returns the team ID
 	GetID() string
 
-	// MatchKey 匹配队列唯一ID
+	// MatchKey returns the unique match queue ID
 	MatchKey() string
 
-	// 获取队伍里的玩家列表
+	// GetPlayers returns the list of players in the team
 	GetPlayers() []Player
 
-	// 队伍中的玩家个数
+	// PlayerCount returns the number of players in the team
 	PlayerCount() int
 
-	// 获取队伍 mmr 值
+	// GetMMR returns the MMR value of the team
 	GetMMR() float64
 
-	// 获取队伍段位值
+	// GetStar returns the team's rank value
 	GetStar() int
 
-	// 队伍状态
+	// GetState returns the team's state
 	GetState() GroupState
 	SetState(state GroupState)
 
-	// 开始匹配的时间，取 player 中最早的
+	// GetStartMatchTimeSec returns the start time of the match, which is the earliest start time of the player
 	GetStartMatchTimeSec() int64
 	SetStartMatchTimeSec(t int64)
 
-	// 结束匹配的时间
+	// GetFinishMatchTimeSec returns the end time of the match
 	GetFinishMatchTimeSec() int64
 	SetFinishMatchTimeSec(t int64)
 
-	// 获取车队类型
+	// Type returns the team type
 	Type() GroupType
 
-	// 当返回 true 时，会自动填充 is_ai 组成房间，第二个返回值为填充的 ai team
+	// CanFillAi returns true if the team will be filled with AI and the second return value is the AI team to be filled
 	CanFillAi() bool
 
-	// 强制退出时对每个玩家的处理逻辑
+	// ForceCancelMatch is the logic for handling player cancellation when forced to exit
 	ForceCancelMatch(reason string, waitSec int64)
 
-	// IsNewer 判断组队是否认定为新手
+	// IsNewer checks if the team is identified as a newcomer
 	IsNewer() bool
 }

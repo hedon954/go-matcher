@@ -853,7 +853,6 @@ func (g *GroupMock) Type() GroupType {
 }
 
 func (g *GroupMock) CanFillAi() bool {
-	// TODO: 读取配置，根据条件判断是否可以返回 isAi
 	now := zeroNowTime()
 	if now-g.GetStartMatchTimeSec() > 60 {
 		return true
@@ -861,7 +860,6 @@ func (g *GroupMock) CanFillAi() bool {
 	return false
 }
 
-// Print 打印 group 信息
 func (g *GroupMock) Print() {
 	fmt.Printf("\t\t%s\t\t\t%d\t\t%.2f\t\t%.2f\t\t%ds\t\t\n", g.GetID(), len(g.Players), g.GetMMR(), g.AverageMMR(),
 		time.Now().Unix()-g.GetStartMatchTimeSec())
@@ -908,7 +906,6 @@ func NewRoom(team Team) Room {
 
 func NewRoomWithAi(team Team) Room {
 	newRoom := NewRoom(team)
-	// TODO: 根据实际规则填充 isAi
 	ai1G := NewGroup("isAi-group-0", nil)
 	for i := 0; i < TeamPlayerLimit; i++ {
 		ai1G.AddPlayers(NewPlayer("isAi-player-0-"+strconv.Itoa(i), true, int64(i+1), Args{}))

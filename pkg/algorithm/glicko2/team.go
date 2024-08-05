@@ -1,42 +1,41 @@
 package glicko2
 
-// Team 是一个阵营的抽象，由 1~n 个 Group 组成
+// Team is an abstract representation of a team, composed of 1-n Groups
 type Team interface {
-
-	// 获取 groups 列表
+	// Get the list of groups
 	GetGroups() []Group
 
-	// 添加 group 到 team 中
+	// Add a group to the team
 	AddGroup(group Group)
 
-	// 移除 group
+	// Remove a group from the team
 	RemoveGroup(groupId string)
 
-	// 玩家数量
+	// Get the number of players in the team
 	PlayerCount() int
 
-	// 阵营的 mmr
+	// Get the MMR (Match Market Rating) value of the team
 	GetMMR() float64
 
-	// 阵营的段位值
+	// Get the rank value of the team
 	GetStar() int
 
-	// 阵营的开始匹配时间，取最早的玩家的
+	// Get the start time of the match, which is the earliest start time of the player
 	GetStartMatchTimeSec() int64
 
-	// 阵营的完成匹配时间
+	// Get the end time of the match
 	GetFinishMatchTimeSec() int64
 	SetFinishMatchTimeSec(t int64)
 
-	// 当前阵营是否是 ai
+	// Check if the team is an AI team
 	IsAi() bool
 
-	// 是否可以填充 AI
+	// Check if the team can be filled with AI
 	CanFillAi() bool
 
-	// Team是否已满
+	// Check if the team is full
 	IsFull(teamPlayerLimit int) bool
 
-	// IsNewer 判断 Team 是否认定为新手
+	// Check if the team is considered a newcomer
 	IsNewer() bool
 }

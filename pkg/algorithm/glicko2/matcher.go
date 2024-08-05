@@ -16,11 +16,11 @@ type Matcher struct {
 	errChan  chan error
 	quitChan chan struct{}
 
-	NormalQueue *Queue // 普通队列
-	TeamQueue   *Queue // 车队专属队列
+	NormalQueue *Queue
+	TeamQueue   *Queue
 }
 
-// NewMatcher 是一个匹配器，包含了 TeamQueue 和 NormalQueue 两个匹配队列
+// NewMatcher is a matcher, which contains both normal queue and team queue.
 func NewMatcher(
 	errChan chan error,
 	roomChan chan Room,
@@ -53,7 +53,7 @@ func nowUnicFunc() int64 {
 	return time.Now().Unix()
 }
 
-// AddGroups 添加队伍
+// AddGroups adds groups to the queue.
 func (qm *Matcher) AddGroups(gs ...Group) error {
 	for _, g := range gs {
 		groupType := g.Type()
@@ -86,7 +86,7 @@ func (qm *Matcher) Match(interval time.Duration) {
 						qm.errChan <- fmt.Errorf("glicko2 matcher occurs panic: %v", err)
 					}
 				}()
-				// 取出本轮要匹配的队伍
+				// Get the groups to be matched in this round.
 				nGs := qm.NormalQueue.GetAndClearGroups()
 				tGs := qm.TeamQueue.GetAndClearGroups()
 
@@ -102,7 +102,7 @@ func (qm *Matcher) Match(interval time.Duration) {
 				}()
 				wg.Wait()
 
-				// 判断哪些 group 需要从专属队列从移动到普通队列
+				// Determine which groups need to be moved from the exclusive team queue to the normal queue
 				now := time.Now()
 				for _, g := range tGs {
 					needMove := false
@@ -130,7 +130,7 @@ func (qm *Matcher) Match(interval time.Duration) {
 					}
 				}
 
-				// 将普通队列中上轮没成功匹配的加回去，下轮重新匹配
+				// Add the normal groups back to the normal queue
 				_ = qm.NormalQueue.AddGroups(nGs...)
 			}()
 		}

@@ -37,7 +37,7 @@ func Test_Matcher(t *testing.T) {
 		_ = qm.AddGroups(newGroup)
 	}
 
-	// 异步启动匹配
+	// start to match asynchronously
 	go qm.Match(time.Millisecond * 100)
 
 	ch := make(chan struct{})

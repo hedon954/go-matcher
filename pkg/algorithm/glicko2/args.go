@@ -1,16 +1,16 @@
 package glicko2
 
-// Args 封装了 glicko-2 算法的 3 个核心参数
+// Args encapsulates the three core parameters of the Glicko-2 algorithm.
 type Args struct {
 
-	// 用户游戏评分，这是对玩家能力的直接衡量。
+	// Player rating, which is a direct measure of a player's ability.
 	MMR float64 `json:"mmr"`
 
-	// 评分偏差，这是对评分准确性的衡量。
-	// 如果你是一个新玩家或者很久没玩游戏了，你的 RD 会很高，表示你的真实技能可能和你的评分相差很大。
-	// 如果你经常玩游戏，你的 RD 会降低，表示你的评分越来越接近你的真实技能。
+	// Rating deviation, which is a measure of the accuracy of the rating.
+	// If you're a new player or haven't played in a while, your RD will be high, indicating that your true skill may be far from your rating.
+	// If you frequently play, your RD will decrease, indicating that your rating is getting closer to your true skill.
 	RD float64 `json:"rd"`
 
-	// 波动率；这是对玩家的评分变动幅度的衡量。
+	// Volatility; this is a measure of the fluctuation in a player's rating.
 	V float64 `json:"v"`
 }

@@ -8,16 +8,20 @@ import (
 )
 
 const (
-	// 每 5 轮会刷新一下配置
+	// Configuration refreshes every 5 turns
 	refreshTurn = 5
 
-	// 允许的 mmr 差值百分比，当差值在这个百分比内，就不尝试继续寻找更优解了
+	// Allowed MMR difference percentage. When the difference is within this percentage,
+	// it will not attempt to find a better solution.
 	acceptMMRDiffPercent = 0.01
 
-	// 使用二分查找的阈值，在寻找匹配的 group 和 team 的时候，有两种思路：
-	// 1. 遍历查找：找到最匹配的那个（数据量大的时候性能很低）
-	// 2. 二分查找：二分查找加局部搜索寻找局部最优解（性能很高，但可能错误最优解）
-	// 所以在数量量小的时候，使用遍历寻找最优解，数据量大的时候，使用二分寻找局部最优解
+	// Threshold for using binary search. When looking for matching groups and teams,
+	// there are two approaches:
+	// 1. Sequential search: Find the best match (low performance with large data).
+	// 2. Binary search: Use binary search and local search to find the local optimal solution
+	//    (high performance, but might miss the optimal solution).
+	// Therefore, when the quantity is small, use sequential search to find the optimal solution,
+	// and when the quantity is large, use binary search to find the local optimal solution.
 	useBinarySearchThreshold = 1000
 
 	CancelMatchByServerStop = "Failed to match. Please try again later"
@@ -30,49 +34,49 @@ var (
 	ErrNilGetArgsReturn = errors.New("getQueueArgs() == nil")
 )
 
-// Queue 是一个匹配队列
+// Queue is a match queue
 type Queue struct {
 	lock          sync.Mutex
-	isClosed      bool                   // 是否已关闭
-	Name          string                 // 队列名称
-	Groups        map[string]Group       // 在队列中的队伍，对于 Groups 的所有处理都要加锁
-	FullTeam      []Team                 // 匹配过程的满员临时阵营，只在 Match 中调用，不可以并发调用
-	TmpTeam       []Team                 // 匹配过程中的临时阵营，只能在 Match 中调用，不可以并发调用
-	TmpRoom       []Room                 // 匹配过程中的临时房间，只能在 Match 中调用，不可以并发调用
-	roomChan      chan Room              // 匹配成功的房间会投进这个 channel
-	newTeam       func(group Group) Team // 构建新 team 的方法
-	newRoom       func(team Team) Room   // 构建新 room 的方法
-	newRoomWithAi func(team Team) Room   // 构建带 ai 的新 room 的方法
-	nowUnixFunc   func() int64           // 返回当前时间的时间戳
-	matchTurn     int                    // 匹配轮次，对 5 取模，用于定时刷新配置
-	*QueueArgs                           // 队列参数
-	getQueueArgs  func() *QueueArgs      // 队列参数获取方法，用于定时刷新配置
+	isClosed      bool                   // Whether the queue is closed
+	Name          string                 // Queue name
+	Groups        map[string]Group       // Groups in the queue, all operations on Groups need to be locked
+	FullTeam      []Team                 // Fully formed temporary teams during matching, called only in Match, not thread-safe
+	TmpTeam       []Team                 // Temporary teams during matching, called only in Match, not thread-safe
+	TmpRoom       []Room                 // Temporary rooms during matching, called only in Match, not thread-safe
+	roomChan      chan Room              // Successfully matched rooms are sent to this channel
+	newTeam       func(group Group) Team // Method to create a new team
+	newRoom       func(team Team) Room   // Method to create a new room
+	newRoomWithAi func(team Team) Room   // Method to create a new room with AI
+	nowUnixFunc   func() int64           // Function to return the current timestamp
+	matchTurn     int                    // Match turn, modulus 5, used to periodically refresh the configuration
+	*QueueArgs                           // Queue parameters
+	getQueueArgs  func() *QueueArgs      // Method to get queue parameters, used to periodically refresh the configuration
 }
 
 type QueueArgs struct {
-	MatchTimeoutSec int64 `json:"match_timeout_sec"` // 匹配超时时间
+	MatchTimeoutSec int64 `json:"match_timeout_sec"` // Match timeout duration
 
-	TeamPlayerLimit int `json:"team_player_limit"` // 阵营总人数上限
-	RoomTeamLimit   int `json:"room_team_limit"`   // 房间总阵营数
-	MinPlayerCount  int `json:"min_player_count"`  // TODO: 最小开局人数
+	TeamPlayerLimit int `json:"team_player_limit"` // Team player limit
+	RoomTeamLimit   int `json:"room_team_limit"`   // Room team limit
+	MinPlayerCount  int `json:"min_player_count"`  // TODO: Minimum number of players to start
 
-	NewerWithNewer bool `json:"newer_with_newer"` // 新手是否只和新手匹配到一起
+	NewerWithNewer bool `json:"newer_with_newer"` // Whether beginners can only match with beginners
 
-	UnfriendlyTeamMMRVarianceMin int `json:"unfriendly_team_mmr_variance_min"` // 不友好车队 mmr 最小方差
-	MaliciousTeamMMRVarianceMin  int `json:"malicious_team_mmr_variance_min"`  // 恶意车队 mmr 最小方差
+	UnfriendlyTeamMMRVarianceMin int `json:"unfriendly_team_mmr_variance_min"` // Minimum MMR variance for unfriendly teams
+	MaliciousTeamMMRVarianceMin  int `json:"malicious_team_mmr_variance_min"`  // Minimum MMR variance for malicious teams
 
-	NormalTeamWaitTimeSec     int64 `json:"normal_team_wait_time_sec"`     // 普通车队在专属队列中的匹配时长
-	UnfriendlyTeamWaitTimeSec int64 `json:"unfriendly_team_wait_time_sec"` // 不友好车队在专属队列中的匹配时长
-	MaliciousTeamWaitTimeSec  int64 `json:"malicious_team_wait_time_sec"`  // 恶意车队在专属队列中的匹配时长
+	NormalTeamWaitTimeSec     int64 `json:"normal_team_wait_time_sec"`     // Matching duration for normal teams in exclusive queue
+	UnfriendlyTeamWaitTimeSec int64 `json:"unfriendly_team_wait_time_sec"` // Matching duration for unfriendly teams in exclusive queue
+	MaliciousTeamWaitTimeSec  int64 `json:"malicious_team_wait_time_sec"`  // Matching duration for malicious teams in exclusive queue
 
-	MatchRanges []MatchRange `json:"match_ranges"` // 匹配范围策略
+	MatchRanges []MatchRange `json:"match_ranges"` // Match range strategies
 }
 
 type MatchRange struct {
-	MaxMatchSec   int64 `json:"max_match_sec"`   // 最长匹配时间 s（不包含）
-	MMRGapPercent int   `json:"mmr_gap_percent"` // 允许的 mmr 差距百分比(0~100)（包含），0 表示无限制
-	CanJoinTeam   bool  `json:"can_join_team"`   // 是否加入满人车队
-	StarGap       int   `json:"star_gap"`        // 允许的段位差距数（包含），0 表示无限制
+	MaxMatchSec   int64 `json:"max_match_sec"`   // Maximum match duration in seconds (exclusive)
+	MMRGapPercent int   `json:"mmr_gap_percent"` // Allowed MMR difference percentage (0-100) (inclusive), 0 means no restriction
+	CanJoinTeam   bool  `json:"can_join_team"`   // Whether to join full teams
+	StarGap       int   `json:"star_gap"`        // Allowed rank difference (inclusive), 0 means no restriction
 }
 
 var defaultMatchRange = MatchRange{
@@ -135,7 +139,7 @@ func (q *Queue) AllGroups() []Group {
 	return groups
 }
 
-// AddGroups 添加 group 到队列中
+// AddGroups adds groups to the queue
 func (q *Queue) AddGroups(gs ...Group) error {
 	q.Lock()
 	defer q.Unlock()
@@ -153,16 +157,16 @@ func (q *Queue) AddGroups(gs ...Group) error {
 	return nil
 }
 
-// GetAndClearGroups 取出要匹配的 group 并且清空当前 groups 列表
+// GetAndClearGroups retrieves and clears the current groups list
 func (q *Queue) GetAndClearGroups() []Group {
 	q.Lock()
 	defer q.Unlock()
 	now := q.nowUnixFunc()
 	res := make([]Group, 0, len(q.Groups))
 	for _, g := range q.Groups {
-		// 只要还在匹配中的队伍
+		// Only groups that are still in the queue
 		if g.GetState() == GroupStateQueuing {
-			// 去掉超时的队伍
+			// Remove groups that have timed out
 			if q.MatchTimeoutSec != 0 && now-g.GetStartMatchTimeSec() >= q.MatchTimeoutSec {
 				waitSec := q.nowUnixFunc() - g.GetStartMatchTimeSec()
 				g.SetState(GroupStateUnready)
@@ -180,7 +184,7 @@ func (q *Queue) GetAndClearGroups() []Group {
 	return res
 }
 
-// clearTmp 清除临时数据并归位 groups
+// clearTmp clears temporary data and resets groups
 func (q *Queue) clearTmp() []Group {
 	groups := make([]Group, 0, 128)
 	for _, t := range q.TmpTeam {
@@ -218,30 +222,30 @@ func (q *Queue) clearTmp() []Group {
 	return groups
 }
 
-// Match 队列匹配逻辑
+// Match queue matching logic
 func (q *Queue) Match(groups []Group) []Group {
 	q.Lock()
 	defer q.Unlock()
-	// 对 groups 进行排序，后面用二分查找提高效率
+	// Sort groups for later binary search to improve efficiency
 	sortGroupsByMMR(groups)
-	// 构建新的 team
+	// Build new teams
 	groups = q.buildNewTeams(groups)
-	// 优先填充 AI
+	// Prioritize filling AI
 	q.fillTeamsWithAi()
-	// 对 team 排序
+	// Sort teams by MMR
 	q.sortFullTeamsByMMR()
-	// 创建新的房间
+	// Create new rooms
 	q.buildNewRooms()
-	// 每轮都打散重来，每 refreshTurn 轮刷新 QueueArgs
+	// Shuffle and reset every turn, refresh QueueArgs every refreshTurn
 	q.refreshMatchTurn()
-	// 清除临时数据，这里不保留临时数据是怕后面 n 轮匹配的时候，临时数据中的 Group 已经取消匹配了
+	// Clear temporary data, not keeping temporary data is to prevent groups from canceling matches in later turns
 	gs := q.clearTmp()
 	groups = append(groups, gs...)
 	return groups
 }
 
 func (q *Queue) buildNewTeams(groups []Group) []Group {
-	// 构建新的 team
+	// Build new teams
 	tryTeamCounts := len(groups)
 	var found bool
 	for i := 0; len(groups) > 0 && i < tryTeamCounts; i++ {
@@ -290,7 +294,7 @@ func (q *Queue) buildNewRooms() {
 	}
 }
 
-// fillTeamsWithAi 填充 AI
+// fillTeamsWithAi fills AI
 func (q *Queue) fillTeamsWithAi() {
 	newFullTeam := make([]Team, 0, len(q.FullTeam))
 	for _, team := range q.FullTeam {
@@ -314,23 +318,23 @@ func (q *Queue) refreshMatchTurn() {
 	}
 }
 
-// sortGroupsByMMR 根据 MMR 对 groups 进行排序
+// sortGroupsByMMR sorts groups by MMR
 func sortGroupsByMMR(groups []Group) {
 	sort.Slice(groups, func(i, j int) bool {
 		return groups[i].GetMMR() < groups[j].GetMMR()
 	})
 }
 
-// sortFullTeamsByMMR 根据 MMR 对 TmpTeam 进行排序
+// sortFullTeamsByMMR sorts TmpTeam by MMR
 func (q *Queue) sortFullTeamsByMMR() {
 	sort.Slice(q.FullTeam, func(i, j int) bool {
 		return q.FullTeam[i].GetMMR() < q.FullTeam[j].GetMMR()
 	})
 }
 
-// findGroupForTeam 从 groups 中找到适合 team 的 group 并加入其中
-// 1. 符合条件
-// 2. mmr 尽可能接近
+// findGroupForTeam finds a suitable group for the team from groups and adds it
+// 1. Meet the conditions
+// 2. MMR is as close as possible
 func (q *Queue) findGroupForTeam(team Team, groups []Group) ([]Group, bool) {
 	if len(groups) == 0 {
 		return groups, false
@@ -341,9 +345,9 @@ func (q *Queue) findGroupForTeam(team Team, groups []Group) ([]Group, bool) {
 	return q.findGroupForTeamRange(team, groups)
 }
 
-// findGroupForTeamRange 从 groups 中找到适合 team 的 group 并加入其中（遍历）
+// findGroupForTeamRange finds a suitable group for the team from groups and adds it (sequential search)
 func (q *Queue) findGroupForTeamRange(team Team, groups []Group) ([]Group, bool) {
-	// 第1个队伍直接进
+	// The first group directly joins
 	if team.PlayerCount() == 0 {
 		for gPos, group := range groups {
 			if group.GetState() == GroupStateQueuing {
@@ -355,7 +359,7 @@ func (q *Queue) findGroupForTeamRange(team Team, groups []Group) ([]Group, bool)
 		return groups, false
 	}
 
-	// 寻找平均 mmr 最接近的 group 组成一个 team
+	// Find the group with the closest average MMR to form a team
 	teamMMR := team.GetMMR()
 	teamPlayerCount := team.PlayerCount()
 	closestIndex := -1
@@ -375,9 +379,9 @@ func (q *Queue) findGroupForTeamRange(team Team, groups []Group) ([]Group, bool)
 			minMMRDiff = mmrDiff
 			closestIndex = i
 		} else if mmrDiff >= minMMRDiff && closestIndex != -1 {
-			// 因为 groups 是按 mmr 升序的，
-			// 所以如果 mmrDiff 在变大的话，说明后面的 mmrDiff 只会更大，
-			// 所以这里如果已经找到 group 了，那么是可以提前结束的
+			// Because groups are sorted in ascending order of MMR,
+			// if mmrDiff is increasing, it means that the subsequent mmrDiff will only get larger,
+			// so if a group has already been found, it can be terminated early.
 			break
 		}
 	}
@@ -391,9 +395,9 @@ func (q *Queue) findGroupForTeamRange(team Team, groups []Group) ([]Group, bool)
 	return groups, true
 }
 
-// findGroupForTeamBinary 从 groups 中找到适合 team 的 group 并加入其中（二分查找）
+// findGroupForTeamBinary finds a suitable group for the team from groups and adds it (binary search)
 func (q *Queue) findGroupForTeamBinary(team Team, groups []Group) ([]Group, bool) {
-	// 第1个队伍直接进
+	// The first group directly joins
 	if team.PlayerCount() == 0 {
 		for gPos, group := range groups {
 			if group.GetState() == GroupStateQueuing {
@@ -405,12 +409,12 @@ func (q *Queue) findGroupForTeamBinary(team Team, groups []Group) ([]Group, bool
 		return groups, false
 	}
 
-	// 寻找平均 mmr 最接近的 group 组成一个 team
+	// Find the group with the closest average MMR to form a team
 	teamMMR := team.GetMMR()
 	teamPlayerCount := team.PlayerCount()
 	closestIndex := -1
 
-	// 二分查找定位一个接近点
+	// Binary search to locate a close point
 	low, high := 0, len(groups)-1
 	minDifference := math.MaxFloat64
 	for low <= high {
@@ -431,8 +435,8 @@ func (q *Queue) findGroupForTeamBinary(team Team, groups []Group) ([]Group, bool
 		}
 	}
 
-	// 局部线性搜索来确认是否有更接近的匹配
-	searchRange := 10 // 根据实际情况调整这个范围
+	// Local linear search to confirm if there is a closer match
+	searchRange := 10 // Adjust this range based on actual conditions
 	start := int(math.Max(0, float64(closestIndex-searchRange)))
 	end := int(math.Min(float64(len(groups)-1), float64(closestIndex+searchRange)))
 	for i := start; i <= end; i++ {
@@ -460,7 +464,7 @@ func (q *Queue) findGroupForTeamBinary(team Team, groups []Group) ([]Group, bool
 	return groups, true
 }
 
-// findTeamForRoom 从 TmpTeam 中找到合适 room 的 team 并加入其中
+// findTeamForRoom finds a suitable team for the room from TmpTeam and adds it
 func (q *Queue) findTeamForRoom(room Room) bool {
 	if len(q.FullTeam) == 0 {
 		return false
@@ -471,7 +475,7 @@ func (q *Queue) findTeamForRoom(room Room) bool {
 	return q.findTeamForRoomRange(room)
 }
 
-// findTeamForRoomRange 从 TmpTeam 中找到合适 room 的 team 并加入其中（遍历）
+// findTeamForRoomRange finds a suitable team for the room from TmpTeam and adds it (sequential search)
 func (q *Queue) findTeamForRoomRange(room Room) bool {
 	if len(q.FullTeam) == 0 {
 		return false
@@ -479,24 +483,24 @@ func (q *Queue) findTeamForRoomRange(room Room) bool {
 
 	teams := room.GetTeams()
 
-	// 已经满了，直接返回
+	// Already full, return directly
 	if len(teams) >= q.RoomTeamLimit {
 		return false
 	}
 
-	// 如果 room 是空的，则第一个 team 直接进入 room 中
+	// If the room is empty, the first team directly enters the room
 	if len(teams) == 0 {
 		room.AddTeam(q.FullTeam[0])
 		q.FullTeam = q.FullTeam[1:]
 		return true
 	}
 
-	// 寻找 mmr 最接近的 team
+	// Find the team with the closest MMR
 	roomMMR := room.GetMMR()
 	closestIndex := -1
 	minMMRDiff := math.MaxFloat64
 	for i, team := range q.FullTeam {
-		// 只有当 team 已经组建完毕了，才可以加入到 room 中
+		// Only fully formed teams can join the room
 		if team.PlayerCount() != q.TeamPlayerLimit {
 			continue
 		}
@@ -521,7 +525,7 @@ func (q *Queue) findTeamForRoomRange(room Room) bool {
 	return true
 }
 
-// findTeamForRoomBinary 从 TmpTeam 中找到合适 room 的 team 并加入其中（二分查找）
+// findTeamForRoomBinary finds a suitable team for the room from TmpTeam and adds it (binary search)
 func (q *Queue) findTeamForRoomBinary(room Room) bool {
 	if len(q.FullTeam) == 0 {
 		return false
@@ -529,19 +533,19 @@ func (q *Queue) findTeamForRoomBinary(room Room) bool {
 
 	teams := room.GetTeams()
 
-	// 已经满了，直接返回
+	// Already full, return directly
 	if len(teams) >= q.RoomTeamLimit {
 		return false
 	}
 
-	// 如果 room 是空的，则第一个 team 直接进入 room 中
+	// If the room is empty, the first team directly enters the room
 	if len(teams) == 0 {
 		room.AddTeam(q.FullTeam[0])
 		q.FullTeam = q.FullTeam[1:]
 		return true
 	}
 
-	// 二分查找定位一个接近点，寻找 mmr 最接近的 team
+	// Binary search to locate a close point, find the team with the closest MMR
 	roomMMR := room.GetMMR()
 	closestIndex := -1
 	low, high := 0, len(q.FullTeam)-1
@@ -554,7 +558,7 @@ func (q *Queue) findTeamForRoomBinary(room Room) bool {
 		if mmrDifference < minDifference && q.canTeamTogether(room, team) {
 			minDifference = mmrDifference
 			closestIndex = mid
-			// 如果只相差1%，那就算可以了，不继续寻找了
+			// If the difference is only 1%, consider it acceptable and stop searching
 			if minDifference <= roomMMR*acceptMMRDiffPercent {
 				break
 			}
@@ -566,15 +570,15 @@ func (q *Queue) findTeamForRoomBinary(room Room) bool {
 		}
 	}
 
-	// 只相差1%，那就算可以了，不继续寻找了
+	// If the difference is only 1%, consider it acceptable and stop searching
 	if closestIndex != -1 && minDifference <= roomMMR*acceptMMRDiffPercent {
 		room.AddTeam(q.FullTeam[closestIndex])
 		q.FullTeam = append(q.FullTeam[:closestIndex], q.FullTeam[closestIndex+1:]...)
 		return true
 	}
 
-	// 局部线性搜索来确认是否有更接近的匹配
-	searchRange := 10 // 根据实际情况调整这个范围
+	// Local linear search to confirm if there is a closer match
+	searchRange := 10 // Adjust this range based on actual conditions
 	start := int(math.Max(0, float64(closestIndex-searchRange)))
 	end := int(math.Min(float64(len(q.FullTeam)-1), float64(closestIndex+searchRange)))
 
@@ -596,7 +600,7 @@ func (q *Queue) findTeamForRoomBinary(room Room) bool {
 	return true
 }
 
-// canGroupTogether 判断队伍之间是否可以组成一个阵营
+// canGroupTogether determines whether groups can form a team
 func (q *Queue) canGroupTogether(team Team, group Group) bool {
 	ngMMR := group.GetMMR()
 	ngStar := group.GetStar()
@@ -604,7 +608,7 @@ func (q *Queue) canGroupTogether(team Team, group Group) bool {
 	ngIsNewer := group.IsNewer()
 
 	for _, g := range team.GetGroups() {
-		// 优先把可以匹配到 AI 的匹配到一起
+		// Prioritize matching groups that can fill AI together
 		if g.CanFillAi() != ngCanFillAi {
 			return false
 		}
@@ -613,16 +617,16 @@ func (q *Queue) canGroupTogether(team Team, group Group) bool {
 			return false
 		}
 
-		// 获取匹配范围配置
+		// Get match range configuration
 		mr := q.getMatchRange(g.GetStartMatchTimeSec(), group.GetStartMatchTimeSec())
 
-		// mmr 是否匹配
+		// Check if MMR matches
 		gMMR := g.GetMMR()
 		if mr.MMRGapPercent != 0 && math.Abs(gMMR-ngMMR) > gMMR*float64(mr.MMRGapPercent)/100 {
 			return false
 		}
 
-		// 段位是否匹配
+		// Check if rank matches
 		if mr.StarGap != 0 && int(math.Abs(float64(g.GetStar()-ngStar))) > mr.StarGap {
 			return false
 		}
@@ -630,13 +634,13 @@ func (q *Queue) canGroupTogether(team Team, group Group) bool {
 	return true
 }
 
-// canTeamTogether 判断阵营之间是否可以组成一个房间
+// canTeamTogether determines whether teams can form a room
 func (q *Queue) canTeamTogether(room Room, tt Team) bool {
 	ttMMR := tt.GetMMR()
 	ttStar := tt.GetStar()
 	ttNewer := tt.IsNewer()
-	// 判断 tt 是否满足跟当前 room 中的所有 team 匹配的条件
-	// 只要有一个不满足，就返回 false
+	// Check if tt meets the matching conditions with all teams in the current room
+	// If any condition is not met, return false
 	for _, t := range room.GetTeams() {
 		mr := q.getMatchRange(t.GetStartMatchTimeSec(), tt.GetStartMatchTimeSec())
 
@@ -644,18 +648,18 @@ func (q *Queue) canTeamTogether(room Room, tt Team) bool {
 			return false
 		}
 
-		// 是否加入车队
+		// Check if joining full teams is allowed
 		if len(t.GetGroups()) > 1 && !mr.CanJoinTeam && len(tt.GetGroups()) == 1 {
 			return false
 		}
 
-		// mmr 是否匹配
+		// Check if MMR matches
 		tMMR := t.GetMMR()
 		if mr.MMRGapPercent != 0 && math.Abs(tMMR-ttMMR) > tMMR*float64(mr.MMRGapPercent)/float64(100) {
 			return false
 		}
 
-		// 段位是否匹配
+		// Check if rank matches
 		if mr.StarGap != 0 && int(math.Abs(float64(t.GetStar()-ttStar))) > mr.StarGap {
 			return false
 		}
@@ -663,7 +667,7 @@ func (q *Queue) canTeamTogether(room Room, tt Team) bool {
 	return true
 }
 
-// getMatchRange 获取匹配范围
+// getMatchRange gets the match range
 func (q *Queue) getMatchRange(mst1, mst2 int64) MatchRange {
 	now := q.nowUnixFunc()
 
@@ -671,7 +675,7 @@ func (q *Queue) getMatchRange(mst1, mst2 int64) MatchRange {
 		return defaultMatchRange
 	}
 
-	// 以匹配时间短的那个为准
+	// Use the shorter match duration as the standard
 	mt := int64(math.Min(float64(now-mst1), float64(now-mst2)))
 	for _, mr := range q.MatchRanges {
 		if mt < mr.MaxMatchSec {
@@ -679,11 +683,11 @@ func (q *Queue) getMatchRange(mst1, mst2 int64) MatchRange {
 		}
 	}
 
-	// 默认返回最后一个
+	// Default return the last one
 	return q.MatchRanges[len(q.MatchRanges)-1]
 }
 
-// StopMatch 取消匹配
+// StopMatch cancels the match
 func (q *Queue) StopMatch() []Group {
 	q.Lock()
 	defer q.Unlock()
@@ -708,7 +712,7 @@ func (q *Queue) StopMatch() []Group {
 	return remainGroups
 }
 
-// roomMatchSuccess 房间匹配成功
+// roomMatchSuccess indicates a successful room match
 func (q *Queue) roomMatchSuccess(room Room) {
 	go func() {
 		q.setRoomReady(room)
@@ -716,7 +720,7 @@ func (q *Queue) roomMatchSuccess(room Room) {
 	}()
 }
 
-// setRoomReady 更新 group 状态为匹配完成
+// setRoomReady updates the group status to match completed
 func (q *Queue) setRoomReady(room Room) {
 	for _, t := range room.GetTeams() {
 		for _, g := range t.GetGroups() {
