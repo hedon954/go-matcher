@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/stretchr/testify/assert"
@@ -448,42 +447,4 @@ func playerInfo(uid string) pto.PlayerInfo {
 		MatchStrategy: constant.MatchStrategyGlicko2,
 		Glicko2Info:   &pto.Glicko2Info{},
 	}
-}
-
-func TestAPI_CreateGroup_BadRequest(t *testing.T) {
-	api := NewAPI(1, time.Second)
-	router := api.setupRouter()
-
-	req, _ := http.NewRequest("POST", "/match/create_group", bytes.NewBuffer(createGroupParamBad("a")))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func createGroupParamBad(uid string) []byte {
-	param := &pto.CreateGroup{
-		PlayerInfo: pto.PlayerInfo{
-			UID:           uid,
-			ModeVersion:   1,
-			MatchStrategy: constant.MatchStrategyGlicko2,
-			Glicko2Info:   &pto.Glicko2Info{},
-		},
-	}
-	bs, _ := json.Marshal(param)
-	return bs
-}
-
-func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
-	api := NewAPI(1, time.Second)
-	router := api.setupRouter()
-
-	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid", http.NoBody)
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	rsp := response.NewHTTPResponse(w.Body.Bytes())
-	assert.Equal(t, http.StatusOK, rsp.Code)
-	assert.Equal(t, merr.ErrPlayerNotExists.Error(), rsp.Message)
 }

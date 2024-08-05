@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"fmt"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/goat_game"
@@ -22,8 +24,10 @@ func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (p entry.Player, err err
 	switch pInfo.GameMode {
 	case constant.GameModeGoatGame:
 		p, err = goat_game.CreatePlayer(base, pInfo)
-	default:
+	case constant.GameModeTest:
 		p = base
+	default:
+		return nil, fmt.Errorf("unsupported game mode: %d", pInfo.GameMode)
 	}
 
 	if err != nil {

@@ -96,7 +96,10 @@ definitions:
   api.SetVoiceStateReq:
     properties:
       state:
-        $ref: '#/definitions/entry.PlayerVoiceState'
+        allOf:
+        - $ref: '#/definitions/entry.PlayerVoiceState'
+        maximum: 1
+        minimum: 0
       uid:
         type: string
     required:
@@ -104,9 +107,11 @@ definitions:
     type: object
   constant.GameMode:
     enum:
+    - -1
     - 905
     type: integer
     x-enum-varnames:
+    - GameModeTest
     - GameModeGoatGame
   constant.MatchStrategy:
     enum:

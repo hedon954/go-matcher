@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -166,10 +165,6 @@ func (api *API) EnterGroup(c *gin.Context) {
 // @Router /match/exit_group/{uid} [post]
 func (api *API) ExitGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if uid == "" {
-		response.GinParamError(c, errors.New("lack of uid param"))
-		return
-	}
 	if err := api.ms.ExitGroup(uid); err != nil {
 		response.GinError(c, err)
 		return
@@ -309,10 +304,7 @@ func (api *API) RefuseInvite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.RefuseInvite(req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg); err != nil {
-		response.GinError(c, err)
-		return
-	}
+	api.ms.RefuseInvite(req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg)
 	response.GinSuccess(c, nil)
 }
 
@@ -401,10 +393,6 @@ func (api *API) SetVoiceState(c *gin.Context) {
 // @Router /match/start_match/{uid} [post]
 func (api *API) StartMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if uid == "" {
-		response.GinParamError(c, errors.New("lack of uid param"))
-		return
-	}
 	if err := api.ms.StartMatch(uid); err != nil {
 		response.GinError(c, err)
 		return
@@ -425,10 +413,6 @@ func (api *API) StartMatch(c *gin.Context) {
 // @Router /match/cancel_match/{uid} [post]
 func (api *API) CancelMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if uid == "" {
-		response.GinParamError(c, errors.New("lack of uid param"))
-		return
-	}
 	if err := api.ms.CancelMatch(uid); err != nil {
 		response.GinError(c, err)
 		return

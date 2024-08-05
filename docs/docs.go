@@ -699,7 +699,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "state": {
-                    "$ref": "#/definitions/entry.PlayerVoiceState"
+                    "maximum": 1,
+                    "minimum": 0,
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entry.PlayerVoiceState"
+                        }
+                    ]
                 },
                 "uid": {
                     "type": "string"
@@ -709,9 +715,11 @@ const docTemplate = `{
         "constant.GameMode": {
             "type": "integer",
             "enum": [
+                -1,
                 905
             ],
             "x-enum-varnames": [
+                "GameModeTest",
                 "GameModeGoatGame"
             ]
         },

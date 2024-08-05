@@ -60,5 +60,5 @@ type SetRecentJoinGroupReq struct {
 
 type SetVoiceStateReq struct {
 	UID   string                 `json:"uid" binding:"required"`
-	State entry.PlayerVoiceState `json:"state"`
+	State entry.PlayerVoiceState `json:"state" binding:"gte=0,lte=1"`
 }

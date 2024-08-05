@@ -25,7 +25,7 @@ type Service interface {
 	AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error
 
 	// RefuseInvite refuses the invite from the inviter
-	RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error
+	RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string)
 
 	// KickPlayer kicks the kicked player from the group
 	KickPlayer(captainUID, kickedUID string) error

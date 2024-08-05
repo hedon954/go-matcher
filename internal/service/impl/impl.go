@@ -395,26 +395,25 @@ func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, g
 	return nil
 }
 
-func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) error {
+func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) {
 	const defaultRefuseMsg = "Sorry, I'm not available at the moment."
 
 	g := impl.groupMgr.Get(groupID)
 	if g == nil {
-		return nil
+		return
 	}
 
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
 	if g.Base().GetState() == entry.GroupStateDissolved {
-		return nil
+		return
 	}
 	g.Base().DelInviteRecord(inviteeUID)
 	if refuseMsg == "" {
 		refuseMsg = defaultRefuseMsg
 	}
 	impl.connectorClient.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
-	return nil
 }
 
 func (impl *Impl) StartMatch(captainUID string) error {

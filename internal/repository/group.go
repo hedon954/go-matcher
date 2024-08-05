@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -36,8 +37,10 @@ func (m *GroupMgr) CreateGroup(playerLimit int, p entry.Player) (
 	switch p.Base().GameMode {
 	case constant.GameModeGoatGame:
 		g, err = goat_game.CreateGroup(base, p)
-	default:
+	case constant.GameModeTest:
 		g = base
+	default:
+		return nil, fmt.Errorf("unsupported game mode: %d", p.Base().GameMode)
 	}
 	if err != nil {
 		return nil, err

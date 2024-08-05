@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const GameMode = 10086
+const GameMode = constant.GameModeGoatGame
 const ModeVersion = 1008611
-const MatchStrategy = 10010
+const MatchStrategy = constant.MatchStrategyGlicko2
 const PlayerLimit = 5
 const UID = "uid"
 
@@ -35,6 +35,7 @@ func newCreateGroupParam(uid string) *pto.CreateGroup {
 			GameMode:      GameMode,
 			ModeVersion:   ModeVersion,
 			MatchStrategy: MatchStrategy,
+			Glicko2Info:   &pto.Glicko2Info{},
 		},
 	}
 }
@@ -58,6 +59,7 @@ func newPlayerInfo(uid string) *pto.PlayerInfo {
 		GameMode:      GameMode,
 		ModeVersion:   ModeVersion,
 		MatchStrategy: MatchStrategy,
+		Glicko2Info:   &pto.Glicko2Info{},
 	}
 }
 
@@ -107,15 +109,15 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.Equal(t, false, g2.IsFull())
 
 	// 3. change the game mode, should create a new group and dissolve the old group
-	param.GameMode = 1
+	param.GameMode = constant.GameModeTest
 	g3, err := impl.CreateGroup(param)
 	assert.Nil(t, err)
 	assert.NotNil(t, g3)
 	assert.Equal(t, int64(2), g3.ID())
 	assert.NotEqual(t, g, g3)
 	assert.Nil(t, impl.groupMgr.Get(g.ID()))
-	assert.Equal(t, constant.GameMode(1), g3.GetCaptain().Base().GameMode)
-	assert.Equal(t, constant.MatchStrategy(10010), g3.GetCaptain().Base().MatchStrategy)
+	assert.Equal(t, constant.GameModeTest, g3.GetCaptain().Base().GameMode)
+	assert.Equal(t, constant.MatchStrategyGlicko2, g3.GetCaptain().Base().MatchStrategy)
 
 	// 4. if the player state is not `online` or `group`, should return error
 	p2, err := impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
@@ -650,22 +652,19 @@ func TestImpl_RefuseInvite(t *testing.T) {
 	impl := defaultImpl(PlayerLimit)
 
 	// 1. if the group not exists, just return nil
-	err := impl.RefuseInvite(UID, UID+"1", 1, "")
-	assert.Nil(t, err)
+	impl.RefuseInvite(UID, UID+"1", 1, "")
 
 	// 2. return the group state is dissolved, just return nil
 	p, g := createTempGroup(UID+"1", impl, t)
 	g.Base().SetState(entry.GroupStateDissolved) // set temp
-	err = impl.RefuseInvite(UID, UID+"1", 1, "")
-	assert.Nil(t, err)
+	impl.RefuseInvite(UID, UID+"1", 1, "")
 	g.Base().SetState(entry.GroupStateInvite) // set back
 
 	// 3. push refuse msg to the inviter and the invite record should be deleted
-	err = impl.Invite(p.UID(), UID)
+	err := impl.Invite(p.UID(), UID)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().GetInviteRecords()))
-	err = impl.RefuseInvite(p.UID(), UID, g.ID(), "")
-	assert.Nil(t, err)
+	impl.RefuseInvite(p.UID(), UID, g.ID(), "")
 	assert.Equal(t, 0, len(g.Base().GetInviteRecords()))
 }
 

@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"sync/atomic"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -14,7 +15,7 @@ type RoomMgr struct {
 	roomIDIter atomic.Int64
 }
 
-// RoomMgr creates a room repository.
+// NewRoomMgr creates a room repository.
 func NewRoomMgr(roomIDStart int64) *RoomMgr {
 	mgr := &RoomMgr{
 		Manager: collection.New[int64, entry.Room](),
@@ -28,8 +29,10 @@ func (m *RoomMgr) CreateRoom(t entry.Team) (r entry.Room, err error) {
 	switch t.Base().GameMode() {
 	case constant.GameModeGoatGame:
 		r, err = goat_game.CreateRoom(base, t)
-	default:
+	case constant.GameModeTest:
 		r = base
+	default:
+		return nil, fmt.Errorf("unsupported game mode: %d", t.Base().GameMode())
 	}
 	if err != nil {
 		return nil, err
