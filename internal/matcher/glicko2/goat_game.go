@@ -18,25 +18,7 @@ func (m *Matcher) resgiterGoatGame() {
 }
 
 func (m *Matcher) goatGameArgs() *glicko2.QueueArgs {
-	return &glicko2.QueueArgs{
-		MatchTimeoutSec:              50,
-		TeamPlayerLimit:              1,
-		RoomTeamLimit:                3,
-		NewerWithNewer:               false,
-		UnfriendlyTeamMMRVarianceMin: 0,
-		MaliciousTeamMMRVarianceMin:  0,
-		NormalTeamWaitTimeSec:        0,
-		UnfriendlyTeamWaitTimeSec:    0,
-		MaliciousTeamWaitTimeSec:     0,
-		MatchRanges: []glicko2.MatchRange{
-			{
-				MaxMatchSec:   0,
-				MMRGapPercent: 0,
-				CanJoinTeam:   true,
-				StarGap:       0,
-			},
-		},
-	}
+	return m.configer.Glicko2.GetQueueArgs(constant.GameModeGoatGame)
 }
 
 func (m *Matcher) newGoatGameTeam(g glicko2.Group) glicko2.Team {

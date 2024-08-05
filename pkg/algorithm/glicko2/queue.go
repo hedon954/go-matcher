@@ -686,8 +686,8 @@ func (q *Queue) getMatchRange(mst1, mst2 int64) MatchRange {
 // StopMatch 取消匹配
 func (q *Queue) StopMatch() []Group {
 	q.Lock()
+	defer q.Unlock()
 	q.isClosed = true
-	q.Unlock()
 
 	groups := q.clearTmp()
 	for _, group := range groups {
