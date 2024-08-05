@@ -226,6 +226,16 @@ func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
 	assert.Equal(t, merr.ErrNotCaptain.Error(), assertRspNotOk(w, t))
 }
 
+func TestAPI_KickPlayer_BadRequest(t *testing.T) {
+	api := NewAPI(2, time.Second)
+	router := api.setupRouter()
+	req, _ := http.NewRequest("POST", "/match/kick_player", bytes.NewBuffer(createKickParam("uid1", "")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
