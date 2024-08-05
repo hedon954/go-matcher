@@ -8,7 +8,7 @@ import (
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
-func (m *Matcher) resgiterGoatGame() {
+func (m *Matcher) registerGoatGame() {
 	m.AddMode(constant.GameModeGoatGame, &Funcs{
 		ArgsFunc:          m.goatGameArgs,
 		NewTeamFunc:       m.newGoatGameTeam,

@@ -416,10 +416,10 @@ func requestCreateGroup(router *gin.Engine, uid string, t *testing.T) *CreateGro
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
-	return creategGroupRsp(w)
+	return createGroupRsp(w)
 }
 
-func creategGroupRsp(w *httptest.ResponseRecorder) *CreateGroupRsp {
+func createGroupRsp(w *httptest.ResponseRecorder) *CreateGroupRsp {
 	var rsp response.HTTPResponse
 	_ = json.Unmarshal(w.Body.Bytes(), &rsp)
 	return response.FromHTTPResponse[CreateGroupRsp](&rsp)

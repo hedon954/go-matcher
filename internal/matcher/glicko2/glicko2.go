@@ -20,10 +20,10 @@ type Matcher struct {
 
 	configer *Configer
 
-	playrMgr *repository.PlayerMgr
-	groupMgr *repository.GroupMgr
-	teamMgr  *repository.TeamMgr
-	roomMgr  *repository.RoomMgr
+	playerMgr *repository.PlayerMgr
+	groupMgr  *repository.GroupMgr
+	teamMgr   *repository.TeamMgr
+	roomMgr   *repository.RoomMgr
 
 	// matchers is the map of glicko2 matchers.
 	// `key` is used to separate different matching groups.
@@ -64,7 +64,7 @@ type Funcs struct {
 func New(
 	roomChannelToService chan entry.Room,
 	configer *Configer, matchInterval time.Duration,
-	playrMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
+	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
 	teamMgr *repository.TeamMgr, roomMgr *repository.RoomMgr,
 ) *Matcher {
 	m := &Matcher{
@@ -73,7 +73,7 @@ func New(
 		roomChan:             make(chan glicko2.Room),
 		roomChannelToService: roomChannelToService,
 		gameModes:            make(map[constant.GameMode]*Funcs, 16),
-		playrMgr:             playrMgr,
+		playerMgr:            playerMgr,
 		groupMgr:             groupMgr,
 		teamMgr:              teamMgr,
 		roomMgr:              roomMgr,
@@ -82,7 +82,7 @@ func New(
 	}
 
 	// register funcs
-	m.resgiterGoatGame()
+	m.registerGoatGame()
 
 	// start to handle match result
 	go m.handleMatchResult()

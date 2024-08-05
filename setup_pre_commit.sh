@@ -26,25 +26,6 @@ else
     fi
 fi
 
-echo "Installing Go tools..."
-
-# 安装 go-imports
-if ! command -v goimports &> /dev/null
-then
-    echo "Installing goimports..."
-    go install golang.org/x/tools/cmd/goimports@latest
-else
-    echo "goimports is already installed"
-fi
-
-# 安装 go-critic
-if ! command -v gocritic &> /dev/null
-then
-    echo "Installing gocritic..."
-    go install github.com/go-critic/go-critic/cmd/gocritic@latest
-else
-    echo "gocritic is already installed"
-fi
 
 # 安装 golangci-lint
 if ! command -v golangci-lint &> /dev/null
@@ -63,6 +44,15 @@ then
     brew install typos-cli
 else
     echo "typos is already installed"
+fi
+
+# 安装 swag
+if ! command -v swag &> /dev/null
+then
+    echo "Installing swag(v1.16.3)..."
+    go install github.com/swaggo/swag/cmd/swag@v1.16.3
+else
+    echo "swag(v1.16.3) is already installed"
 fi
 
 # 安装 pre-commit hooks
