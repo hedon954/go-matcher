@@ -5,9 +5,9 @@ import (
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
-type Glicko2Mock struct {
-}
+type Glicko2Mock struct{}
 
+//nolint:all
 func (gc *Glicko2Mock) GetQueueArgs(mode constant.GameMode) *glicko2.QueueArgs {
 	if mode == constant.GameModeGoatGame {
 		return &glicko2.QueueArgs{
