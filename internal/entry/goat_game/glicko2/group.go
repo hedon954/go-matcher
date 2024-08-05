@@ -1,6 +1,7 @@
 package glicko2
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -14,12 +15,25 @@ type Group struct {
 	entry.Group
 }
 
+func CreateGroup(e entry.Group, p *Player) *Group {
+	g := &Group{
+		Group: e,
+	}
+	js, _ := json.Marshal(p)
+	slog.Info("create group", slog.String("player", string(js)))
+	return g
+}
+
 func (g *Group) QueueKey() string {
 	return fmt.Sprintf("%d-%d", g.Base().GameMode, g.Base().ModeVersion)
 }
 
 func (g *Group) GetID() string {
 	return cast.ToString(g.ID())
+}
+
+func (g *Group) MatchKey() string {
+	return fmt.Sprintf("%d-%d", g.Base().GameMode, g.Base().ModeVersion)
 }
 
 func (g *Group) GetPlayers() []glicko2.Player {

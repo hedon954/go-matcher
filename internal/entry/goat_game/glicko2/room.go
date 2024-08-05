@@ -1,6 +1,9 @@
 package glicko2
 
 import (
+	"encoding/json"
+	"log/slog"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
@@ -9,28 +12,38 @@ type Room struct {
 	entry.Room
 }
 
+func CreateRoom(room entry.Room, team *Team) entry.Room {
+	r := &Room{
+		Room: room,
+	}
+	bs, _ := json.Marshal(team)
+	slog.Info("create room", slog.Any("team", string(bs)))
+	return r
+}
+
 func (r *Room) GetID() int64 {
 	return r.ID()
 }
 
 func (r *Room) GetTeams() []glicko2.Team {
-	//TODO implement me
-	panic("implement me")
+	teams := r.Base().GetTeams()
+	res := make([]glicko2.Team, len(teams))
+	for i := 0; i < len(res); i++ {
+		res[i] = teams[i].(glicko2.Team)
+	}
+	return res
 }
 
 func (r *Room) SortTeamByRank() []glicko2.Team {
-	//TODO implement me
-	panic("implement me")
+	return r.GetTeams()
 }
 
 func (r *Room) AddTeam(t glicko2.Team) {
-	//TODO implement me
-	panic("implement me")
+	r.Base().AddTeam(t.(entry.Team))
 }
 
 func (r *Room) RemoveTeam(t glicko2.Team) {
-	//TODO implement me
-	panic("implement me")
+	r.Base().RemoveTeam(t.(entry.Team).ID())
 }
 
 func (r *Room) GetMMR() float64 {

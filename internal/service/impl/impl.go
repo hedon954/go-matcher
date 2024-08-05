@@ -18,12 +18,14 @@ type Impl struct {
 
 	connectorClient *connector.Client
 
-	playerLimit int
-	nowFunc     func() int64
+	groupPlayerLimit int
+	nowFunc          func() int64
 
-	// matchChannel used to send a group to match system.
+	// groupChannel used to send a group to match system.
 	// TODO: if match system is down, we should stop the server.
-	matchChannel chan entry.Group
+	groupChannel chan entry.Group
+
+	roomChannel chan entry.Room
 }
 
 type Option func(*Impl)
@@ -34,14 +36,18 @@ func WithNowFunc(f func() int64) Option {
 	}
 }
 
-func NewDefault(playerLimit int, matchChannel chan entry.Group, options ...Option) *Impl {
+func NewDefault(
+	groupPlayerLimit int, playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr, groupChannel chan entry.Group,
+	roomChannel chan entry.Room, options ...Option,
+) *Impl {
 	impl := &Impl{
-		playerMgr:       repository.NewPlayerMgr(),
-		groupMgr:        repository.NewGroupMgr(0), // TODO: confirm the groupIDStart
-		connectorClient: connector.New(),           // TODO: DI
-		playerLimit:     playerLimit,
-		nowFunc:         time.Now().Unix,
-		matchChannel:    matchChannel,
+		playerMgr:        playerMgr,
+		groupMgr:         groupMgr,
+		connectorClient:  connector.New(), // TODO: DI
+		groupPlayerLimit: groupPlayerLimit,
+		nowFunc:          time.Now().Unix,
+		groupChannel:     groupChannel,
+		roomChannel:      roomChannel,
 	}
 
 	for _, opt := range options {
@@ -66,7 +72,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 	g := impl.groupMgr.Get(p.Base().GroupID)
 	if g == nil {
 		// create a group
-		g, err = impl.createGroup(param, p)
+		g, err = impl.createGroup(p)
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +89,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 			if g.Base().RemovePlayer(p) {
 				impl.groupMgr.Delete(g.ID())
 			}
-			g, err = impl.createGroup(param, p)
+			g, err = impl.createGroup(p)
 			if err != nil {
 				return nil, err
 			}
@@ -353,7 +359,8 @@ func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, g
 	if invitee != nil {
 		invitee.Base().Lock()
 		defer invitee.Base().Unlock()
-		if err := invitee.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
+		if err := invitee.Base().CheckOnlineState(entry.PlayerOnlineStateOnline,
+			entry.PlayerOnlineStateInGroup); err != nil {
 			return err
 		}
 	}

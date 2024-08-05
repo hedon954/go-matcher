@@ -23,5 +23,5 @@ func (impl *Impl) startMatch(g entry.Group) {
 	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateInMatch))
 
 	// push to match channel
-	impl.matchChannel <- g
+	impl.groupChannel <- g
 }

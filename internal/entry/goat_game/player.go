@@ -13,11 +13,11 @@ type Player struct {
 	*entry.PlayerBase
 }
 
-func CreatePlayer(base *entry.PlayerBase, info *pto.Glicko2Info) (entry.Player, error) {
+func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) (entry.Player, error) {
 	player := &Player{PlayerBase: base}
 	switch base.MatchStrategy {
 	case constant.MatchStrategyGlicko2:
-		return glicko2.CreatePlayer(player, info), nil
+		return glicko2.CreatePlayer(player, pInfo.Glicko2Info), nil
 	default:
 		return nil, fmt.Errorf("unknown match strategy: %d", base.MatchStrategy)
 	}

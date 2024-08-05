@@ -10,6 +10,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -20,8 +21,11 @@ const PlayerLimit = 5
 const UID = "uid"
 
 func defaultImpl(playerLimit int, opts ...Option) *Impl {
-	mc := make(chan entry.Group, 1024)
-	return NewDefault(playerLimit, mc, opts...)
+	gc := make(chan entry.Group, 1024)
+	rc := make(chan entry.Room, 1024)
+	pm := repository.NewPlayerMgr()
+	gm := repository.NewGroupMgr(0)
+	return NewDefault(playerLimit, pm, gm, gc, rc, opts...)
 }
 
 func newCreateGroupParam(uid string) *pto.CreateGroup {
@@ -753,9 +757,11 @@ func TestImpl_AcceptInvite(t *testing.T) {
 	assert.Nil(t, err)
 	err = impl.Invite(fullGroup.GetCaptain().UID(), inviteeInfo.UID) // send invite
 	assert.Nil(t, err)
-	err = impl.EnterGroup(newEnterGroupParam(fullGroupInviter.UID()), fullGroup.ID()) // another player enter the group make group full
+	err = impl.EnterGroup(newEnterGroupParam(fullGroupInviter.UID()),
+		fullGroup.ID()) // another player enter the group make group full
 	assert.Nil(t, err)
-	err = impl.AcceptInvite(fullGroup.GetCaptain().UID(), inviteeInfo, fullGroup.ID()) // now the group is full, so can not accept invite
+	err = impl.AcceptInvite(fullGroup.GetCaptain().UID(), inviteeInfo,
+		fullGroup.ID()) // now the group is full, so can not accept invite
 	assert.Equal(t, merr.ErrGroupFull, err)
 
 	// 8. return success and delete the invite record

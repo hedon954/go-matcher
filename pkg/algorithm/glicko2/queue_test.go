@@ -702,6 +702,10 @@ func (g *GroupMock) GetID() string {
 	return g.ID
 }
 
+func (g *GroupMock) MatchKey() string {
+	return fmt.Sprintf("%d-%d", g.modeVersion, g.platform)
+}
+
 func (g *GroupMock) GetState() GroupState {
 	g.RLock()
 	defer g.RUnlock()
@@ -1001,13 +1005,6 @@ func (r *RoomMock) HasAi() bool {
 	return false
 }
 
-func (r *RoomMock) SortTeamByRank() []Team {
-	sort.SliceStable(r.teams, func(i, j int) bool {
-		return r.teams[i].GetRank() < r.teams[j].GetRank()
-	})
-	return r.teams
-}
-
 type TeamMock struct {
 	sync.RWMutex
 
@@ -1038,6 +1035,8 @@ func (t *TeamMock) GetModeVersion() int {
 }
 
 func (t *TeamMock) GetGroups() []Group {
+	t.RLock()
+	defer t.RUnlock()
 	res := make([]Group, len(t.groups))
 	i := 0
 	for _, g := range t.groups {
@@ -1051,6 +1050,8 @@ func (t *TeamMock) GetGroups() []Group {
 }
 
 func (t *TeamMock) AddGroup(g Group) {
+	t.Lock()
+	defer t.Unlock()
 	t.groups[g.GetID()] = g
 	gmst := g.GetStartMatchTimeSec()
 	if gmst == 0 {
@@ -1062,10 +1063,14 @@ func (t *TeamMock) AddGroup(g Group) {
 }
 
 func (t *TeamMock) RemoveGroup(groupId string) {
+	t.Lock()
+	defer t.Unlock()
 	delete(t.groups, groupId)
 }
 
 func (t *TeamMock) PlayerCount() int {
+	t.RLock()
+	defer t.RUnlock()
 	count := 0
 	for _, group := range t.groups {
 		count += group.PlayerCount()
@@ -1074,6 +1079,8 @@ func (t *TeamMock) PlayerCount() int {
 }
 
 func (t *TeamMock) GetMMR() float64 {
+	t.RLock()
+	defer t.RUnlock()
 	if len(t.groups) == 0 {
 		return 0
 	}
@@ -1085,6 +1092,8 @@ func (t *TeamMock) GetMMR() float64 {
 }
 
 func (t *TeamMock) GetStar() int {
+	t.RLock()
+	defer t.RUnlock()
 	if len(t.groups) == 0 {
 		return 0
 	}
@@ -1096,6 +1105,8 @@ func (t *TeamMock) GetStar() int {
 }
 
 func (t *TeamMock) SetFinishMatchTimeSec(t2 int64) {
+	t.RLock()
+	defer t.RUnlock()
 	for _, g := range t.groups {
 		g.SetFinishMatchTimeSec(t2)
 	}
@@ -1106,6 +1117,8 @@ func (t *TeamMock) GetStartMatchTimeSec() int64 {
 }
 
 func (t *TeamMock) GetFinishMatchTimeSec() int64 {
+	t.RLock()
+	defer t.RUnlock()
 	for _, g := range t.groups {
 		return g.GetFinishMatchTimeSec()
 	}
@@ -1113,6 +1126,8 @@ func (t *TeamMock) GetFinishMatchTimeSec() int64 {
 }
 
 func (t *TeamMock) IsAi() bool {
+	t.RLock()
+	defer t.RUnlock()
 	for _, g := range t.groups {
 		for _, p := range g.GetPlayers() {
 			if p.IsAi() {
@@ -1132,6 +1147,8 @@ func (t *TeamMock) SetRank(rank int) {
 }
 
 func (t *TeamMock) SortPlayerByRank() []Player {
+	t.RLock()
+	defer t.RUnlock()
 	players := make([]Player, 0, 5)
 	for _, g := range t.groups {
 		players = append(players, g.GetPlayers()...)
@@ -1143,6 +1160,8 @@ func (t *TeamMock) SortPlayerByRank() []Player {
 }
 
 func (t *TeamMock) CanFillAi() bool {
+	t.RLock()
+	defer t.RUnlock()
 	for _, g := range t.groups {
 		if !g.CanFillAi() {
 			return false

@@ -4,3 +4,6 @@ main
 **coverage.out*
 *groups-*.json
 .DS_Store
+
+# binary files
+match-http

@@ -1,16 +1,23 @@
 package entry
 
+import (
+	"sync"
+
+	"github.com/hedon954/go-matcher/internal/constant"
+)
+
 type Team interface {
 	Base() *TeamBase
-	ID() int8
+	ID() int64
 }
 
 type TeamBase struct {
-	id     int8
+	sync.RWMutex
+	id     int64
 	groups map[int64]Group
 }
 
-func NewTeam(id int8, g Group) Team {
+func NewTeamBase(id int64, g Group) *TeamBase {
 	t := &TeamBase{
 		id:     id,
 		groups: make(map[int64]Group),
@@ -23,8 +30,16 @@ func (t *TeamBase) Base() *TeamBase {
 	return t
 }
 
-func (t *TeamBase) ID() int8 {
+func (t *TeamBase) ID() int64 {
 	return t.id
+}
+
+func (t *TeamBase) MatchStrategy() constant.MatchStrategy {
+	return t.randGroup().Base().MatchStrategy
+}
+
+func (t *TeamBase) GameMode() constant.GameMode {
+	return t.randGroup().Base().GameMode
 }
 
 func (t *TeamBase) GetGroups() []Group {
@@ -43,4 +58,11 @@ func (t *TeamBase) AddGroup(g Group) {
 
 func (t *TeamBase) RemoveGroup(id int64) {
 	delete(t.groups, id)
+}
+
+func (t *TeamBase) randGroup() Group {
+	for _, g := range t.groups {
+		return g
+	}
+	return nil
 }

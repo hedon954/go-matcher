@@ -220,6 +220,8 @@ func (q *Queue) clearTmp() []Group {
 
 // Match 队列匹配逻辑
 func (q *Queue) Match(groups []Group) []Group {
+	q.Lock()
+	defer q.Unlock()
 	// 对 groups 进行排序，后面用二分查找提高效率
 	sortGroupsByMMR(groups)
 	// 构建新的 team
@@ -704,11 +706,6 @@ func (q *Queue) StopMatch() []Group {
 	}
 	q.Groups = make(map[string]Group)
 	return remainGroups
-}
-
-// GetTmpTeamAndTmpRoom 测试用
-func (q *Queue) GetTmpTeamAndFullTeamAndTmpRoom() ([]Team, []Team, []Room) {
-	return q.TmpTeam, q.FullTeam, q.TmpRoom
 }
 
 // roomMatchSuccess 房间匹配成功

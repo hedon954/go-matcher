@@ -31,13 +31,6 @@ type Team interface {
 	// 当前阵营是否是 ai
 	IsAi() bool
 
-	// 赛后在房间内的排名
-	GetRank() int
-	SetRank(rank int)
-
-	// 赛后根据排名获取玩家列表
-	SortPlayerByRank() []Player
-
 	// 是否可以填充 AI
 	CanFillAi() bool
 

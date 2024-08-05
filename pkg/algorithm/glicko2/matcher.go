@@ -2,6 +2,7 @@ package glicko2
 
 import (
 	"fmt"
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -70,21 +71,21 @@ func (qm *Matcher) AddGroups(gs ...Group) error {
 	return nil
 }
 
-func (qm *Matcher) Match() {
-	ticker := time.NewTicker(time.Second).C
+func (qm *Matcher) Match(interval time.Duration) {
+	ticker := time.NewTicker(interval).C
 	for {
 		select {
 		case <-qm.quitChan:
-			fmt.Println("\n\nGracefully exit...")
+			slog.Info("stop glicko2 matcher")
 			return
 		case <-ticker:
+			slog.Info("glicko2 matcher tick")
 			func() {
 				defer func() {
 					if err := recover(); err != nil {
 						qm.errChan <- fmt.Errorf("glicko2 matcher occurs panic: %v", err)
 					}
 				}()
-
 				// 取出本轮要匹配的队伍
 				nGs := qm.NormalQueue.GetAndClearGroups()
 				tGs := qm.TeamQueue.GetAndClearGroups()
@@ -119,6 +120,8 @@ func (qm *Matcher) Match() {
 						if matchTime >= qm.TeamQueue.NormalTeamWaitTimeSec {
 							needMove = true
 						}
+					default:
+						needMove = false
 					}
 					if needMove {
 						_ = qm.NormalQueue.AddGroups(g)
@@ -139,23 +142,4 @@ func (qm *Matcher) Stop() ([]Group, []Group) {
 	gs2 := qm.TeamQueue.StopMatch()
 	qm.quitChan <- struct{}{}
 	return gs1, gs2
-}
-
-func (qm *Matcher) GetErrChan() chan error {
-	return qm.errChan
-}
-
-func (qm *Matcher) GetRoomChan() chan Room {
-	if qm.TeamQueue != nil {
-		return qm.TeamQueue.roomChan
-	}
-	if qm.NormalQueue != nil {
-		return qm.NormalQueue.roomChan
-	}
-	return nil
-}
-
-func (qm *Matcher) SetNowFunc(f func() int64) {
-	qm.NormalQueue.nowUnixFunc = f
-	qm.TeamQueue.nowUnixFunc = f
 }

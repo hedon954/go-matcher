@@ -1,21 +1,30 @@
 package entry
 
+import (
+	"encoding/json"
+	"log/slog"
+
+	"github.com/hedon954/go-matcher/internal/pto"
+)
+
 type Room interface {
 	Base() *RoomBase
 	ID() int64
+	GetMatchInfo() *pto.MatchInfo
 }
 
 type RoomBase struct {
 	id    int64
-	teams map[int8]Team
+	teams []Team
 }
 
 func NewRoomBase(id int64, t Team) *RoomBase {
 	r := &RoomBase{
 		id:    id,
-		teams: make(map[int8]Team),
+		teams: make([]Team, 0),
 	}
-	r.teams[t.ID()] = t
+	bs, _ := json.Marshal(t)
+	slog.Info("create room", slog.Any("team", string(bs)))
 	return r
 }
 
@@ -28,17 +37,23 @@ func (r *RoomBase) ID() int64 {
 }
 
 func (r *RoomBase) GetTeams() []Team {
-	res := make([]Team, 0, len(r.teams))
-	for _, t := range r.teams {
-		res = append(res, t)
-	}
-	return res
+	return r.teams
 }
 
 func (r *RoomBase) AddTeam(t Team) {
-	r.teams[t.ID()] = t
+	r.teams = append(r.teams, t)
 }
 
-func (r *RoomBase) RemoveTeam(id int8) {
-	delete(r.teams, id)
+func (r *RoomBase) RemoveTeam(id int64) {
+	for i, t := range r.teams {
+		if t.ID() == id {
+			r.teams = append(r.teams[:i], r.teams[i+1:]...)
+			break
+		}
+	}
+}
+
+func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
+	// TODO
+	return nil
 }

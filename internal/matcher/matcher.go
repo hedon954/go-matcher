@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"log/slog"
+	"runtime/debug"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -34,7 +35,7 @@ func (m *Matcher) Start() {
 func (m *Matcher) handle(g entry.Group) {
 	defer func() {
 		if err := recover(); err != nil {
-			slog.Error("handle group match error", slog.Any("group", g), slog.Any("err", err))
+			slog.Error("handle group match error: \n"+string(debug.Stack()), slog.Any("group", g), slog.Any("err", err))
 		}
 	}()
 

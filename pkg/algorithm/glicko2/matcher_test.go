@@ -1,17 +1,14 @@
-package example
+package glicko2
 
 import (
 	"fmt"
 	"math/rand"
-	"os"
-	"os/signal"
-	"sort"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_Matcher(t *testing.T) {
@@ -20,18 +17,16 @@ func Test_Matcher(t *testing.T) {
 	var roomId = atomic.Int64{}
 
 	errChan := make(chan error, 128)
-	roomChan := make(chan glicko2.Room, 128)
+	roomChan := make(chan Room, 128)
 
-	qm, _ := glicko2.NewMatcher(errChan, roomChan, GetQueueArgs, NewTeam, NewRoom, NewRoomWithAi)
+	qm, _ := NewMatcher(errChan, roomChan, GetQueueArgs, NewTeam, NewRoom, NewRoomWithAi)
 
-	// 异步随机生成 group
-	// go func() {
 	for i := 0; i < 1000; i++ {
-		var players []*Player
-		count := rand.Intn(2) + 1
+		var players []*PlayerMock
+		count := rand.Intn(5) + 1
 		for j := 0; j < count; j++ {
-			p := NewPlayer(uuid.NewString(), false, 0, 1+rand.Intn(200),
-				glicko2.Args{
+			p := NewPlayer(uuid.NewString(), false, 0,
+				Args{
 					MMR: 0 + float64(rand.Intn(2000)),
 					RD:  0,
 					V:   0,
@@ -39,21 +34,19 @@ func Test_Matcher(t *testing.T) {
 			players = append(players, p)
 		}
 		newGroup := NewGroup(fmt.Sprintf("Group%d", i+1), players)
-		qm.AddGroups(newGroup)
-		// ssec := rand.Intn(200)
-		// time.Sleep(time.Duration(ssec) * time.Millisecond)
+		_ = qm.AddGroups(newGroup)
 	}
-	// }()
 
 	// 异步启动匹配
-	go qm.Match()
+	go qm.Match(time.Millisecond * 100)
 
-	// 进程退出
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt)
+	ch := make(chan struct{})
+	go func() {
+		time.Sleep(1 * time.Second)
+		ch <- struct{}{}
+	}()
 	for {
 		select {
-		// 模拟消费 room
 		case tr := <-roomChan:
 			now := time.Now().Unix()
 			rId := roomId.Add(1)
@@ -64,7 +57,7 @@ func Test_Matcher(t *testing.T) {
 				fmt.Printf("|   Team %d MMR: %.2f, Star: %d, isAi: %t, cost time %ds\n", j+1,
 					team.GetMMR(), team.GetStar(), team.IsAi(), now-team.GetStartMatchTimeSec())
 				for _, group := range team.GetGroups() {
-					group.SetState(glicko2.GroupStateMatched)
+					group.SetState(GroupStateMatched)
 					fmt.Printf("|     %s MMR: %.2f, Star: %d, player count: %d, team type: %d, cost time %ds\n",
 						group.GetID(),
 						group.GetMMR(),
@@ -83,35 +76,13 @@ func Test_Matcher(t *testing.T) {
 			fmt.Println("-------------------------------------------------------------------")
 			fmt.Println()
 		case err := <-errChan:
-			fmt.Println("something error: ", err)
+			assert.Nil(t, err)
 		case <-ch:
-			gs1, gs2 := qm.Stop()
-
-			sort.Slice(gs1, func(i, j int) bool {
-				return gs1[i].GetMMR() < gs1[j].GetMMR()
-			})
-			sort.Slice(gs2, func(i, j int) bool {
-				return gs2[i].GetMMR() < gs2[j].GetMMR()
-			})
-
-			fmt.Println()
-			fmt.Println()
+			_, _ = qm.Stop()
 			fmt.Println("--------------- finish --------------")
-
-			fmt.Println("normal queue left group count:", len(gs1))
-			fmt.Printf("\t\tGroupId\t\t\tPlayerCount\t\tMMR\t\tMatchTime\t\t\n")
-			for _, g := range gs1 {
-				g.(*Group).Print()
-			}
-			fmt.Println()
-			fmt.Println("team queue left group count:", len(gs2))
-			fmt.Printf("\t\tGroupId\t\t\tPlayerCount\t\tMMR\t\tMatchTime\t\t\n")
-			for _, g := range gs2 {
-				g.(*Group).Print()
-			}
 			return
 		default:
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 	}
 }

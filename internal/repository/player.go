@@ -21,7 +21,7 @@ func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (p entry.Player, err err
 
 	switch pInfo.GameMode {
 	case constant.GameModeGoatGame:
-		p, err = goat_game.CreatePlayer(base, &pInfo.Glicko2Info)
+		p, err = goat_game.CreatePlayer(base, pInfo)
 	default:
 		p = base
 	}

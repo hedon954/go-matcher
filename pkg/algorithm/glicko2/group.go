@@ -28,6 +28,9 @@ type Group interface {
 	// 队伍 ID
 	GetID() string
 
+	// MatchKey 匹配队列唯一ID
+	MatchKey() string
+
 	// 获取队伍里的玩家列表
 	GetPlayers() []Player
 
