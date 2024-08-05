@@ -93,7 +93,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
 
 	// 10. 'b' exit group 'g2'
-	requestExitGroup(router, UIDB, g2.ID(), t)
+	requestExitGroup(router, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
 	assert.Equal(t, ua, g2.GetCaptain())
 	assert.Nil(t, api.pm.Get(UIDB))
@@ -213,7 +213,7 @@ func requestCreateFullGroup(router *gin.Engine, uid1, uid2 string, t *testing.T)
 }
 
 func requestCancelMatch(router *gin.Engine, uid string, t *testing.T) {
-	req, _ := http.NewRequest("POST", "/match/cancel_match/"+uid, nil)
+	req, _ := http.NewRequest("POST", "/match/cancel_match/"+uid, http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -221,7 +221,7 @@ func requestCancelMatch(router *gin.Engine, uid string, t *testing.T) {
 }
 
 func requestStartMatch(router *gin.Engine, uid string, t *testing.T) {
-	req, _ := http.NewRequest("POST", "/match/start_match/"+uid, nil)
+	req, _ := http.NewRequest("POST", "/match/start_match/"+uid, http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -281,7 +281,7 @@ func createSetVoiceStateParam(uid string, state entry.PlayerVoiceState) []byte {
 	return bs
 }
 
-func requestKick(router *gin.Engine, captainUID string, kickedUID string, t *testing.T) {
+func requestKick(router *gin.Engine, captainUID, kickedUID string, t *testing.T) {
 	req, _ := http.NewRequest("POST", "/match/kick_player",
 		bytes.NewBuffer(createKickParam(captainUID, kickedUID)))
 	req.Header.Set("Content-Type", "application/json")
@@ -299,15 +299,15 @@ func createKickParam(captainUID, kickedUID string) []byte {
 	return bs
 }
 
-func requestExitGroup(router *gin.Engine, uid string, id int64, t *testing.T) {
-	req, _ := http.NewRequest("POST", "/match/exit_group/"+uid, nil)
+func requestExitGroup(router *gin.Engine, uid string, t *testing.T) {
+	req, _ := http.NewRequest("POST", "/match/exit_group/"+uid, http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assertRspOk(w, t)
 }
 
-func requestChangeRole(router *gin.Engine, captain string, target string, role entry.GroupRole, t *testing.T) {
+func requestChangeRole(router *gin.Engine, captain, target string, role entry.GroupRole, t *testing.T) {
 	req, _ := http.NewRequest("POST", "/match/change_role",
 		bytes.NewBuffer(createChangeRoleParam(captain, target, role)))
 	req.Header.Set("Content-Type", "application/json")
@@ -354,7 +354,7 @@ func requestAcceptInvite(router *gin.Engine, inviter, invitee string, groupID in
 	assertRspOk(w, t)
 }
 
-func createAcceptInviteParam(inviter string, invitee string, groupID int64) []byte {
+func createAcceptInviteParam(inviter, invitee string, groupID int64) []byte {
 	info := playerInfo(invitee)
 	param := &AcceptInviteReq{
 		InviterUID:  inviter,
@@ -390,6 +390,7 @@ func requestInvite(router *gin.Engine, uid1, uid2 string, t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
+	assertRspOk(w, t)
 }
 
 func createInviteParam(uid1, uid2 string) []byte {
@@ -402,7 +403,7 @@ func createInviteParam(uid1, uid2 string) []byte {
 }
 
 func requestDissolveGroup(router *gin.Engine, uid string, t *testing.T) {
-	req, _ := http.NewRequest("POST", "/match/dissolve_group/"+uid, nil)
+	req, _ := http.NewRequest("POST", "/match/dissolve_group/"+uid, http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -477,7 +478,7 @@ func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
 	api := NewAPI(1, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid", nil)
+	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)

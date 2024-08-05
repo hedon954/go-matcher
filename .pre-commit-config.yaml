@@ -31,7 +31,7 @@ repos:
       - id: golangci-lint
         name: golangci-lint
         description: run golangci-lint
-        entry: golangci-lint run -v .
+        entry: golangci-lint run -v ./...
         language: golang
         files: \.*$
         pass_filenames: false
