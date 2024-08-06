@@ -1,4 +1,4 @@
-package native
+package mock
 
 import (
 	"fmt"
@@ -9,30 +9,15 @@ import (
 )
 
 type Timer struct {
-	nowFunc func() int64
-
 	sync.RWMutex
 	handlers map[timer.OpType]func(id string)
 	timers   map[string]*time.Timer
 }
 
-type Option func(*Timer)
-
-func WithNowFunc(f func() int64) Option {
-	return func(impl *Timer) {
-		impl.nowFunc = f
-	}
-}
-
-func NewTimer(opts ...Option) *Timer {
+func NewTimer() *Timer {
 	t := &Timer{
-		nowFunc:  time.Now().Unix,
 		handlers: make(map[timer.OpType]func(id string)),
 		timers:   make(map[string]*time.Timer),
-	}
-
-	for _, opt := range opts {
-		opt(t)
 	}
 	return t
 }
