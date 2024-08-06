@@ -18,5 +18,7 @@ func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
 	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())
 	impl.connectorClient.PushCancelMatch(base.UIDs(), cancelUID)
 
-	// TODO: add dissolve group timer
+	impl.removeCancelMatchTimer(g.ID())
+	impl.removeWaitAttrTimer(g.ID())
+	impl.addInviteTimer(g.ID(), base.GameMode)
 }

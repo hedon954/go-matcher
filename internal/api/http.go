@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/hedon954/go-matcher/docs"
-	"github.com/hedon954/go-matcher/internal/config"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/matcher"
 	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
@@ -87,7 +87,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		teamMgr   = repository.NewTeamMgr(0)
 		roomMgr   = repository.NewRoomMgr(0)
 		configer  = &glicko2.Configer{
-			Glicko2: new(config.Glicko2Mock),
+			Glicko2: new(mock.Glicko2Mock),
 		}
 		glicko2Matcher = glicko2.New(roomChannel, configer, matchInterval, playerMgr, groupMgr, teamMgr, roomMgr)
 	)

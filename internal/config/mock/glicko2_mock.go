@@ -1,4 +1,4 @@
-package config
+package mock
 
 import (
 	"github.com/hedon954/go-matcher/internal/constant"

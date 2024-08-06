@@ -100,6 +100,16 @@ func (p *PlayerBase) SetOnlineState(s PlayerOnlineState) {
 func (p *PlayerBase) GetOnlineState() PlayerOnlineState {
 	return p.onlineState
 }
+func (p *PlayerBase) SetOnlineStateWithLock(s PlayerOnlineState) {
+	p.Lock()
+	defer p.Unlock()
+	p.onlineState = s
+}
+func (p *PlayerBase) GetOnlineStateWithLock() PlayerOnlineState {
+	p.RLock()
+	defer p.RUnlock()
+	return p.onlineState
+}
 
 func (p *PlayerBase) SetVoiceState(s PlayerVoiceState) {
 	p.VoiceState = s

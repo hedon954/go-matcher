@@ -22,6 +22,11 @@ func (impl *Impl) startMatch(g entry.Group) {
 	}
 	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateInMatch))
 
-	// push to match channel
+	impl.removeInviteTimer(g.ID())
+	impl.addWaitAttrTimer(g.ID(), g.Base().GameMode)
+	impl.addCancelMatchTimer(g.ID(), base.GameMode)
+}
+
+func (impl *Impl) sendGroupToChannel(g entry.Group) {
 	impl.groupChannel <- g
 }

@@ -28,5 +28,7 @@ func (impl *Impl) createGroup(p entry.Player) (entry.Group, error) {
 
 	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
+
+	impl.addInviteTimer(g.ID(), g.Base().GameMode)
 	return g, nil
 }

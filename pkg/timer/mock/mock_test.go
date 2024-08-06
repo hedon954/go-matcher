@@ -42,13 +42,14 @@ func TestMockTimer(t *testing.T) {
 	err := timer.Add(opType3, id1, 1*time.Second)
 	assert.Equal(t, errors.New("unsupported op type: 3"), err)
 
-	// add optype1 should add num after delay
+	// add optype1 should add num after delay, and the timer should be deleted
 	delay := time.Millisecond * 10
 	err = timer.Add(opType1, id1, delay)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), numMap[id1].Load())
 	time.Sleep(delay + 3*time.Millisecond)
 	assert.Equal(t, int64(1), numMap[id1].Load())
+	assert.Equal(t, 0, len(timer.timers))
 
 	// add optype2 should reduce num after delay
 	err = timer.Add(opType2, id2, delay)

@@ -240,6 +240,18 @@ func (g *GroupBase) GetState() GroupState {
 	return g.state
 }
 
+func (g *GroupBase) SetStateWithLock(s GroupState) {
+	g.Lock()
+	defer g.Unlock()
+	g.state = s
+}
+
+func (g *GroupBase) GetStateWithLock() GroupState {
+	g.RLock()
+	defer g.RUnlock()
+	return g.state
+}
+
 func (g *GroupBase) SetCaptain(p Player) {
 	for key, role := range g.roles {
 		if role == GroupRoleCaptain {

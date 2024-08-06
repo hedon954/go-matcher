@@ -3,16 +3,23 @@ package impl
 import (
 	"time"
 
+	"github.com/hedon954/go-matcher/internal/config"
+	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
+	"github.com/hedon954/go-matcher/pkg/timer"
+	"github.com/hedon954/go-matcher/pkg/timer/mock"
 )
 
 // Impl implements a default service,
 // in most cases, you don't need to implement your own service.
 type Impl struct {
+	delayTimer  timer.Operator
+	DelayConfig config.DelayTimer
+
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
 
@@ -36,6 +43,12 @@ func WithNowFunc(f func() int64) Option {
 	}
 }
 
+func WithDelayTimer(t timer.Operator) Option {
+	return func(impl *Impl) {
+		impl.delayTimer = t
+	}
+}
+
 func NewDefault(
 	groupPlayerLimit int, playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr, groupChannel chan entry.Group,
 	roomChannel chan entry.Room, options ...Option,
@@ -43,16 +56,21 @@ func NewDefault(
 	impl := &Impl{
 		playerMgr:        playerMgr,
 		groupMgr:         groupMgr,
-		connectorClient:  connector.New(), // TODO: DI
+		connectorClient:  connector.New(), // TODO: change
 		groupPlayerLimit: groupPlayerLimit,
 		nowFunc:          time.Now().Unix,
 		groupChannel:     groupChannel,
 		roomChannel:      roomChannel,
+		delayTimer:       mock.NewTimer(),           // TODO: change
+		DelayConfig:      new(mock2.DelayTimerMock), // TODO: change
 	}
 
 	for _, opt := range options {
 		opt(impl)
 	}
+
+	impl.initDelayTimer()
+	go impl.waitForMatchResult()
 	return impl
 }
 
@@ -215,7 +233,9 @@ func (impl *Impl) DissolveGroup(uid string) error {
 		return err
 	}
 
-	return impl.dissolveGroup(g)
+	p.Base().Lock()
+	defer p.Base().Unlock()
+	return impl.dissolveGroup(p, g)
 }
 
 func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
@@ -474,6 +494,12 @@ func (impl *Impl) SetVoiceState(uid string, state entry.PlayerVoiceState) error 
 
 	impl.connectorClient.PushVoiceState(g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
 	return nil
+}
+
+func (impl *Impl) HandleMatchResult(r entry.Room) {
+	r.Base().Lock()
+	defer r.Base().Unlock()
+	impl.clearDelayTimer(r)
 }
 
 // getPlayerAndGroup returns the player and group of the given uid.

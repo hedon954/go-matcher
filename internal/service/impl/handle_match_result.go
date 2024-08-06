@@ -4,6 +4,20 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
-func (impl *Impl) HandleMatchResult(r entry.Room) {
+func (impl *Impl) waitForMatchResult() {
+	go func() {
+		for r := range impl.roomChannel {
+			impl.HandleMatchResult(r)
+		}
+	}()
+}
 
+func (impl *Impl) clearDelayTimer(r entry.Room) {
+	for _, t := range r.Base().GetTeams() {
+		for _, g := range t.Base().GetGroups() {
+			impl.removeWaitAttrTimer(g.ID())
+			impl.removeWaitAttrTimer(g.ID())
+			impl.removeCancelMatchTimer(g.ID())
+		}
+	}
 }

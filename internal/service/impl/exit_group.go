@@ -10,7 +10,7 @@ func (impl *Impl) exitGroup(p entry.Player, g entry.Group) error {
 	empty := g.Base().RemovePlayer(p)
 	impl.connectorClient.UpdateOnlineState([]string{p.UID()}, int(entry.PlayerOnlineStateOnline))
 	if empty {
-		return impl.dissolveGroup(g)
+		return impl.dissolveGroup(p, g)
 	} else {
 		impl.connectorClient.PushGroupUsers(g.Base().UIDs(), g.GetPlayerInfos())
 	}

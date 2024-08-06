@@ -34,6 +34,7 @@ func (t *Timer) Add(opType timer.OpType, id string, delay time.Duration) error {
 		return fmt.Errorf("unsupported op type: %s", opType)
 	}
 	tt := time.AfterFunc(delay, func() {
+		t.Remove(opType, id)
 		handler(id)
 	})
 	t.saveTimer(opType, id, tt)
