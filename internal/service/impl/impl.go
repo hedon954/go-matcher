@@ -49,6 +49,12 @@ func WithDelayTimer(t timer.Operator) Option {
 	}
 }
 
+func WithDelayConfiger(t config.DelayTimer) Option {
+	return func(impl *Impl) {
+		impl.DelayConfig = t
+	}
+}
+
 func NewDefault(
 	groupPlayerLimit int, playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr, groupChannel chan entry.Group,
 	roomChannel chan entry.Room, options ...Option,

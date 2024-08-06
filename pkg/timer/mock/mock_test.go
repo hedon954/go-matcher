@@ -46,6 +46,8 @@ func TestMockTimer(t *testing.T) {
 	delay := time.Millisecond * 10
 	err = timer.Add(opType1, id1, delay)
 	assert.Nil(t, err)
+	assert.NotNil(t, timer.Get(opType1, id1))
+	assert.Equal(t, 1, len(timer.GetAll()))
 	assert.Equal(t, int64(0), numMap[id1].Load())
 	time.Sleep(delay + 3*time.Millisecond)
 	assert.Equal(t, int64(1), numMap[id1].Load())

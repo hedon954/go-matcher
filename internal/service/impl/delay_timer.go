@@ -24,42 +24,46 @@ const (
 )
 
 func (impl *Impl) initDelayTimer() {
-	impl.delayTimer.Register(TimerOpTypeGroupInvite, func(id string) {
-		g := impl.groupMgr.Get(cast.ToInt64(id))
-		if g != nil {
-			g.Base().Lock()
-			defer g.Base().Unlock()
-			if err := impl.dissolveGroup(nil, g); err != nil {
-				slog.Error("dissolve group error",
-					slog.Int64("group_id", g.Base().GroupID),
-					slog.Any("group", g),
-					slog.String("err", err.Error()),
-				)
-			}
-		}
-	})
+	impl.delayTimer.Register(TimerOpTypeGroupInvite, impl.inviteTimeoutHandler)
+	impl.delayTimer.Register(TimerOpTypeGroupMatch, impl.matchTimeoutHandler)
+	impl.delayTimer.Register(TimerOpTypeGroupWaitAttr, impl.waitAttrTimeoutHandler)
+}
 
-	impl.delayTimer.Register(TimerOpTypeGroupMatch, func(id string) {
-		g := impl.groupMgr.Get(cast.ToInt64(id))
-		if g != nil {
-			g.Base().Lock()
-			defer g.Base().Unlock()
-			if g.Base().GetState() == entry.GroupStateMatch {
-				impl.cancelMatch("", g)
-			}
+func (impl *Impl) inviteTimeoutHandler(id string) {
+	g := impl.groupMgr.Get(cast.ToInt64(id))
+	if g != nil {
+		g.Base().Lock()
+		defer g.Base().Unlock()
+		if err := impl.dissolveGroup(nil, g); err != nil {
+			slog.Error("dissolve group error",
+				slog.Int64("group_id", g.Base().GroupID),
+				slog.Any("group", g),
+				slog.String("err", err.Error()),
+			)
 		}
-	})
+	}
+}
 
-	impl.delayTimer.Register(TimerOpTypeGroupWaitAttr, func(id string) {
-		g := impl.groupMgr.Get(cast.ToInt64(id))
-		if g != nil {
-			g.Base().Lock()
-			defer g.Base().Unlock()
-			if g.Base().GetState() == entry.GroupStateMatch {
-				impl.sendGroupToChannel(g)
-			}
+func (impl *Impl) matchTimeoutHandler(id string) {
+	g := impl.groupMgr.Get(cast.ToInt64(id))
+	if g != nil {
+		g.Base().Lock()
+		defer g.Base().Unlock()
+		if g.Base().GetState() == entry.GroupStateMatch {
+			impl.cancelMatch("", g)
 		}
-	})
+	}
+}
+
+func (impl *Impl) waitAttrTimeoutHandler(id string) {
+	g := impl.groupMgr.Get(cast.ToInt64(id))
+	if g != nil {
+		g.Base().Lock()
+		defer g.Base().Unlock()
+		if g.Base().GetState() == entry.GroupStateMatch {
+			impl.sendGroupToChannel(g)
+		}
+	}
 }
 
 func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {

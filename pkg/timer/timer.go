@@ -16,8 +16,8 @@ type OperationItem struct {
 	// ID specifies the task unique id.
 	ID string
 
-	// Handler specifies the handle function.
-	Handler func(id string)
+	// RunTime specifies the task run time.
+	RunTime time.Time
 }
 
 // Operator is the interface for timer.
@@ -27,6 +27,12 @@ type Operator interface {
 
 	// Add adds a new task to timer.
 	Add(opType OpType, id string, delay time.Duration) error
+
+	// Get gets the task from timer.
+	Get(opType OpType, id string) *OperationItem
+
+	// GetAll gets all tasks from timer.
+	GetAll() []*OperationItem
 
 	// Remove removes the task from timer.
 	Remove(opType OpType, id string)

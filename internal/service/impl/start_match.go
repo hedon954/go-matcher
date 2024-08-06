@@ -1,6 +1,8 @@
 package impl
 
 import (
+	"fmt"
+
 	"github.com/google/uuid"
 	"github.com/hedon954/go-matcher/internal/entry"
 )
@@ -28,5 +30,6 @@ func (impl *Impl) startMatch(g entry.Group) {
 }
 
 func (impl *Impl) sendGroupToChannel(g entry.Group) {
+	fmt.Println("sendGroupToChannel: ", g)
 	impl.groupChannel <- g
 }

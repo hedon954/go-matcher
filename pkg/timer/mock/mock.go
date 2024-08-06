@@ -12,12 +12,14 @@ type Timer struct {
 	sync.RWMutex
 	handlers map[timer.OpType]func(id string)
 	timers   map[string]*time.Timer
+	tasks    map[string]*timer.OperationItem
 }
 
 func NewTimer() *Timer {
 	t := &Timer{
 		handlers: make(map[timer.OpType]func(id string)),
 		timers:   make(map[string]*time.Timer),
+		tasks:    make(map[string]*timer.OperationItem),
 	}
 	return t
 }
@@ -37,8 +39,24 @@ func (t *Timer) Add(opType timer.OpType, id string, delay time.Duration) error {
 		t.Remove(opType, id)
 		handler(id)
 	})
-	t.saveTimer(opType, id, tt)
+	t.saveTimer(opType, id, tt, delay)
 	return nil
+}
+
+func (t *Timer) Get(opType timer.OpType, id string) *timer.OperationItem {
+	t.RLock()
+	defer t.RUnlock()
+	return t.tasks[timerKey(opType, id)]
+}
+
+func (t *Timer) GetAll() []*timer.OperationItem {
+	t.RLock()
+	defer t.RUnlock()
+	res := make([]*timer.OperationItem, 0, len(t.tasks))
+	for _, v := range t.tasks {
+		res = append(res, v)
+	}
+	return res
 }
 
 func (t *Timer) Remove(opType timer.OpType, id string) {
@@ -50,6 +68,7 @@ func (t *Timer) Remove(opType timer.OpType, id string) {
 	}
 	tt.Stop()
 	delete(t.timers, timerKey(opType, id))
+	delete(t.tasks, timerKey(opType, id))
 }
 
 func (t *Timer) getHandler(opType timer.OpType) func(id string) {
@@ -58,7 +77,7 @@ func (t *Timer) getHandler(opType timer.OpType) func(id string) {
 	return t.handlers[opType]
 }
 
-func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer) {
+func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer, delay time.Duration) {
 	t.Lock()
 	defer t.Unlock()
 	old, ok := t.timers[timerKey(opType, id)]
@@ -66,6 +85,11 @@ func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer) {
 		old.Stop()
 	}
 	t.timers[timerKey(opType, id)] = tt
+	t.tasks[timerKey(opType, id)] = &timer.OperationItem{
+		OpType:  opType,
+		ID:      id,
+		RunTime: time.Now().Add(delay),
+	}
 }
 
 func timerKey(opType timer.OpType, id string) string {
