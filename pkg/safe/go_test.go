@@ -17,25 +17,32 @@ type logger struct {
 	buffer bytes.Buffer
 }
 
-func (l *logger) Error(msg string, v ...any) {
+func (l *logger) Error(msg string, vv ...any) {
 	l.Lock()
 	defer l.Unlock()
 	l.buffer.WriteString(msg)
-	if len(v) > 0 {
+	for _, v := range vv {
 		l.buffer.WriteString(": ")
 		l.buffer.WriteString(cast.ToString(v))
 	}
 }
 
 func TestSafeGo(t *testing.T) {
-	l := &logger{}
-	safe.SetLogger(l)
-
 	num := atomic.Int64{}
+	l := &logger{}
+	safe.Callback(func(_ any, _ []byte) {
+		num.Add(1)
+	})
+	safe.CallCallBack(func(err any, stack []byte) {
+		l.Error("safe call occurs panic", err, string(stack))
+	})
+	safe.GoCallBack(func(err any, stack []byte) {
+		l.Error("safe go occurs panic", err, string(stack))
+	})
 
 	safe.Go(func() {
 		panic("panic in safe.Go")
-	}, func(_ any) {
+	}, func(_ any, _ []byte) {
 		num.Add(1)
 	})
 
@@ -43,13 +50,13 @@ func TestSafeGo(t *testing.T) {
 	safe.Call(func() {
 		time.Sleep(10 * time.Millisecond)
 		panic("panic in safe.Call")
-	}, func(_ any) {
+	}, func(_ any, _ []byte) {
 		num.Add(1)
 	})
 	safe.Wait()
 	end := time.Now().UnixMilli()
 
-	assert.Equal(t, int64(2), num.Load())
+	assert.Equal(t, int64(4), num.Load())
 	assert.True(t, end-start >= 10)
 
 	buffer := l.buffer.String()

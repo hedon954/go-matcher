@@ -1,38 +1,46 @@
 package safe
 
 import (
-	"fmt"
-	"log/slog"
 	"runtime/debug"
 	"sync"
 )
 
 var sg = safeGo{
-	logger: slog.Default(),
+	goCallbacks:   make([]PanicCallback, 0),
+	callCallbacks: make([]PanicCallback, 0),
 }
 
 type safeGo struct {
 	sync.WaitGroup
-	logger ErrorLogger
+	goCallbacks   []PanicCallback
+	callCallbacks []PanicCallback
 }
 
-type PanicCallback = func(err any)
+type PanicCallback = func(err any, stack []byte)
 
-type ErrorLogger interface {
-	Error(msg string, v ...any)
+func Callback(callbacks ...PanicCallback) {
+	sg.goCallbacks = append(sg.goCallbacks, callbacks...)
+	sg.callCallbacks = append(sg.callCallbacks, callbacks...)
 }
 
-func SetLogger(logger ErrorLogger) {
-	sg.logger = logger
+func GoCallBack(callbacks ...PanicCallback) {
+	sg.goCallbacks = append(sg.goCallbacks, callbacks...)
+}
+
+func CallCallBack(callbacks ...PanicCallback) {
+	sg.callCallbacks = append(sg.callCallbacks, callbacks...)
 }
 
 func Call(f func(), panicCallback ...PanicCallback) {
 	defer func() {
 		debug.Stack()
 		if err := recover(); err != nil {
-			sg.logger.Error(fmt.Sprintf("safe call occurs panic: %v \n", err), string(debug.Stack()))
+			stack := debug.Stack()
+			for _, callback := range sg.callCallbacks {
+				callback(err, stack)
+			}
 			for _, callback := range panicCallback {
-				callback(err)
+				callback(err, stack)
 			}
 		}
 	}()
@@ -44,9 +52,12 @@ func Go(f func(), panicCallback ...PanicCallback) {
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				sg.logger.Error(fmt.Sprintf("safe go occurs panic: %v \n", err), string(debug.Stack()))
+				stack := debug.Stack()
+				for _, callback := range sg.goCallbacks {
+					callback(err, stack)
+				}
 				for _, callback := range panicCallback {
-					callback(err)
+					callback(err, stack)
 				}
 			}
 		}()
