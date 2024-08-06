@@ -26,13 +26,14 @@ func NewTeamMgr(teamIDStart int64) *TeamMgr {
 
 func (m *TeamMgr) CreateTeam(g entry.Group) (t entry.Team, err error) {
 	base := entry.NewTeamBase(m.teamIDIter.Add(1), g)
-	switch g.Base().GameMode {
+
+	switch base.GameMode {
 	case constant.GameModeGoatGame:
-		t, err = goat_game.CreateTeam(base, g)
+		t, err = goat_game.CreateTeam(base)
 	case constant.GameModeTest:
 		t = base
 	default:
-		return nil, fmt.Errorf("unsupported game mode: %d", g.Base().GameMode)
+		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
 	}
 	if err != nil {
 		return nil, err

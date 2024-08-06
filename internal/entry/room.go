@@ -1,9 +1,9 @@
 package entry
 
 import (
-	"encoding/json"
-	"log/slog"
+	"sync"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
@@ -14,17 +14,20 @@ type Room interface {
 }
 
 type RoomBase struct {
-	id    int64
-	teams []Team
+	sync.RWMutex
+	id            int64
+	teams         []Team
+	GameMode      constant.GameMode
+	MatchStrategy constant.MatchStrategy
 }
 
 func NewRoomBase(id int64, t Team) *RoomBase {
 	r := &RoomBase{
-		id:    id,
-		teams: make([]Team, 0),
+		id:            id,
+		teams:         make([]Team, 0),
+		GameMode:      t.Base().GameMode,
+		MatchStrategy: t.Base().MatchStrategy,
 	}
-	bs, _ := json.Marshal(t)
-	slog.Info("create room", slog.Any("team", string(bs)))
 	return r
 }
 

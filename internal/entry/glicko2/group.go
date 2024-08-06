@@ -1,7 +1,6 @@
 package glicko2
 
 import (
-	"encoding/json"
 	"fmt"
 	"log/slog"
 
@@ -11,45 +10,39 @@ import (
 	"github.com/spf13/cast"
 )
 
-type Group struct {
-	entry.Group
+type GroupBaseGlicko2 struct {
+	*entry.GroupBase
 }
 
-func CreateGroup(e entry.Group, p *Player) *Group {
-	g := &Group{
-		Group: e,
+func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
+	g := &GroupBaseGlicko2{
+		GroupBase: base,
 	}
-	js, _ := json.Marshal(p)
-	slog.Info("create group", slog.String("player", string(js)))
 	return g
 }
 
-func (g *Group) QueueKey() string {
-	return fmt.Sprintf("%d-%d", g.Base().GameMode, g.Base().ModeVersion)
-}
-
-func (g *Group) GetID() string {
+func (g *GroupBaseGlicko2) GetID() string {
 	return cast.ToString(g.ID())
 }
 
-func (g *Group) MatchKey() string {
-	return fmt.Sprintf("%d-%d", g.Base().GameMode, g.Base().ModeVersion)
+func (g *GroupBaseGlicko2) QueueKey() string {
+	return fmt.Sprintf("%d-%d", g.GameMode, g.ModeVersion)
 }
 
-func (g *Group) GetPlayers() []glicko2.Player {
+func (g *GroupBaseGlicko2) GetPlayers() []glicko2.Player {
 	players := g.Base().GetPlayers()
 	res := make([]glicko2.Player, len(players))
 	for i := 0; i < len(players); i++ {
-		res[i] = players[i].(*Player)
+		res[i] = players[i].(*PlayerBaseGlicko2)
 	}
 	return res
 }
 
-func (g *Group) PlayerCount() int {
-	return len(g.Base().GetPlayers())
+func (g *GroupBaseGlicko2) PlayerCount() int {
+	return len(g.GetPlayers())
 }
 
-func (g *Group) GetMMR() float64 {
+func (g *GroupBaseGlicko2) GetMMR() float64 {
 	total := 0.0
 	players := g.GetPlayers()
 	if len(players) == 0 {
@@ -61,7 +54,7 @@ func (g *Group) GetMMR() float64 {
 	return total / float64(len(players))
 }
 
-func (g *Group) GetStar() int {
+func (g *GroupBaseGlicko2) GetStar() int {
 	total := 0
 	players := g.GetPlayers()
 	if len(players) == 0 {
@@ -73,9 +66,9 @@ func (g *Group) GetStar() int {
 	return total / len(players)
 }
 
-func (g *Group) GetState() glicko2.GroupState {
-	g.Base().RLock()
-	defer g.Base().RUnlock()
+func (g *GroupBaseGlicko2) GetState() glicko2.GroupState {
+	g.RLock()
+	defer g.RUnlock()
 	switch g.Base().GetState() {
 	case entry.GroupStateDissolved, entry.GroupStateInvite:
 		return glicko2.GroupStateUnready
@@ -84,12 +77,12 @@ func (g *Group) GetState() glicko2.GroupState {
 	case entry.GroupStateGame:
 		return glicko2.GroupStateMatched
 	}
-	panic(fmt.Sprintf("unreachable, state: %d", g.Base().GetState()))
+	panic(fmt.Sprintf("unreachable, state: %d", g.GetState()))
 }
 
-func (g *Group) SetState(state glicko2.GroupState) {
-	g.Base().Lock()
-	defer g.Base().Unlock()
+func (g *GroupBaseGlicko2) SetState(state glicko2.GroupState) {
+	g.Lock()
+	defer g.Unlock()
 	switch state {
 	case glicko2.GroupStateUnready:
 		g.Base().SetState(entry.GroupStateInvite)
@@ -100,42 +93,51 @@ func (g *Group) SetState(state glicko2.GroupState) {
 	}
 }
 
-func (g *Group) GetStartMatchTimeSec() int64 {
+func (g *GroupBaseGlicko2) GetStartMatchTimeSec() int64 {
 	return g.GetPlayers()[0].GetStartMatchTimeSec()
 }
 
-func (g *Group) SetStartMatchTimeSec(t int64) {
+func (g *GroupBaseGlicko2) SetStartMatchTimeSec(t int64) {
 	for _, p := range g.GetPlayers() {
 		p.SetStartMatchTimeSec(t)
 	}
 }
 
-func (g *Group) GetFinishMatchTimeSec() int64 {
+func (g *GroupBaseGlicko2) GetFinishMatchTimeSec() int64 {
 	return g.GetPlayers()[0].GetFinishMatchTimeSec()
 }
 
-func (g *Group) SetFinishMatchTimeSec(t int64) {
+func (g *GroupBaseGlicko2) SetFinishMatchTimeSec(t int64) {
 	for _, p := range g.GetPlayers() {
 		p.SetFinishMatchTimeSec(t)
 	}
 }
 
-func (g *Group) Type() glicko2.GroupType {
+func (g *GroupBaseGlicko2) Type() glicko2.GroupType {
 	return glicko2.GroupTypeNormalTeam
 }
 
-func (g *Group) CanFillAi() bool {
+func (g *GroupBaseGlicko2) CanFillAi() bool {
 	return false
 }
 
-func (g *Group) ForceCancelMatch(reason string, waitSec int64) {
+func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
 	slog.Info("force cancel match",
 		slog.Any("group", g),
 		slog.String("reason", reason),
 		slog.Int64("wait_sec", waitSec),
 	)
+	g.Lock()
+	defer g.Unlock()
+	g.Base().SetState(entry.GroupStateInvite)
+	for _, p := range g.Base().GetPlayers() {
+		p.Base().Lock()
+		p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
+		p.Base().Unlock()
+	}
+	// TODO: push cancel match to users
 }
 
-func (g *Group) IsNewer() bool {
+func (g *GroupBaseGlicko2) IsNewer() bool {
 	return false
 }

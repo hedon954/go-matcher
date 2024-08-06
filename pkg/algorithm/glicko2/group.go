@@ -30,8 +30,8 @@ type Group interface {
 	// GetID returns the team ID
 	GetID() string
 
-	// MatchKey returns the unique match queue ID
-	MatchKey() string
+	// QueueKey returns the unique match queue ID
+	QueueKey() string
 
 	// GetPlayers returns the list of players in the team
 	GetPlayers() []Player

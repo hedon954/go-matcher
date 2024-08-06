@@ -197,7 +197,7 @@ func (m *Matcher) Match(g glicko2.Group) {
 		panic(fmt.Sprintf("game mode glicko2 funcs not register: %d", g.(entry.Group).Base().GameMode))
 	}
 
-	matcher, err := m.NewMatcher(g.MatchKey(),
+	matcher, err := m.NewMatcher(g.QueueKey(),
 		funcs.ArgsFunc, funcs.NewTeamFunc, funcs.NewRoomFunc, funcs.NewRoomWithAIFunc)
 	if err != nil {
 		slog.Error("match by glicko2 error", slog.Any("group", g), slog.String("err", err.Error()))

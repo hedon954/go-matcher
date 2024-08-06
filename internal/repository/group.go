@@ -34,17 +34,19 @@ func (m *GroupMgr) CreateGroup(playerLimit int, p entry.Player) (
 	g entry.Group, err error,
 ) {
 	base := entry.NewGroupBase(m.GenGroupID(), playerLimit, p.Base())
-	switch p.Base().GameMode {
+
+	switch base.GameMode {
 	case constant.GameModeGoatGame:
-		g, err = goat_game.CreateGroup(base, p)
+		g, err = goat_game.CreateGroup(base)
 	case constant.GameModeTest:
 		g = base
 	default:
-		return nil, fmt.Errorf("unsupported game mode: %d", p.Base().GameMode)
+		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
 	}
 	if err != nil {
 		return nil, err
 	}
+
 	_ = g.Base().AddPlayer(p)
 	m.Add(g.ID(), g)
 	return g, nil

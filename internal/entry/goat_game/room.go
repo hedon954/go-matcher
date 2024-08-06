@@ -5,19 +5,28 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/entry/goat_game/glicko2"
+	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
 
 type Room struct {
-	*entry.RoomBase
+	*glicko2.RoomBaseGlicko2
 }
 
-func CreateRoom(base *entry.RoomBase, t entry.Team) (entry.Room, error) {
-	room := &Room{base}
-	switch t.Base().MatchStrategy() {
-	case constant.MatchStrategyGlicko2:
-		return glicko2.CreateRoom(room, t.(*glicko2.Team)), nil
-	default:
-		return nil, fmt.Errorf("unsupported match strategy: %d", t.Base().MatchStrategy())
+func CreateRoom(base *entry.RoomBase) (entry.Room, error) {
+	room := &Room{}
+
+	if err := room.withMatchStrategy(base); err != nil {
+		return nil, err
 	}
+	return room, nil
+}
+
+func (r *Room) withMatchStrategy(base *entry.RoomBase) error {
+	switch base.MatchStrategy {
+	case constant.MatchStrategyGlicko2:
+		r.RoomBaseGlicko2 = glicko2.CreateRoomBase(base)
+	default:
+		return fmt.Errorf("unsupported match strategy: %d", base.MatchStrategy)
+	}
+	return nil
 }

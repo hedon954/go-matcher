@@ -16,6 +16,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func init() {
+	gin.SetMode(gin.ReleaseMode)
+}
+
 func Test_HTTP_ShouldWork(t *testing.T) {
 	api := NewAPI(2, time.Millisecond*10)
 	defer api.m.Stop()

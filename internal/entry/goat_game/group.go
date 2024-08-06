@@ -5,19 +5,28 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/entry/goat_game/glicko2"
+	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
 
 type Group struct {
-	*entry.GroupBase
+	*glicko2.GroupBaseGlicko2
 }
 
-func CreateGroup(base *entry.GroupBase, p entry.Player) (entry.Group, error) {
-	group := &Group{base}
+func CreateGroup(base *entry.GroupBase) (entry.Group, error) {
+	g := &Group{}
+
+	if err := g.withMatchStrategy(base); err != nil {
+		return nil, err
+	}
+	return g, nil
+}
+
+func (g *Group) withMatchStrategy(base *entry.GroupBase) error {
 	switch base.MatchStrategy {
 	case constant.MatchStrategyGlicko2:
-		return glicko2.CreateGroup(group, p.(*glicko2.Player)), nil
+		g.GroupBaseGlicko2 = glicko2.NewGroup(base)
 	default:
-		return nil, fmt.Errorf("unsupported match strategy: %d", base.MatchStrategy)
+		return fmt.Errorf("unsupported match strategy: %d", base.MatchStrategy)
 	}
+	return nil
 }

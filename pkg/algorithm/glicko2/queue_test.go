@@ -702,7 +702,7 @@ func (g *GroupMock) GetID() string {
 	return g.ID
 }
 
-func (g *GroupMock) MatchKey() string {
+func (g *GroupMock) QueueKey() string {
 	return fmt.Sprintf("%d-%d", g.modeVersion, g.platform)
 }
 

@@ -21,13 +21,13 @@ func NewPlayerMgr() *PlayerMgr {
 func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (p entry.Player, err error) {
 	base := entry.NewPlayerBase(pInfo)
 
-	switch pInfo.GameMode {
+	switch base.GameMode {
 	case constant.GameModeGoatGame:
 		p, err = goat_game.CreatePlayer(base, pInfo)
 	case constant.GameModeTest:
 		p = base
 	default:
-		return nil, fmt.Errorf("unsupported game mode: %d", pInfo.GameMode)
+		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
 	}
 
 	if err != nil {

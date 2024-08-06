@@ -13,14 +13,18 @@ type Team interface {
 
 type TeamBase struct {
 	sync.RWMutex
-	id     int64
-	groups map[int64]Group
+	id            int64
+	groups        map[int64]Group
+	GameMode      constant.GameMode
+	MatchStrategy constant.MatchStrategy
 }
 
 func NewTeamBase(id int64, g Group) *TeamBase {
 	t := &TeamBase{
-		id:     id,
-		groups: make(map[int64]Group),
+		id:            id,
+		groups:        make(map[int64]Group),
+		GameMode:      g.Base().GameMode,
+		MatchStrategy: g.Base().MatchStrategy,
 	}
 	t.groups[g.ID()] = g
 	return t
@@ -32,14 +36,6 @@ func (t *TeamBase) Base() *TeamBase {
 
 func (t *TeamBase) ID() int64 {
 	return t.id
-}
-
-func (t *TeamBase) MatchStrategy() constant.MatchStrategy {
-	return t.randGroup().Base().MatchStrategy
-}
-
-func (t *TeamBase) GameMode() constant.GameMode {
-	return t.randGroup().Base().GameMode
 }
 
 func (t *TeamBase) GetGroups() []Group {
@@ -58,11 +54,4 @@ func (t *TeamBase) AddGroup(g Group) {
 
 func (t *TeamBase) RemoveGroup(id int64) {
 	delete(t.groups, id)
-}
-
-func (t *TeamBase) randGroup() Group {
-	for _, g := range t.groups {
-		return g
-	}
-	return nil
 }

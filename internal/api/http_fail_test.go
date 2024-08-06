@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
@@ -16,6 +17,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+func init() {
+	gin.SetMode(gin.ReleaseMode)
+}
 
 func TestAPI_StartMatch_StateNotMatching(t *testing.T) {
 	api := NewAPI(2, time.Second)
@@ -50,7 +55,8 @@ func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
 
 	_ = requestCreateGroup(router, "uid", t)
 
-	req, _ := http.NewRequest("POST", "/match/set_voice_state", bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceState(100))))
+	req, _ := http.NewRequest("POST", "/match/set_voice_state",
+		bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceState(100))))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -61,7 +67,8 @@ func TestAPI_SetVoice_PlayerNotInGroup(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/set_voice_state", bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceStateUnmute)))
+	req, _ := http.NewRequest("POST", "/match/set_voice_state",
+		bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceStateUnmute)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -72,7 +79,8 @@ func TestAPI_SetVoice_BadRequest(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/set_voice_state", bytes.NewBuffer(createSetVoiceStateParam("", entry.PlayerVoiceState(10))))
+	req, _ := http.NewRequest("POST", "/match/set_voice_state",
+		bytes.NewBuffer(createSetVoiceStateParam("", entry.PlayerVoiceState(10))))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -83,7 +91,8 @@ func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/set_recent_join_group", bytes.NewBuffer(createSetRecentJoinParam("", true)))
+	req, _ := http.NewRequest("POST", "/match/set_recent_join_group",
+		bytes.NewBuffer(createSetRecentJoinParam("", true)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -97,7 +106,8 @@ func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
 	g := requestCreateGroup(router, "uid1", t)
 	requestEnterGroup(router, "uid2", g.GroupID, t)
 
-	req, _ := http.NewRequest("POST", "/match/set_recent_join_group", bytes.NewBuffer(createSetRecentJoinParam("uid2", true)))
+	req, _ := http.NewRequest("POST", "/match/set_recent_join_group",
+		bytes.NewBuffer(createSetRecentJoinParam("uid2", true)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -108,7 +118,8 @@ func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group", bytes.NewBuffer(createSetNearbyJoinParam("", true)))
+	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group",
+		bytes.NewBuffer(createSetNearbyJoinParam("", true)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -122,7 +133,8 @@ func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
 	g := requestCreateGroup(router, "uid1", t)
 	requestEnterGroup(router, "uid2", g.GroupID, t)
 
-	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group", bytes.NewBuffer(createSetNearbyJoinParam("uid2", true)))
+	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group",
+		bytes.NewBuffer(createSetNearbyJoinParam("uid2", true)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -133,7 +145,8 @@ func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/refuse_invite", bytes.NewBuffer(createRefuseInviteParam("uid1", "uid2", 0)))
+	req, _ := http.NewRequest("POST", "/match/refuse_invite",
+		bytes.NewBuffer(createRefuseInviteParam("uid1", "uid2", 0)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -144,7 +157,8 @@ func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/accept_invite", bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 0)))
+	req, _ := http.NewRequest("POST", "/match/accept_invite",
+		bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 0)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -155,7 +169,8 @@ func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/accept_invite", bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 1)))
+	req, _ := http.NewRequest("POST", "/match/accept_invite",
+		bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 1)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -191,7 +206,8 @@ func TestAPI_ChangeRole_BadRequest(t *testing.T) {
 	g := requestCreateGroup(router, "uid1", t)
 	requestEnterGroup(router, "uid2", g.GroupID, t)
 
-	req, _ := http.NewRequest("POST", "/match/change_role", bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(0))))
+	req, _ := http.NewRequest("POST", "/match/change_role",
+		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(0))))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -205,7 +221,8 @@ func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
 	g := requestCreateGroup(router, "uid1", t)
 	requestEnterGroup(router, "uid2", g.GroupID, t)
 
-	req, _ := http.NewRequest("POST", "/match/change_role", bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(127))))
+	req, _ := http.NewRequest("POST", "/match/change_role",
+		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(127))))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -219,7 +236,8 @@ func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
 	g := requestCreateGroup(router, "uid1", t)
 	requestEnterGroup(router, "uid2", g.GroupID, t)
 
-	req, _ := http.NewRequest("POST", "/match/change_role", bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRoleCaptain)))
+	req, _ := http.NewRequest("POST", "/match/change_role",
+		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRoleCaptain)))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
@@ -312,7 +330,8 @@ func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
 	api := NewAPI(1, time.Second)
 	router := api.setupRouter()
 
-	req, _ := http.NewRequest("POST", "/match/create_group", bytes.NewBuffer(createGroupParamBad("a", constant.GameMode(10010))))
+	req, _ := http.NewRequest("POST", "/match/create_group",
+		bytes.NewBuffer(createGroupParamBad("a", constant.GameMode(10010))))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
