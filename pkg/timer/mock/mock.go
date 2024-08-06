@@ -60,6 +60,10 @@ func (t *Timer) getHandler(opType timer.OpType) func(id string) {
 func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer) {
 	t.Lock()
 	defer t.Unlock()
+	old, ok := t.timers[timerKey(opType, id)]
+	if ok {
+		old.Stop()
+	}
 	t.timers[timerKey(opType, id)] = tt
 }
 
