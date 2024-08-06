@@ -16,3 +16,45 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 ```bash
 bash ./setup_pre_commit.sh
 ```
+
+
+
+## FEATURE
+
+- [ ] API
+  - [x] HTTP
+  - [ ] TCP
+  - [ ] UDP
+  - [ ] KCP
+  - [ ] WebSocket
+- [x] Service
+  - [x] match service
+- [x] Swagger Doc
+- [x] GameMode
+  - [x] GoatGame
+- [x] MatchStrategy
+  - [x] Glicko2
+
+
+
+## PROBLEM
+
+- [ ] change match strategy dynamic according to config changes
+- [ ] lack of `GameEnd` and `Ready` services。
+
+
+
+## TODO
+
+- [ ] connectorRPC
+- [ ] tcp
+- [ ] udp
+- [ ] kcp
+- [ ] websocket
+- [ ] dynamic config
+- [ ] logger
+- [ ] tracer
+- [ ] opentelementry
+- [ ] repository stats
+- [ ] match queue stats
+
