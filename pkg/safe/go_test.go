@@ -3,6 +3,7 @@ package safe_test
 import (
 	"bytes"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -26,22 +27,29 @@ func (l *logger) Error(msg string, v ...any) {
 	}
 }
 
-func TestSafe(t *testing.T) {
+func TestSafeGo(t *testing.T) {
 	l := &logger{}
 	safe.SetLogger(l)
 
+	num := atomic.Int64{}
+
 	safe.Go(func() {
 		panic("panic in safe.Go")
+	}, func(_ any) {
+		num.Add(1)
 	})
 
 	start := time.Now().UnixMilli()
 	safe.Call(func() {
 		time.Sleep(10 * time.Millisecond)
 		panic("panic in safe.Call")
+	}, func(_ any) {
+		num.Add(1)
 	})
 	safe.Wait()
 	end := time.Now().UnixMilli()
 
+	assert.Equal(t, int64(2), num.Load())
 	assert.True(t, end-start >= 10)
 
 	buffer := l.buffer.String()
