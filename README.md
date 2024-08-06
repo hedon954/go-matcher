@@ -5,7 +5,7 @@
 [![CI](https://github.com/hedon954/go-matcher/workflows/build/badge.svg)](https://github.com/hedon954/go-matcher/actions)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/hedon954/go-matcher?sort=semver)](https://github.com/hedon954/go-matcher/releases)
 
-Go-matcher is a game mather implement in Go, which supports add game mode and match strategy easily.
+Go-matcher is a game matcher implement in Go, which supports add game mode and match strategy easily.
 
 - `GameMode`: The identifier of each different game, used to define as enum.
 - `MatchStrategy`: The strategy to match players, used to define as interface.
