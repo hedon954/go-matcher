@@ -44,7 +44,7 @@ jobs:
       - name: Display Go version
         run: go version
       - name: Install dependencies
-        run: go get .
+        run: go get ./...
       - name: Check code format
         run: gofmt -l .
       - name: Check the package for errors
