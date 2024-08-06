@@ -6,8 +6,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/timer"
-
-	"github.com/spf13/cast"
 )
 
 const (
@@ -29,8 +27,8 @@ func (impl *Impl) initDelayTimer() {
 	impl.delayTimer.Register(TimerOpTypeGroupWaitAttr, impl.waitAttrTimeoutHandler)
 }
 
-func (impl *Impl) inviteTimeoutHandler(id string) {
-	g := impl.groupMgr.Get(cast.ToInt64(id))
+func (impl *Impl) inviteTimeoutHandler(id int64) {
+	g := impl.groupMgr.Get(id)
 	if g != nil {
 		g.Base().Lock()
 		defer g.Base().Unlock()
@@ -44,8 +42,8 @@ func (impl *Impl) inviteTimeoutHandler(id string) {
 	}
 }
 
-func (impl *Impl) matchTimeoutHandler(id string) {
-	g := impl.groupMgr.Get(cast.ToInt64(id))
+func (impl *Impl) matchTimeoutHandler(id int64) {
+	g := impl.groupMgr.Get(id)
 	if g != nil {
 		g.Base().Lock()
 		defer g.Base().Unlock()
@@ -55,8 +53,8 @@ func (impl *Impl) matchTimeoutHandler(id string) {
 	}
 }
 
-func (impl *Impl) waitAttrTimeoutHandler(id string) {
-	g := impl.groupMgr.Get(cast.ToInt64(id))
+func (impl *Impl) waitAttrTimeoutHandler(id int64) {
+	g := impl.groupMgr.Get(id)
 	if g != nil {
 		g.Base().Lock()
 		defer g.Base().Unlock()
@@ -67,7 +65,7 @@ func (impl *Impl) waitAttrTimeoutHandler(id string) {
 }
 
 func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {
-	err := impl.delayTimer.Add(TimerOpTypeGroupInvite, cast.ToString(groupID),
+	err := impl.delayTimer.Add(TimerOpTypeGroupInvite, groupID,
 		impl.DelayConfig.GetConfig(mode).InviteTimeout())
 	if err != nil {
 		slog.Error("add invite timer error",
@@ -78,11 +76,11 @@ func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeInviteTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupInvite, cast.ToString(groupID))
+	impl.delayTimer.Remove(TimerOpTypeGroupInvite, groupID)
 }
 
 func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
-	err := impl.delayTimer.Add(TimerOpTypeGroupMatch, cast.ToString(groupID),
+	err := impl.delayTimer.Add(TimerOpTypeGroupMatch, groupID,
 		impl.DelayConfig.GetConfig(mode).MatchTimeout())
 	if err != nil {
 		slog.Error("add cancel match timer error",
@@ -93,11 +91,11 @@ func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeCancelMatchTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupMatch, cast.ToString(groupID))
+	impl.delayTimer.Remove(TimerOpTypeGroupMatch, groupID)
 }
 
 func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
-	err := impl.delayTimer.Add(TimerOpTypeGroupWaitAttr, cast.ToString(groupID),
+	err := impl.delayTimer.Add(TimerOpTypeGroupWaitAttr, groupID,
 		impl.DelayConfig.GetConfig(mode).WaitAttrTimeout())
 	if err != nil {
 		slog.Error("add wait attr timer error",
@@ -108,5 +106,5 @@ func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeWaitAttrTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupWaitAttr, cast.ToString(groupID))
+	impl.delayTimer.Remove(TimerOpTypeGroupWaitAttr, groupID)
 }

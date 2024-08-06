@@ -7,7 +7,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/spf13/cast"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -57,7 +56,7 @@ func TestImpl_waitAttrTimeoutHandler_shouldwork(t *testing.T) {
 	err = impl.StartMatch(g.GetCaptain().UID())
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
-	assert.NotNil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, cast.ToString(g.Base().GroupID)))
+	assert.NotNil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, g.ID()))
 	time.Sleep(waitAttrTimeoutMs + 3*time.Millisecond)
-	assert.Nil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, cast.ToString(g.Base().GroupID)))
+	assert.Nil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, g.ID()))
 }

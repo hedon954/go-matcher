@@ -10,27 +10,27 @@ import (
 
 type Timer struct {
 	sync.RWMutex
-	handlers map[timer.OpType]func(id string)
+	handlers map[timer.OpType]func(id int64)
 	timers   map[string]*time.Timer
-	tasks    map[string]*timer.OperationItem
+	tasks    map[string]*timer.OperationItem[int64]
 }
 
 func NewTimer() *Timer {
 	t := &Timer{
-		handlers: make(map[timer.OpType]func(id string)),
+		handlers: make(map[timer.OpType]func(id int64)),
 		timers:   make(map[string]*time.Timer),
-		tasks:    make(map[string]*timer.OperationItem),
+		tasks:    make(map[string]*timer.OperationItem[int64]),
 	}
 	return t
 }
 
-func (t *Timer) Register(opType timer.OpType, handler func(id string)) {
+func (t *Timer) Register(opType timer.OpType, handler func(id int64)) {
 	t.Lock()
 	defer t.Unlock()
 	t.handlers[opType] = handler
 }
 
-func (t *Timer) Add(opType timer.OpType, id string, delay time.Duration) error {
+func (t *Timer) Add(opType timer.OpType, id int64, delay time.Duration) error {
 	handler := t.getHandler(opType)
 	if handler == nil {
 		return fmt.Errorf("unsupported op type: %s", opType)
@@ -43,23 +43,23 @@ func (t *Timer) Add(opType timer.OpType, id string, delay time.Duration) error {
 	return nil
 }
 
-func (t *Timer) Get(opType timer.OpType, id string) *timer.OperationItem {
+func (t *Timer) Get(opType timer.OpType, id int64) *timer.OperationItem[int64] {
 	t.RLock()
 	defer t.RUnlock()
 	return t.tasks[timerKey(opType, id)]
 }
 
-func (t *Timer) GetAll() []*timer.OperationItem {
+func (t *Timer) GetAll() []*timer.OperationItem[int64] {
 	t.RLock()
 	defer t.RUnlock()
-	res := make([]*timer.OperationItem, 0, len(t.tasks))
+	res := make([]*timer.OperationItem[int64], 0, len(t.tasks))
 	for _, v := range t.tasks {
 		res = append(res, v)
 	}
 	return res
 }
 
-func (t *Timer) Remove(opType timer.OpType, id string) {
+func (t *Timer) Remove(opType timer.OpType, id int64) {
 	t.Lock()
 	defer t.Unlock()
 	tt, ok := t.timers[timerKey(opType, id)]
@@ -71,13 +71,13 @@ func (t *Timer) Remove(opType timer.OpType, id string) {
 	delete(t.tasks, timerKey(opType, id))
 }
 
-func (t *Timer) getHandler(opType timer.OpType) func(id string) {
+func (t *Timer) getHandler(opType timer.OpType) func(id int64) {
 	t.RLock()
 	defer t.RUnlock()
 	return t.handlers[opType]
 }
 
-func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer, delay time.Duration) {
+func (t *Timer) saveTimer(opType timer.OpType, id int64, tt *time.Timer, delay time.Duration) {
 	t.Lock()
 	defer t.Unlock()
 	old, ok := t.timers[timerKey(opType, id)]
@@ -85,13 +85,13 @@ func (t *Timer) saveTimer(opType timer.OpType, id string, tt *time.Timer, delay 
 		old.Stop()
 	}
 	t.timers[timerKey(opType, id)] = tt
-	t.tasks[timerKey(opType, id)] = &timer.OperationItem{
+	t.tasks[timerKey(opType, id)] = &timer.OperationItem[int64]{
 		OpType:  opType,
 		ID:      id,
 		RunTime: time.Now().Add(delay),
 	}
 }
 
-func timerKey(opType timer.OpType, id string) string {
-	return fmt.Sprintf("%s-%s", opType, id)
+func timerKey(opType timer.OpType, id int64) string {
+	return fmt.Sprintf("%s-%d", opType, id)
 }

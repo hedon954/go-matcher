@@ -16,10 +16,10 @@ func TestMockTimer(t *testing.T) {
 	const opType2 ptimer.OpType = "2"
 	const opType3 ptimer.OpType = "3"
 
-	const id1 = "id-1"
-	const id2 = "id-2"
+	const id1 = 1
+	const id2 = 2
 
-	var numMap = map[string]*atomic.Int64{
+	var numMap = map[int64]*atomic.Int64{
 		id1: {},
 		id2: {},
 	}
@@ -30,10 +30,10 @@ func TestMockTimer(t *testing.T) {
 	assert.NotNil(t, timer.handlers)
 
 	// resgiter operations
-	timer.Register(opType1, func(id string) {
+	timer.Register(opType1, func(id int64) {
 		numMap[id].Add(1)
 	})
-	timer.Register(opType2, func(id string) {
+	timer.Register(opType2, func(id int64) {
 		numMap[id].Add(-1)
 	})
 	assert.Equal(t, 2, len(timer.handlers))

@@ -17,7 +17,7 @@ import (
 // Impl implements a default service,
 // in most cases, you don't need to implement your own service.
 type Impl struct {
-	delayTimer  timer.Operator
+	delayTimer  timer.Operator[int64]
 	DelayConfig config.DelayTimer
 
 	playerMgr *repository.PlayerMgr
@@ -43,7 +43,7 @@ func WithNowFunc(f func() int64) Option {
 	}
 }
 
-func WithDelayTimer(t timer.Operator) Option {
+func WithDelayTimer(t timer.Operator[int64]) Option {
 	return func(impl *Impl) {
 		impl.delayTimer = t
 	}

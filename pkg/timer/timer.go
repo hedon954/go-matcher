@@ -9,31 +9,31 @@ import (
 type OpType string
 
 // OperationItem specifies one task in timer.
-type OperationItem struct {
+type OperationItem[T comparable] struct {
 	// OpType specifies the operation type.
 	OpType OpType
 
 	// ID specifies the task unique id.
-	ID string
+	ID T
 
 	// RunTime specifies the task run time.
 	RunTime time.Time
 }
 
 // Operator is the interface for timer.
-type Operator interface {
+type Operator[T comparable] interface {
 	// Register binds a handler for one operation type.
-	Register(opType OpType, handler func(id string))
+	Register(opType OpType, handler func(id T))
 
 	// Add adds a new task to timer.
-	Add(opType OpType, id string, delay time.Duration) error
+	Add(opType OpType, id T, delay time.Duration) error
 
 	// Get gets the task from timer.
-	Get(opType OpType, id string) *OperationItem
+	Get(opType OpType, id T) *OperationItem[T]
 
 	// GetAll gets all tasks from timer.
-	GetAll() []*OperationItem
+	GetAll() []*OperationItem[T]
 
 	// Remove removes the task from timer.
-	Remove(opType OpType, id string)
+	Remove(opType OpType, id T)
 }
