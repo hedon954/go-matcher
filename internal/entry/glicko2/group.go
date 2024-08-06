@@ -33,7 +33,7 @@ func (g *GroupBaseGlicko2) GetPlayers() []glicko2.Player {
 	players := g.Base().GetPlayers()
 	res := make([]glicko2.Player, len(players))
 	for i := 0; i < len(players); i++ {
-		res[i] = players[i].(*PlayerBaseGlicko2)
+		res[i] = players[i].(glicko2.Player)
 	}
 	return res
 }

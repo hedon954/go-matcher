@@ -80,12 +80,10 @@ type GroupMgr struct {
 
 type TeamMgr struct {
 	*collection.Manager[int64, entry.Team]
-	teamIDIter atomic.Int64
 }
 
 type RoomMgr struct {
 	*collection.Manager[int64, entry.Room]
-	roomIDIter atomic.Int64
 }
 ```
 
