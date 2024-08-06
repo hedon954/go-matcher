@@ -5,6 +5,6 @@ import (
 )
 
 func TestConcurrentOpMap(t *testing.T) {
-	// 使用 go test -race 来检测潜在的并发问题的前提是测试会运行到相关代码。
+	// use go test -race to check for potential concurrency issues if the test will run to related code.
 	ConcurrentOpMap()
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
+	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/timer"
 	"github.com/hedon954/go-matcher/pkg/timer/mock"
 )
@@ -76,7 +77,7 @@ func NewDefault(
 	}
 
 	impl.initDelayTimer()
-	go impl.waitForMatchResult()
+	safe.Go(impl.waitForMatchResult)
 	return impl
 }
 

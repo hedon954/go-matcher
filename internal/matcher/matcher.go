@@ -25,11 +25,9 @@ func New(groupChannel chan entry.Group, glicko2Match *glicko2.Matcher) *Matcher 
 }
 
 func (m *Matcher) Start() {
-	go func() {
-		for g := range m.groupChannel {
-			m.handle(g)
-		}
-	}()
+	for g := range m.groupChannel {
+		m.handle(g)
+	}
 }
 
 func (m *Matcher) Stop() {

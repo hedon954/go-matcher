@@ -12,6 +12,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
+	"github.com/hedon954/go-matcher/pkg/safe"
 )
 
 // Matcher is the glicko2 matcher.
@@ -85,7 +86,7 @@ func New(
 	m.registerGoatGame()
 
 	// start to handle match result
-	go m.handleMatchResult()
+	safe.Go(m.handleMatchResult)
 
 	return m
 }
@@ -140,7 +141,7 @@ func (m *Matcher) NewMatcher(
 	}
 
 	m.matchers[key] = matcher
-	go matcher.Match(m.matchInterval)
+	safe.Go(func() { matcher.Match(m.matchInterval) })
 	return matcher, nil
 }
 

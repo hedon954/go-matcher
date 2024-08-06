@@ -14,6 +14,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/impl"
 	"github.com/hedon954/go-matcher/pkg/response"
+	"github.com/hedon954/go-matcher/pkg/safe"
 
 	"github.com/gin-gonic/gin"
 
@@ -101,7 +102,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		rm: roomMgr,
 	}
 
-	api.m.Start()
+	safe.Go(api.m.Start)
 	return api
 }
 

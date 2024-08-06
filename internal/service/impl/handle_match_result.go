@@ -7,11 +7,9 @@ import (
 )
 
 func (impl *Impl) waitForMatchResult() {
-	go func() {
-		for r := range impl.roomChannel {
-			impl.HandleMatchResult(r)
-		}
-	}()
+	for r := range impl.roomChannel {
+		impl.HandleMatchResult(r)
+	}
 }
 
 func (impl *Impl) clearDelayTimer(r entry.Room) {
