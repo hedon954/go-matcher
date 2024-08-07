@@ -42,8 +42,3 @@ repos:
         language: golang
         files: \.*$
         pass_filenames: false
-#      - id: check-go-tests
-#        name: Check Go Test Files
-#        entry: ./check_go_tests.sh
-#        language: script
-#        files: \.go$
