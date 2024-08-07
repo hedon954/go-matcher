@@ -296,10 +296,12 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	groups = append(groups, g3)
 	groups, found = q.findGroupForTeamBinary(t1, groups)
 	assert.Equal(t, 2, len(t1.GetGroups()))
+	assert.True(t, found)
 
 	// g2(100) 和 g4(130) mmr 相差 30，匹配时间 25s，只能接受 20% 的差距，无法组成一队
 	t2 := &TeamMock{groups: make(map[string]Group)}
 	groups, found = q.findGroupForTeamBinary(t2, groups)
+	assert.False(t, false)
 	assert.Equal(t, 1, len(t2.GetGroups()))
 	g4 := newGroupWithMMR(4, 3, 130)
 	groups = append(groups, g4)
@@ -355,7 +357,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	assert.Equal(t, 2, len(t5.GetGroups()))
 	assert.Equal(t, GroupStateQueuing, g13.GetState())
 	// g13 符合 g11 的要求，但是不符合 g12 的要求，无法进队
-	groups, found = q.findGroupForTeamBinary(t5, groups)
+	_, found = q.findGroupForTeamBinary(t5, groups)
 	assert.Equal(t, false, found)
 	assert.Equal(t, 2, len(t5.GetGroups()))
 	assert.Equal(t, GroupStateQueuing, g13.GetState())
@@ -375,9 +377,10 @@ func TestQueue_findGroupForTeam_rangeSearch_quickReturn(t *testing.T) {
 	g6 := newGroupWithMMR(6, 1, 1040)
 	g7 := newGroupWithMMR(7, 1, 1050)
 	g8 := newGroupWithMMR(8, 1, 1090)
-	q.AddGroups(g2, g3, g4, g5, g6, g7, g8)
+	err := q.AddGroups(g2, g3, g4, g5, g6, g7, g8)
+	assert.Nil(t, err)
 	groups := q.SortedGroups()
-	groups, found = q.findGroupForTeamRange(t1, groups)
+	_, found = q.findGroupForTeamRange(t1, groups)
 	assert.Equal(t, true, found)
 	assert.Equal(t, 2, len(t1.GetGroups()))
 	assert.Equal(t, g5, t1.GetGroups()[1])
