@@ -105,6 +105,7 @@ issues:
     - path: _test\.go
       linters:
         - gomnd
+        - funlen
   exclude-dirs:
     - vendor
   new: true

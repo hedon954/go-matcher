@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/alicebob/miniredis/v2"
+	"github.com/hedon954/go-matcher/pkg/miniredis"
 	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAsync_shouldwork(t *testing.T) {
-	redis := newMiniRedis()
+func TestAsync_ShouldWork(t *testing.T) {
+	redis := miniredis.NewMiniRedis().Addr()
 	// redis := "127.0.0.1:6379"
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redis})
 
@@ -79,14 +79,4 @@ func startHandleServer(ep *EmailProcessor, ip *ImageProcessor, redis string) {
 	if err := srv.Run(mux); err != nil {
 		log.Fatalf("could not run server: %v", err)
 	}
-}
-
-func newMiniRedis() string {
-	var miniRedisClient *miniredis.Miniredis
-	var err error
-	miniRedisClient, err = miniredis.Run()
-	if err != nil {
-		panic(err)
-	}
-	return miniRedisClient.Addr()
 }
