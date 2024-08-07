@@ -1,15 +1,14 @@
 package thirdparty
 
 import (
-	"log/slog"
 	"runtime"
 	"time"
 
 	"github.com/hibiken/asynq"
 )
 
-func StartAsynqServer(redisOpt *asynq.RedisClientOpt,
-	queues map[string]int, handler map[string]asynq.HandlerFunc, interval time.Duration) {
+func NewAsynqServer(redisOpt *asynq.RedisClientOpt,
+	queues map[string]int, interval time.Duration) *asynq.Server {
 	srv := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -23,18 +22,5 @@ func StartAsynqServer(redisOpt *asynq.RedisClientOpt,
 			// See the godoc for other configuration options.
 		},
 	)
-
-	// mux maps a type to a handler
-	mux := asynq.NewServeMux()
-
-	// register handlers...
-	for t, h := range handler {
-		mux.HandleFunc(t, h)
-	}
-
-	// start server
-	slog.Info("start asynq server")
-	if err := srv.Run(mux); err != nil {
-		slog.Error("could not run asynq server", slog.String("err", err.Error()))
-	}
+	return srv
 }

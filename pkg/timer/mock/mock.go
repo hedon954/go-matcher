@@ -24,6 +24,8 @@ func NewTimer() *Timer {
 	return t
 }
 
+func (t *Timer) Start() {}
+
 func (t *Timer) Register(opType timer.OpType, handler func(id int64)) {
 	t.Lock()
 	defer t.Unlock()

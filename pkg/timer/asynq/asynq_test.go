@@ -1,8 +1,6 @@
 package asynq
 
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"sync/atomic"
@@ -11,7 +9,6 @@ import (
 
 	"github.com/hedon954/go-matcher/pkg/miniredis"
 	ptimer "github.com/hedon954/go-matcher/pkg/timer"
-	"github.com/hedon954/go-matcher/thirdparty"
 	"github.com/hibiken/asynq"
 
 	"github.com/stretchr/testify/assert"
@@ -40,27 +37,14 @@ func TestAsynqTimer(t *testing.T) {
 	}
 
 	redisOpt := &asynq.RedisClientOpt{Addr: miniredis.NewMiniRedis().Addr()}
-	go thirdparty.StartAsynqServer(redisOpt, map[string]int{"test": 1, "default": 3}, map[string]asynq.HandlerFunc{
-		string(opType1): func(ctx context.Context, task *asynq.Task) error {
-			var id int64
-			_ = json.Unmarshal(task.Payload(), &id)
-			handle1(id)
-			return nil
-		},
-		string(opType2): func(ctx context.Context, task *asynq.Task) error {
-			var id int64
-			_ = json.Unmarshal(task.Payload(), &id)
-			handle2(id)
-			return nil
-		},
-	}, time.Second)
-
 	time.Sleep(3 * time.Millisecond)
 
 	// create a new timer
 	timer := NewTimer[int64](redisOpt,
 		WithQueueName[int64]("test"),
-		WithExpireTicker[int64](time.Millisecond))
+		WithTimerInterval[int64](time.Second),
+	)
+	go timer.Start()
 	defer timer.Stop()
 	assert.NotNil(t, timer.client)
 	assert.NotNil(t, timer.inspector)

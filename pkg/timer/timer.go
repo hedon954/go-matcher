@@ -22,6 +22,12 @@ type OperationItem[T comparable] struct {
 
 // Operator is the interface for timer.
 type Operator[T comparable] interface {
+	// Start starts the timer
+	Start()
+
+	// Stop stops the timer
+	Stop()
+
 	// Register binds a handler for one operation type.
 	Register(opType OpType, handler func(id T))
 
@@ -36,7 +42,4 @@ type Operator[T comparable] interface {
 
 	// Remove removes the task from timer.
 	Remove(opType OpType, id T) error
-
-	// Stop stops the timer
-	Stop()
 }

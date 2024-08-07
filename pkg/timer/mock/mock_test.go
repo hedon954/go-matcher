@@ -26,6 +26,7 @@ func TestMockTimer(t *testing.T) {
 
 	// create a new timer
 	timer := NewTimer()
+	timer.Start()
 	defer timer.Stop()
 	assert.NotNil(t, timer.timers)
 	assert.NotNil(t, timer.handlers)

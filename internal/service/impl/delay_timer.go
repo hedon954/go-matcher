@@ -10,10 +10,10 @@ import (
 
 const (
 	// TimerOpTypeGroupInvite used to dissolve the group if it not starts game after delay.
-	TimerOpTypeGroupInvite timer.OpType = "match:timer_gourp_invite"
+	TimerOpTypeGroupInvite timer.OpType = "match:timer_group_invite"
 
-	// TimerOpTypeGroupMatchif used to cancel match if the group not matched after delay.
-	TimerOpTypeGroupMatch timer.OpType = "match:timer_gourp_match"
+	// TimerOpTypeGroupMatch if used to cancel match if the group not matched after delay.
+	TimerOpTypeGroupMatch timer.OpType = "match:timer_group_match"
 
 	// TimerOpTypeGroupWaitAttr used to wait for players to upload attributes after client clicks `StartMatch`.
 	// If all players upload attributes, the group would start to match.
@@ -76,7 +76,7 @@ func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeInviteTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupInvite, groupID)
+	_ = impl.delayTimer.Remove(TimerOpTypeGroupInvite, groupID)
 }
 
 func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
@@ -91,7 +91,7 @@ func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeCancelMatchTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupMatch, groupID)
+	_ = impl.delayTimer.Remove(TimerOpTypeGroupMatch, groupID)
 }
 
 func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
@@ -106,5 +106,5 @@ func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
 }
 
 func (impl *Impl) removeWaitAttrTimer(groupID int64) {
-	impl.delayTimer.Remove(TimerOpTypeGroupWaitAttr, groupID)
+	_ = impl.delayTimer.Remove(TimerOpTypeGroupWaitAttr, groupID)
 }

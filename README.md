@@ -25,7 +25,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] Swagger Doc
 - [ ] timer
   - [x] native timer
-  - [ ] asynq timer
+  - [x] asynq timer
   - [ ] redis timer
 
 - [x] GameMode
@@ -89,6 +89,8 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 nvm install 16
 # use node 16
 nvm use 16
+# install yarn if not
+brew install yarn
 # build asynqmon
 make build
 # start asynqmon

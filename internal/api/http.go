@@ -2,8 +2,10 @@ package api
 
 import (
 	"log"
+	"log/slog"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -13,10 +15,13 @@ import (
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/impl"
+	"github.com/hedon954/go-matcher/pkg/miniredis"
 	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/hedon954/go-matcher/pkg/safe"
 
-	"github.com/gin-gonic/gin"
+	asynqtimer "github.com/hedon954/go-matcher/pkg/timer/asynq"
+
+	"github.com/hibiken/asynq"
 
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -88,20 +93,25 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		teamMgr   = repository.NewTeamMgr(0)
 		roomMgr   = repository.NewRoomMgr(0)
 		configer  = &glicko2.Configer{
-			Glicko2: new(mock.Glicko2Mock),
+			Glicko2: new(mock.Glicko2Mock), // TODO: change
 		}
 		glicko2Matcher = glicko2.New(roomChannel, configer, matchInterval, playerMgr, groupMgr, teamMgr, roomMgr)
 	)
 
+	redis := miniredis.NewMiniRedis() // TODO: change
+	slog.Info("start asynq redis: " + redis.Addr())
+	delayTimer := asynqtimer.NewTimer[int64](&asynq.RedisClientOpt{Addr: redis.Addr()})
+
 	api := &API{
-		ms: impl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, groupChannel, roomChannel),
-		m:  matcher.New(groupChannel, glicko2Matcher),
 		pm: playerMgr,
 		gm: groupMgr,
 		tm: teamMgr,
 		rm: roomMgr,
+		m:  matcher.New(groupChannel, glicko2Matcher),
+		ms: impl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, groupChannel, roomChannel, impl.WithDelayTimer(delayTimer)),
 	}
 
+	safe.Go(delayTimer.Start)
 	safe.Go(api.m.Start)
 	return api
 }

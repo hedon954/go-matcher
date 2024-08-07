@@ -32,8 +32,7 @@ type Impl struct {
 	// groupChannel used to send a group to match system.
 	// TODO: if match system is down, we should stop the server.
 	groupChannel chan entry.Group
-
-	roomChannel chan entry.Room
+	roomChannel  chan entry.Room
 }
 
 type Option func(*Impl)
@@ -57,8 +56,10 @@ func WithDelayConfiger(t config.DelayTimer) Option {
 }
 
 func NewDefault(
-	groupPlayerLimit int, playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr, groupChannel chan entry.Group,
-	roomChannel chan entry.Room, options ...Option,
+	groupPlayerLimit int,
+	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
+	groupChannel chan entry.Group, roomChannel chan entry.Room,
+	options ...Option,
 ) *Impl {
 	impl := &Impl{
 		playerMgr:        playerMgr,

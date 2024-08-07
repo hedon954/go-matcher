@@ -1,26 +1,31 @@
 package asynq
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/hedon954/go-matcher/pkg/timer"
+	"github.com/hedon954/go-matcher/thirdparty"
 	"github.com/hibiken/asynq"
 )
 
 const DefaultQueue = "default"
+const queuePriority = 10
 
 type Timer[T comparable] struct {
 	sync.RWMutex
-	client       *asynq.Client
-	inspector    *asynq.Inspector
-	queue        string
-	handlers     map[timer.OpType]func(T)
-	tasks        map[string]*asynq.TaskInfo
-	key2ID       map[string]T
-	expireTicker time.Duration
+	server        *asynq.Server
+	mux           *asynq.ServeMux
+	client        *asynq.Client
+	inspector     *asynq.Inspector
+	queue         string
+	handlers      map[timer.OpType]func(T)
+	tasks         map[string]*asynq.TaskInfo
+	key2ID        map[string]T
+	timerInterval time.Duration
 }
 
 type Option[T comparable] func(*Timer[T])
@@ -29,26 +34,21 @@ func NewTimer[T comparable](redisOpt *asynq.RedisClientOpt, opts ...Option[T]) *
 	client := asynq.NewClient(redisOpt)
 	inspector := asynq.NewInspector(redisOpt)
 	t := &Timer[T]{
-		client:       client,
-		inspector:    inspector,
-		queue:        DefaultQueue,
-		handlers:     make(map[timer.OpType]func(T)),
-		tasks:        make(map[string]*asynq.TaskInfo),
-		key2ID:       map[string]T{},
-		expireTicker: time.Minute,
+		mux:           asynq.NewServeMux(),
+		client:        client,
+		inspector:     inspector,
+		queue:         DefaultQueue,
+		handlers:      make(map[timer.OpType]func(T)),
+		tasks:         make(map[string]*asynq.TaskInfo),
+		key2ID:        map[string]T{},
+		timerInterval: time.Second,
 	}
 
 	for _, opt := range opts {
 		opt(t)
 	}
 
-	go func() {
-		ticker := time.NewTicker(t.expireTicker)
-		for range ticker.C {
-			t.GetAll() // delete expired task
-		}
-	}()
-
+	t.server = thirdparty.NewAsynqServer(redisOpt, map[string]int{t.queue: queuePriority}, t.timerInterval)
 	return t
 }
 
@@ -58,9 +58,18 @@ func WithQueueName[T comparable](queue string) Option[T] {
 	}
 }
 
-func WithExpireTicker[T comparable](interval time.Duration) Option[T] {
+func WithTimerInterval[T comparable](interval time.Duration) Option[T] {
 	return func(t *Timer[T]) {
-		t.expireTicker = interval
+		if interval < time.Second {
+			interval = time.Second
+		}
+		t.timerInterval = interval
+	}
+}
+
+func (t *Timer[T]) Start() {
+	if err := t.server.Run(t.mux); err != nil {
+		panic(err)
 	}
 }
 
@@ -68,6 +77,15 @@ func (t *Timer[T]) Register(opType timer.OpType, handler func(T)) {
 	t.Lock()
 	defer t.Unlock()
 	t.handlers[opType] = handler
+	t.mux.HandleFunc(string(opType), func(ctx context.Context, task *asynq.Task) error {
+		var id T
+		if err := json.Unmarshal(task.Payload(), &id); err != nil {
+			return err
+		}
+		delete(t.tasks, taskKey(opType, id))
+		handler(id)
+		return nil
+	})
 }
 
 func (t *Timer[T]) Add(opType timer.OpType, id T, delay time.Duration) error {
