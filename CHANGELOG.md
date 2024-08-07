@@ -1,6 +1,66 @@
 # Changelog
 
 ---
+## [0.0.5-timer](https://github.com/hedon954/go-matcher/compare/v0.0.4-http-api..v0.0.5-timer) - 2024-08-07
+
+add timer logic in match service
+
+### Optimize
+
+- **(timer)** optimize `timer` and add more unit tests to improve test coverage - ([cbd28e5](https://github.com/hedon954/go-matcher/commit/cbd28e57af9adf7c2194a81001050cca8fa7a1b5)) - hedon954
+
+### Skip
+
+- delete `main.go` in root directory - ([8b16ea7](https://github.com/hedon954/go-matcher/commit/8b16ea7e7501c25fedfd3720fcd493306bfed269)) - hedon954
+- recover root `main.go` for `swag init` - ([f5d6450](https://github.com/hedon954/go-matcher/commit/f5d6450de2ac114480d210bd6de68cabda102fc8)) - hedon954
+- add ignore files in codecov config - ([0c73c4c](https://github.com/hedon954/go-matcher/commit/0c73c4cd83069a435ea84497942d26a9cf1291bf)) - hedon954
+
+### ⚙️ Miscellaneous Chores
+
+- **(ci)** add codecov config to ignore `cmd` folder - ([5b72a7b](https://github.com/hedon954/go-matcher/commit/5b72a7b88f2562c493cd052c3dbaf3b4f26cc757)) - hedon954
+- **(ci)** fix codecov config to ignore `cmd` folder - ([bc48e10](https://github.com/hedon954/go-matcher/commit/bc48e10e015d756bf31ac5ab7dde291e6e71ffe8)) - hedon954
+- upgrade go toolchain version to 1.22.1 to fix CodeQL warning - ([a4fb55f](https://github.com/hedon954/go-matcher/commit/a4fb55f4856a93899d1ec1be690a23e8a1807ed7)) - hedon954
+
+### ⛰️ Features
+
+- **(ci)** upgrade `actions/cache` to `v4` - ([83891a4](https://github.com/hedon954/go-matcher/commit/83891a4405249649b133f7e57d3cdbbbd31a8668)) - hedon954
+- **(pkg)** define `timer.Operator` interface and provide navtie timer implementations - ([a06eef2](https://github.com/hedon954/go-matcher/commit/a06eef20ad18a4c0a2e60e452f1c799b5e5dd4e6)) - hedon954
+- **(safego)** add safe go package - ([cc97bc9](https://github.com/hedon954/go-matcher/commit/cc97bc92c76b81f9d563e7ce874b6b9dcd1ab527)) - hedon954
+- **(timer)** add delay timer logic for match service - ([d44657a](https://github.com/hedon954/go-matcher/commit/d44657adae611887c73223c23c76613e1b3e1119)) - hedon954
+
+### 🐛 Bug Fixes
+
+- **(glicko2)** type assert to `glicko2.Player` - ([8d1a8b7](https://github.com/hedon954/go-matcher/commit/8d1a8b733d4e1ddba7a745e3d01b8c0375c6f1d7)) - hedon954
+- **(typo)** fix typo in readme - ([09907ab](https://github.com/hedon954/go-matcher/commit/09907ab333596ee73a136e8c79bb89e58055ffd9)) - Hedon
+
+### 📚 Documentation
+
+- **(changelog)** update go report card icon url - ([9fc4f3f](https://github.com/hedon954/go-matcher/commit/9fc4f3f491d8bdfb4cd7161c4b0c35be12816b1f)) - Hedon
+- **(entry)** add readme for `entry` for reader the understand it easilier - ([a995f45](https://github.com/hedon954/go-matcher/commit/a995f45a9428f1855fa79f786c29a5fb78573457)) - hedon954
+- **(glicko2)** rewrite `glicko2` document - ([13a106d](https://github.com/hedon954/go-matcher/commit/13a106d813e75da4d6d05cf69e59497f709b1564)) - hedon954
+- **(readme)** add badges for readme - ([0925e8e](https://github.com/hedon954/go-matcher/commit/0925e8e9b61a668babb97d68a572a38bf8da2e2e)) - hedon954
+- **(readme)** add release badge icon to readme - ([ddeaa81](https://github.com/hedon954/go-matcher/commit/ddeaa81666e6dcd294ca434ebea43905e72df4b5)) - hedon954
+- **(readme)** add `FEATURE`, `PROBLEM` and `TODO` in readme - ([50a78d5](https://github.com/hedon954/go-matcher/commit/50a78d53aa8a1979f9e1e53f8821b95544d75949)) - hedon954
+- **(safego)** add comments for `safe.go` - ([965d30c](https://github.com/hedon954/go-matcher/commit/965d30c383d3424162a40279ce30ed61078fe0f7)) - hedon954
+
+### 🚜 Refactor
+
+- **(pkg)** delete useless option pattern for timer and rename `native` to `mock` - ([f38ab57](https://github.com/hedon954/go-matcher/commit/f38ab57a73e17d7b98703f83925ff85b0ac17716)) - hedon954
+- **(safego)** use `safe.Go` to replace native `go` for better safety - ([25ab79e](https://github.com/hedon954/go-matcher/commit/25ab79e008b7fd5684495d515d9c06cd0d12640f)) - hedon954
+- **(safego)** optimize safego callback logics to support for better customization - ([f589a83](https://github.com/hedon954/go-matcher/commit/f589a8334aeedff91abc1e4f6cdc4e7e2babb421)) - hedon954
+- **(timer)** use generic to opmitize `timer` to support different comparable key type - ([e17b694](https://github.com/hedon954/go-matcher/commit/e17b69469cdd28093e5bb610447d05cae3b11605)) - hedon954
+- provide glicko2 base objects and use combinations to complete the entry for each game mode - ([e5f9a46](https://github.com/hedon954/go-matcher/commit/e5f9a46a1e7635392c2a834a96a8e8995330e33c)) - hedon954
+
+### 🧪 Tests
+
+- **(glicko2)** optimize glicko2 queue test to fix some ineffectual assignment - ([71ad60f](https://github.com/hedon954/go-matcher/commit/71ad60f574bb2b8616983d1edf0751f6aed3bd73)) - hedon954
+- **(http)** test bad request case for `kick_player` - ([4b80113](https://github.com/hedon954/go-matcher/commit/4b8011342dc663c057180662e0041a294c7ea940)) - hedon954
+- **(safego)** test callback of safe go - ([0dae6b9](https://github.com/hedon954/go-matcher/commit/0dae6b937d9fa8c72e943e29f72f73aa618c8dad)) - hedon954
+- **(timer)** add unit tests for mock timer - ([2721eb6](https://github.com/hedon954/go-matcher/commit/2721eb619bbbbc74ce5383a23062a9068fdae32f)) - hedon954
+
+<!-- generated by git-cliff -->
+
+---
 ## [0.0.4-http-api](https://github.com/hedon954/go-matcher/compare/v0.0.3-glicko2..v0.0.4-http-api) - 2024-08-05
 
 support http api for match service
