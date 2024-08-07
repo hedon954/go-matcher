@@ -35,5 +35,8 @@ type Operator[T comparable] interface {
 	GetAll() []*OperationItem[T]
 
 	// Remove removes the task from timer.
-	Remove(opType OpType, id T)
+	Remove(opType OpType, id T) error
+
+	// Stop stops the timer
+	Stop()
 }

@@ -59,17 +59,20 @@ func (t *Timer) GetAll() []*timer.OperationItem[int64] {
 	return res
 }
 
-func (t *Timer) Remove(opType timer.OpType, id int64) {
+func (t *Timer) Remove(opType timer.OpType, id int64) error {
 	t.Lock()
 	defer t.Unlock()
 	tt, ok := t.timers[timerKey(opType, id)]
 	if !ok {
-		return
+		return nil
 	}
 	tt.Stop()
 	delete(t.timers, timerKey(opType, id))
 	delete(t.tasks, timerKey(opType, id))
+	return nil
 }
+
+func (t *Timer) Stop() {}
 
 func (t *Timer) getHandler(opType timer.OpType) func(id int64) {
 	t.RLock()
