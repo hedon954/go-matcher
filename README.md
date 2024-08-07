@@ -11,13 +11,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - `MatchStrategy`: The strategy to match players, used to define as interface.
 
 
-## Before writing code
-
-```bash
-bash ./setup_pre_commit.sh
-```
-
-
 
 ## Features
 
@@ -30,10 +23,21 @@ bash ./setup_pre_commit.sh
 - [x] Service
   - [x] match service
 - [x] Swagger Doc
+- [ ] timer
+  - [x] native timer
+  - [ ] asynq timer
+  - [ ] redis timer
+
 - [x] GameMode
   - [x] GoatGame
 - [x] MatchStrategy
   - [x] Glicko2
+
+
+
+## Architecture
+
+![go-matcher architecture](assets/img/architecture.png)
 
 
 
@@ -57,10 +61,17 @@ bash ./setup_pre_commit.sh
 - [ ] opentelementry
 - [ ] repository stats
 - [ ] match queue stats
-- [ ] timer
+
+
 
 
 ## Help
+
+### Before writing code
+
+```bash
+bash ./setup_pre_commit.sh
+```
 
 ### Start asynq web UI `Asynqmon`
 

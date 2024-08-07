@@ -10,8 +10,8 @@ import (
 )
 
 func TestAsync_shouldwork(t *testing.T) {
-	// redis := newMiniRedis()
-	redis := "127.0.0.1:6379"
+	redis := newMiniRedis()
+	// redis := "127.0.0.1:6379"
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redis})
 
 	ep := NewEmailProcessor()
