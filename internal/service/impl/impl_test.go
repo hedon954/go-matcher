@@ -11,6 +11,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
+	"github.com/hedon954/go-matcher/pkg/timer/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,7 +26,7 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	rc := make(chan entry.Room, 1024)
 	pm := repository.NewPlayerMgr()
 	gm := repository.NewGroupMgr(0)
-	return NewDefault(playerLimit, pm, gm, gc, rc, opts...)
+	return NewDefault(playerLimit, pm, gm, gc, rc, mock.NewTimer(), opts...)
 }
 
 func newCreateGroupParam(uid string) *pto.CreateGroup {

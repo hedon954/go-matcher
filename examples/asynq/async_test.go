@@ -5,13 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hedon954/go-matcher/pkg/miniredis"
+	"github.com/hedon954/go-matcher/thirdparty"
 	"github.com/hibiken/asynq"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAsync_ShouldWork(t *testing.T) {
-	redis := miniredis.NewMiniRedis().Addr()
+	redis := thirdparty.NewMiniRedis().Addr()
 	// redis := "127.0.0.1:6379"
 	client := asynq.NewClient(asynq.RedisClientOpt{Addr: redis})
 

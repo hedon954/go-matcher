@@ -1,4 +1,4 @@
-package miniredis
+package thirdparty
 
 import "github.com/alicebob/miniredis/v2"
 

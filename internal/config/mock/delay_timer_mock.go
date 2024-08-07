@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	InviteTimeoutMs   = 1000
-	MatchTimeoutMs    = 1000
+	InviteTimeoutMs   = 300000
+	MatchTimeoutMs    = 60000
 	WaitAttrTimeoutMs = 1
 )
 

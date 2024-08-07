@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hedon954/go-matcher/pkg/miniredis"
 	ptimer "github.com/hedon954/go-matcher/pkg/timer"
+	"github.com/hedon954/go-matcher/thirdparty"
 	"github.com/hibiken/asynq"
 
 	"github.com/stretchr/testify/assert"
@@ -36,7 +36,7 @@ func TestAsynqTimer(t *testing.T) {
 		numMap[id].Add(-1)
 	}
 
-	redisOpt := &asynq.RedisClientOpt{Addr: miniredis.NewMiniRedis().Addr()}
+	redisOpt := &asynq.RedisClientOpt{Addr: thirdparty.NewMiniRedis().Addr()}
 	time.Sleep(3 * time.Millisecond)
 
 	// create a new timer

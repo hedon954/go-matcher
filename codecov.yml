@@ -2,3 +2,4 @@ ignore:
   - 'cmd'
   - 'main.go'
   - 'docs'
+  - 'thirdparty'

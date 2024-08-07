@@ -12,7 +12,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/timer"
-	"github.com/hedon954/go-matcher/pkg/timer/mock"
 )
 
 // Impl implements a default service,
@@ -59,6 +58,7 @@ func NewDefault(
 	groupPlayerLimit int,
 	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
+	delayTimer timer.Operator[int64],
 	options ...Option,
 ) *Impl {
 	impl := &Impl{
@@ -69,7 +69,7 @@ func NewDefault(
 		nowFunc:          time.Now().Unix,
 		groupChannel:     groupChannel,
 		roomChannel:      roomChannel,
-		delayTimer:       mock.NewTimer(),           // TODO: change
+		delayTimer:       delayTimer,                // TODO: change
 		DelayConfig:      new(mock2.DelayTimerMock), // TODO: change
 	}
 
@@ -77,8 +77,8 @@ func NewDefault(
 		opt(impl)
 	}
 
-	impl.initDelayTimer()
 	safe.Go(impl.waitForMatchResult)
+	impl.initDelayTimer()
 	return impl
 }
 
