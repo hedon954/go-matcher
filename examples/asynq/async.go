@@ -3,7 +3,6 @@ package asynq
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sync/atomic"
 	"time"
@@ -31,21 +30,15 @@ type ImageResizePayload struct {
 // A task consists of a type and a payload.
 // ----------------------------------------------
 
-func NewEmailDeliveryTask(userID int, tmplID string) (*asynq.Task, error) {
-	payload, err := json.Marshal(EmailDeliveryPayload{UserID: userID, TemplateID: tmplID})
-	if err != nil {
-		return nil, err
-	}
-	return asynq.NewTask(TypeEmailDelivery, payload), nil
+func NewEmailDeliveryTask(userID int, tmplID string) *asynq.Task {
+	payload, _ := json.Marshal(EmailDeliveryPayload{UserID: userID, TemplateID: tmplID})
+	return asynq.NewTask(TypeEmailDelivery, payload)
 }
 
-func NewImageResizeTask(src string) (*asynq.Task, error) {
-	payload, err := json.Marshal(ImageResizePayload{SourceURL: src})
-	if err != nil {
-		return nil, err
-	}
+func NewImageResizeTask(src string) *asynq.Task {
+	payload, _ := json.Marshal(ImageResizePayload{SourceURL: src})
 	// task options can be passed to NewTask, which can be overridden at enqueue time.
-	return asynq.NewTask(TypeImageResize, payload, asynq.MaxRetry(5), asynq.Timeout(20*time.Minute)), nil
+	return asynq.NewTask(TypeImageResize, payload, asynq.MaxRetry(5), asynq.Timeout(20*time.Minute))
 }
 
 // ---------------------------------------------------------------
@@ -57,9 +50,7 @@ func NewImageResizeTask(src string) (*asynq.Task, error) {
 // ---------------------------------------------------------------
 func (processor *EmailProcessor) HandleEmailDeliveryTask(_ context.Context, t *asynq.Task) error {
 	var p EmailDeliveryPayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
-	}
+	_ = json.Unmarshal(t.Payload(), &p)
 	log.Printf("Handle Email to User: user_id=%d, template_id=%s", p.UserID, p.TemplateID)
 	processor.FinishTaskCount.Add(1)
 	return nil
@@ -67,9 +58,7 @@ func (processor *EmailProcessor) HandleEmailDeliveryTask(_ context.Context, t *a
 
 func (processor *ImageProcessor) HandleImageResizeTask(_ context.Context, t *asynq.Task) error {
 	var p ImageResizePayload
-	if err := json.Unmarshal(t.Payload(), &p); err != nil {
-		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, asynq.SkipRetry)
-	}
+	_ = json.Unmarshal(t.Payload(), &p)
 	log.Printf("Resizing image: src=%s", p.SourceURL)
 	// Image resizing code ...
 	processor.FinishTaskCount.Add(1)

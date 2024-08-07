@@ -7,6 +7,7 @@ import (
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/hibiken/asynq"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAsync_shouldwork(t *testing.T) {
@@ -23,14 +24,9 @@ func TestAsync_shouldwork(t *testing.T) {
 	//            Use (*Client).Enqueue method.
 	// ------------------------------------------------------
 
-	task, err := NewEmailDeliveryTask(42, "some:template:id")
-	if err != nil {
-		log.Fatalf("could not create task: %v", err)
-	}
+	task := NewEmailDeliveryTask(42, "some:template:id")
 	info, err := client.Enqueue(task)
-	if err != nil {
-		log.Fatalf("could not enqueue task: %v", err)
-	}
+	assert.Nil(t, err)
 	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
 
 	// ------------------------------------------------------------
@@ -39,9 +35,7 @@ func TestAsync_shouldwork(t *testing.T) {
 	// ------------------------------------------------------------
 
 	info, err = client.Enqueue(task, asynq.ProcessIn(3*time.Millisecond))
-	if err != nil {
-		log.Fatalf("could not schedule task: %v", err)
-	}
+	assert.Nil(t, err)
 	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
 
 	// ----------------------------------------------------------------------------
@@ -49,15 +43,10 @@ func TestAsync_shouldwork(t *testing.T) {
 	//            Options include MaxRetry, Queue, Timeout, Deadline, Unique etc.
 	// ----------------------------------------------------------------------------
 
-	task, err = NewImageResizeTask("https://example.com/myassets/image.jpg")
-	if err != nil {
-		log.Fatalf("could not create task: %v", err)
-	}
+	task = NewImageResizeTask("https://example.com/myassets/image.jpg")
 	info, err = client.Enqueue(task, asynq.ProcessIn(3*time.Millisecond), asynq.MaxRetry(10),
 		asynq.Timeout(10*time.Millisecond))
-	if err != nil {
-		log.Fatalf("could not enqueue task: %v", err)
-	}
+	assert.Nil(t, err)
 	log.Printf("enqueued task: id=%s queue=%s", info.ID, info.Queue)
 
 	time.Sleep(10 * time.Second)
