@@ -26,10 +26,11 @@ func TestMockTimer(t *testing.T) {
 
 	// create a new timer
 	timer := NewTimer()
+	defer timer.Stop()
 	assert.NotNil(t, timer.timers)
 	assert.NotNil(t, timer.handlers)
 
-	// resgiter operations
+	// register operations
 	timer.Register(opType1, func(id int64) {
 		numMap[id].Add(1)
 	})
@@ -64,11 +65,12 @@ func TestMockTimer(t *testing.T) {
 	err = timer.Add(opType2, id2, delay)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(-1), numMap[id2].Load())
-	timer.Remove(opType2, id2)
+	err = timer.Remove(opType2, id2)
+	assert.Nil(t, err)
 	time.Sleep(delay + 3*time.Millisecond)
 	assert.Equal(t, int64(-1), numMap[id2].Load())
 
-	// readd optype2 should stop the first add
+	// read optype2 should stop the first add
 	err = timer.Add(opType2, id2, delay)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(-1), numMap[id2].Load())
@@ -80,5 +82,6 @@ func TestMockTimer(t *testing.T) {
 	assert.Equal(t, int64(-2), numMap[id2].Load())
 
 	// remove not existed operation should not panic
-	timer.Remove(opType3, id1)
+	err = timer.Remove(opType3, id1)
+	assert.Nil(t, err)
 }

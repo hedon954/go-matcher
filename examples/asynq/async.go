@@ -83,10 +83,6 @@ type EmailProcessor struct {
 	FinishTaskCount atomic.Int64
 }
 
-func (processor *EmailProcessor) ProcessTask(ctx context.Context, t *asynq.Task) error {
-	return processor.HandleEmailDeliveryTask(ctx, t)
-}
-
 func NewEmailProcessor() *EmailProcessor {
 	return &EmailProcessor{}
 }
