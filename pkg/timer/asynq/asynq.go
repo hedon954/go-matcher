@@ -138,10 +138,6 @@ func (t *Timer[T]) GetAll() []*timer.OperationItem[T] {
 
 	res := make([]*timer.OperationItem[T], 0, len(t.tasks))
 	for key, taskInfo := range t.tasks {
-		if taskInfo.NextProcessAt.Before(time.Now()) {
-			delete(t.tasks, key)
-			continue
-		}
 		res = append(res, &timer.OperationItem[T]{
 			OpType:  timer.OpType(taskInfo.Type),
 			ID:      t.key2ID[key],
