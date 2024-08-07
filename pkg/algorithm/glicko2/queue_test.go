@@ -253,7 +253,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	g1 := newGroupWithMMR(1, 3, 10)
 	g1.SetState(GroupStateQueuing)
 	_, found = q.findGroupForTeamBinary(t1, []Group{g1})
-	assert.Equal(t, true, found)
+	assert.True(t, found)
 	assert.Equal(t, 1, len(t1.GetGroups()))
 
 	/**
@@ -286,7 +286,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	g2 := newGroupWithMMR(2, 2, 100)
 	groups := []Group{g2}
 	groups, found = q.findGroupForTeamBinary(t1, groups)
-	assert.Equal(t, false, found)
+	assert.False(t, found)
 	assert.Equal(t, 1, len(t1.GetGroups()))
 	assert.Equal(t, GroupStateQueuing, g2.GetState())
 	assert.Equal(t, 1, len(groups))
@@ -300,15 +300,14 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 
 	// g2(100) 和 g4(130) mmr 相差 30，匹配时间 25s，只能接受 20% 的差距，无法组成一队
 	t2 := &TeamMock{groups: make(map[string]Group)}
-	groups, found = q.findGroupForTeamBinary(t2, groups)
-	assert.False(t, false)
+	groups, _ = q.findGroupForTeamBinary(t2, groups)
 	assert.Equal(t, 1, len(t2.GetGroups()))
 	g4 := newGroupWithMMR(4, 3, 130)
 	groups = append(groups, g4)
 	g2.SetStartMatchTimeSec(q.nowUnixFunc() - 25)
 	g4.SetStartMatchTimeSec(q.nowUnixFunc() - 55)
 	groups, found = q.findGroupForTeamBinary(t2, groups)
-	assert.Equal(t, false, found)
+	assert.False(t, found)
 	assert.Equal(t, 1, len(t2.groups))
 	assert.Equal(t, GroupStateQueuing, g4.GetState())
 
@@ -317,7 +316,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	// 可以组成一队
 	g2.SetStartMatchTimeSec(q.nowUnixFunc() - 45)
 	groups, found = q.findGroupForTeamBinary(t2, groups)
-	assert.Equal(t, true, found)
+	assert.True(t, found)
 	assert.Equal(t, 2, len(t2.groups))
 
 	// g5 g6 相差很大，但是匹配很久了，可以直接组队
@@ -328,7 +327,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	groups = append(groups, g5, g6)
 	t3 := NewTeam(g5)
 	groups, found = q.findGroupForTeamBinary(t3, groups)
-	assert.Equal(t, true, found)
+	assert.True(t, found)
 	assert.Equal(t, 2, len(t3.GetGroups()))
 
 	// g7,g8,g9,g10，g7 和 g9 更近，应该选 g9
@@ -339,7 +338,7 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	groups = append(groups, g7, g8, g9, g10)
 	t4 := NewTeam(g7)
 	groups, found = q.findGroupForTeamBinary(t4, groups)
-	assert.Equal(t, true, found)
+	assert.True(t, found)
 	assert.Equal(t, 2, len(t4.GetGroups()))
 	assert.Equal(t, g9, t4.GetGroups()[1])
 	g8.SetState(GroupStateUnready)
@@ -353,12 +352,12 @@ func TestQueue_findGroupForTeam(t *testing.T) {
 	t5 := NewTeam(g11)
 	// g12 符合要求，进队
 	groups, found = q.findGroupForTeamBinary(t5, groups)
-	assert.Equal(t, true, found)
+	assert.True(t, found)
 	assert.Equal(t, 2, len(t5.GetGroups()))
 	assert.Equal(t, GroupStateQueuing, g13.GetState())
 	// g13 符合 g11 的要求，但是不符合 g12 的要求，无法进队
 	_, found = q.findGroupForTeamBinary(t5, groups)
-	assert.Equal(t, false, found)
+	assert.False(t, found)
 	assert.Equal(t, 2, len(t5.GetGroups()))
 	assert.Equal(t, GroupStateQueuing, g13.GetState())
 }
