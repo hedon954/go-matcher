@@ -19,7 +19,7 @@ bash ./setup_pre_commit.sh
 
 
 
-## FEATURE
+## Features
 
 - [ ] API
   - [x] HTTP
@@ -37,14 +37,14 @@ bash ./setup_pre_commit.sh
 
 
 
-## PROBLEM
+## Problems
 
 - [ ] change match strategy dynamic according to config changes
 - [ ] lack of `GameEnd` and `Ready` services。
 
 
 
-## TODO
+## Todo
 
 - [ ] connectorRPC
 - [ ] tcp
@@ -59,3 +59,27 @@ bash ./setup_pre_commit.sh
 - [ ] match queue stats
 - [ ] timer
 
+
+## Help
+
+### Start asynq web UI `Asynqmon`
+
+```bash
+# clone repo
+git clone git@github.com:hibiken/asynqmon.git
+# enter repo
+cd asynqmon
+# check node version
+node -v
+# if higher 16, should degrade it
+# install nvm if not
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+# install node 16
+nvm install 16
+# use node 16
+nvm use 16
+# build asynqmon
+make build
+# start asynqmon
+./asynqmon
+```
