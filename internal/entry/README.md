@@ -113,21 +113,16 @@ func (m *PlayerMgr) CreatePlayer(pInfo *pto.PlayerInfo) (p entry.Player, err err
 }
 
 // entry/goat_game/player.go
-func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) (entry.Player, error) {
-	p := &Player{}
+func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) entry.Player {
+    p := &Player{}
+    // ... other common fields
 
-	if err := p.withMatchStrategy(base, pInfo.Glicko2Info); err != nil {
-		return nil, err
-	}
-	return p, nil
+    p.withMatchStrategy(base, pInfo.Glicko2Info)
+    return p
 }
-func (p *Player) withMatchStrategy(base *entry.PlayerBase, info *pto.Glicko2Info) error {
-	switch base.MatchStrategy {
-	case constant.MatchStrategyGlicko2:
-		p.PlayerBaseGlicko2 = glicko2.CreatePlayerBase(base, info)
-	default:
-		return fmt.Errorf("unknown match strategy: %d", base.MatchStrategy)
-	}
-	return nil
+
+func (p *Player) withMatchStrategy(base *entry.PlayerBase, info *pto.Glicko2Info) {
+    p.PlayerBaseGlicko2 = glicko2.CreatePlayerBase(base, info)
+    // ... other match strategy initialization
 }
 ```
