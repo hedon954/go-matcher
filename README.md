@@ -20,8 +20,11 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] UDP
   - [ ] KCP
   - [ ] WebSocket
-- [x] Service
+  - [ ] gRPC
+- [ ] Service
   - [x] match service
+  - [ ] user service
+  - [ ] settle service
 - [x] Swagger Doc
 - [ ] timer
   - [x] native timer
@@ -30,8 +33,10 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 
 - [x] GameMode
   - [x] GoatGame
-- [x] MatchStrategy
+- [ ] MatchStrategy
   - [x] Glicko2
+  - [ ] Gather
+  - [ ] ELO
 
 
 
@@ -43,20 +48,31 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 
 ## Problems
 
-- [ ] change match strategy dynamic according to config changes
 - [ ] lack of `GameEnd` and `Ready` services。
 
 
 
 ## Todo
 
-- [ ] connectorRPC
-- [ ] tcp
-- [ ] udp
-- [ ] kcp
-- [ ] websocket
+- [ ] network
+  - [ ] TCP
+  - [ ] UDP
+  - [ ] KCP
+  - [ ] WebSocket
+  - [ ] gRPC
+- [ ] static config
+  - [ ] json
+  - [ ] yaml
+  - [ ] toml
 - [ ] dynamic config
+  - [ ] nacos
+  - [ ] etcd
+  - [ ] apollo
+  - [ ] consul
 - [ ] logger
+  - [x] slog
+  - [ ] zap
+  - [ ] logrus
 - [ ] tracer
 - [ ] opentelementry
 - [ ] repository stats
