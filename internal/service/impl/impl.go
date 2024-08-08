@@ -11,7 +11,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
-	"github.com/hedon954/go-matcher/pkg/collection"
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/timer"
 )
@@ -462,7 +461,7 @@ func (impl *Impl) StartMatch(captainUID string) error {
 	if g.GetCaptain() != p {
 		return merr.ErrNotCaptain
 	}
-	if !collection.InSlice(g.Base().MatchStrategy, g.SupportMatchStrategy()) {
+	if !g.Base().IsMatchStrategySupported() {
 		return fmt.Errorf("unsupported match strategy: %v", g.Base().MatchStrategy)
 	}
 

@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"slices"
 	"sync"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -18,11 +19,6 @@ type Group interface {
 	// to hold the common fields to avoid lots getter and setter method.
 	Base() *GroupBase
 
-	// SupportMatchStrategy returns the supported match strategies of the group.
-	// Do not implement this method in GroupBase, each game mode entry should implement it.
-	// TODO: refactor, tell, dont ask
-	SupportMatchStrategy() []constant.MatchStrategy
-
 	// IsFull checks if the group is full.
 	IsFull() bool
 
@@ -35,10 +31,14 @@ type Group interface {
 	// CanPlayTogether checks if the player can play with the group's players.
 	CanPlayTogether(*pto.PlayerInfo) error
 
-	// GetPlayerInfos 获取队伍用户信息
+	// GetPlayerInfos returns the player infos of the group.
+	// This method usually used for sync group info to client.
 	GetPlayerInfos() pto.GroupUser
 
 	// CanStartMatch checks if the group can start to match.
+	// Maybe some game mode need to check if the group is full or not.
+	// Maybe some game mode need all players to be ready.
+	// If you have some special logics, please override this method.
 	CanStartMatch() bool
 }
 
@@ -69,6 +69,7 @@ type GroupBase struct {
 	ModeVersion int64
 
 	// MatchStrategy is the current match strategy of the group.
+	// TODO: make it to a interface{} to support dynamic change
 	MatchStrategy constant.MatchStrategy
 
 	// SupportMatchStrategys is the supported match strategies of the group.
@@ -141,8 +142,9 @@ func (g *GroupBase) ID() int64 {
 	return g.GroupID
 }
 
-func (g *GroupBase) SupportMatchStrategy() []constant.MatchStrategy {
-	return g.SupportMatchStrategys
+// IsMatchStrategySupported checks if the group supports the current match strategy.
+func (g *GroupBase) IsMatchStrategySupported() bool {
+	return slices.Index(g.SupportMatchStrategys, g.MatchStrategy) >= 0
 }
 
 func (g *GroupBase) IsFull() bool {
