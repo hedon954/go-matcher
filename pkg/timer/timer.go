@@ -29,6 +29,7 @@ type Operator[T comparable] interface {
 	Stop()
 
 	// Register binds a handler for one operation type.
+	// This function should be invoked before all Add.
 	Register(opType OpType, handler func(id T))
 
 	// Add adds a new task to timer.
@@ -37,7 +38,7 @@ type Operator[T comparable] interface {
 	// Get gets the task from timer.
 	Get(opType OpType, id T) *OperationItem[T]
 
-	// GetAll gets all tasks from timer.
+	// GetAll gets all active tasks from timer.
 	GetAll() []*OperationItem[T]
 
 	// Remove removes the task from timer.

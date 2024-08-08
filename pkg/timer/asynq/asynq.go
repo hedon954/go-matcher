@@ -161,6 +161,8 @@ func (t *Timer[T]) remove(opType timer.OpType, id T) error {
 	if t.handlers[opType] == nil {
 		return nil
 	}
+	delete(t.tasks, taskKey(opType, id))
+	delete(t.key2ID, taskKey(opType, id))
 	return t.inspector.DeleteTask(t.queue, taskKey(opType, id))
 }
 

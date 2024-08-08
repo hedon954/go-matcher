@@ -92,10 +92,14 @@ func TestAsynqTimer(t *testing.T) {
 	// add optype2 and delete it before delay should not reduce num
 	err = timer.Add(opType2, id2, delay)
 	assert.Nil(t, err)
+	assert.Equal(t, 1+1, len(timer.GetAll()))
+	assert.Equal(t, 1+1, len(timer.key2ID))
 	// NOTE: sleep to long, do not run in ci
 	// assert.Equal(t, int64(-1), numMap[id2].Load())
 	err = timer.Remove(opType2, id2)
 	assert.Nil(t, err)
+	assert.Equal(t, 1+1-1, len(timer.GetAll()))
+	assert.Equal(t, 1+1-1, len(timer.key2ID))
 	// NOTE: sleep to long, do not run in ci
 	// time.Sleep(delay + 1*time.Second)
 	// assert.Equal(t, int64(-1), numMap[id2].Load())
