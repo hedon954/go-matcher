@@ -18,8 +18,10 @@ import (
 // Impl implements a default service,
 // in most cases, you don't need to implement your own service.
 type Impl struct {
-	delayTimer  timer.Operator[int64]
+	delayTimer timer.Operator[int64]
+
 	DelayConfig config.DelayTimer
+	MSConfig    config.MatchStrategy
 
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
@@ -43,15 +45,15 @@ func WithNowFunc(f func() int64) Option {
 	}
 }
 
-func WithDelayTimer(t timer.Operator[int64]) Option {
-	return func(impl *Impl) {
-		impl.delayTimer = t
-	}
-}
-
 func WithDelayConfiger(t config.DelayTimer) Option {
 	return func(impl *Impl) {
 		impl.DelayConfig = t
+	}
+}
+
+func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
+	return func(impl *Impl) {
+		impl.MSConfig = c
 	}
 }
 
@@ -70,8 +72,9 @@ func NewDefault(
 		nowFunc:          time.Now().Unix,
 		groupChannel:     groupChannel,
 		roomChannel:      roomChannel,
-		delayTimer:       delayTimer,                // TODO: change
-		DelayConfig:      new(mock2.DelayTimerMock), // TODO: change
+		delayTimer:       delayTimer,                   // TODO: change
+		DelayConfig:      new(mock2.DelayTimerMock),    // TODO: change
+		MSConfig:         new(mock2.MatchStrategyMock), // TODO: change
 	}
 
 	for _, opt := range options {
@@ -461,6 +464,8 @@ func (impl *Impl) StartMatch(captainUID string) error {
 	if g.GetCaptain() != p {
 		return merr.ErrNotCaptain
 	}
+
+	g.Base().MatchStrategy = impl.MSConfig.GetMatchStrategy(g.Base().GameMode)
 	if !g.Base().IsMatchStrategySupported() {
 		return fmt.Errorf("unsupported match strategy: %v", g.Base().MatchStrategy)
 	}

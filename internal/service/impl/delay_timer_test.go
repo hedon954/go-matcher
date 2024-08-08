@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hedon954/go-matcher/internal/config"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/stretchr/testify/assert"
@@ -27,7 +28,10 @@ func (d *delayConfiger) GetConfig(mode constant.GameMode) config.DelayTimerConfi
 }
 
 func TestImpl_inviteTimeoutHandler_shouldwork(t *testing.T) {
-	impl := defaultImpl(1, WithDelayConfiger(new(delayConfiger)))
+	impl := defaultImpl(1,
+		WithDelayConfiger(new(delayConfiger)),
+		WithMatchStrategyConfiger(new(mock.MatchStrategyMock)),
+	)
 
 	g, err := impl.CreateGroup(newCreateGroupParam(UID))
 	assert.Nil(t, err)

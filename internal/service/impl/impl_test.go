@@ -32,11 +32,10 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 func newCreateGroupParam(uid string) *pto.CreateGroup {
 	return &pto.CreateGroup{
 		PlayerInfo: pto.PlayerInfo{
-			UID:           uid,
-			GameMode:      GameMode,
-			ModeVersion:   ModeVersion,
-			MatchStrategy: MatchStrategy,
-			Glicko2Info:   &pto.Glicko2Info{},
+			UID:         uid,
+			GameMode:    GameMode,
+			ModeVersion: ModeVersion,
+			Glicko2Info: &pto.Glicko2Info{},
 		},
 	}
 }
@@ -56,11 +55,10 @@ func newEnterGroupParamWithSrc(uid string, source pto.EnterGroupSourceType) *pto
 
 func newPlayerInfo(uid string) *pto.PlayerInfo {
 	return &pto.PlayerInfo{
-		UID:           uid,
-		GameMode:      GameMode,
-		ModeVersion:   ModeVersion,
-		MatchStrategy: MatchStrategy,
-		Glicko2Info:   &pto.Glicko2Info{},
+		UID:         uid,
+		GameMode:    GameMode,
+		ModeVersion: ModeVersion,
+		Glicko2Info: &pto.Glicko2Info{},
 	}
 }
 
@@ -118,7 +116,6 @@ func TestImpl_CreateGroup(t *testing.T) {
 	assert.NotEqual(t, g, g3)
 	assert.Nil(t, impl.groupMgr.Get(g.ID()))
 	assert.Equal(t, constant.GameModeTest, g3.GetCaptain().Base().GameMode)
-	assert.Equal(t, constant.MatchStrategyGlicko2, g3.GetCaptain().Base().MatchStrategy)
 
 	// 4. if the player state is not `online` or `group`, should return error
 	p2, err := impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
@@ -834,10 +831,13 @@ func TestImpl_StartMatch(t *testing.T) {
 	err = impl.StartMatch(UID + "1")
 	assert.Equal(t, merr.ErrNotCaptain, err)
 
-	// 5. if the player is captain, should success and the group state and players' state should change to `match`
+	// 5. if the player is captain, should success
+	// and the group state and players' state should change to `match`,
+	// and the group match strategy should be set.
 	err = impl.StartMatch(UID)
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
+	assert.Equal(t, constant.MatchStrategyGlicko2, g.Base().MatchStrategy)
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
 	assert.Equal(t, entry.PlayerOnlineStateInMatch, p.Base().GetOnlineStateWithLock())
 	assert.Equal(t, entry.PlayerOnlineStateInMatch, impl.playerMgr.Get(UID+"1").Base().GetOnlineStateWithLock())

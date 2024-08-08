@@ -445,10 +445,9 @@ func assertRspOk(w *httptest.ResponseRecorder, t *testing.T) {
 
 func playerInfo(uid string) pto.PlayerInfo {
 	return pto.PlayerInfo{
-		UID:           uid,
-		GameMode:      constant.GameModeGoatGame,
-		ModeVersion:   1,
-		MatchStrategy: constant.MatchStrategyGlicko2,
-		Glicko2Info:   &pto.Glicko2Info{},
+		UID:         uid,
+		GameMode:    constant.GameModeGoatGame,
+		ModeVersion: 1,
+		Glicko2Info: &pto.Glicko2Info{},
 	}
 }

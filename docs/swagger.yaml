@@ -113,12 +113,6 @@ definitions:
     x-enum-varnames:
     - GameModeTest
     - GameModeGoatGame
-  constant.MatchStrategy:
-    enum:
-    - 1
-    type: integer
-    x-enum-varnames:
-    - MatchStrategyGlicko2
   entry.GroupRole:
     enum:
     - 0
@@ -141,15 +135,12 @@ definitions:
         $ref: '#/definitions/constant.GameMode'
       glicko2_info:
         $ref: '#/definitions/pto.Glicko2Info'
-      match_strategy:
-        $ref: '#/definitions/constant.MatchStrategy'
       mode_version:
         type: integer
       uid:
         type: string
     required:
     - game_mode
-    - match_strategy
     - mode_version
     - uid
     type: object
@@ -159,8 +150,6 @@ definitions:
         $ref: '#/definitions/constant.GameMode'
       glicko2_info:
         $ref: '#/definitions/pto.Glicko2Info'
-      match_strategy:
-        $ref: '#/definitions/constant.MatchStrategy'
       mode_version:
         type: integer
       source:
@@ -169,7 +158,6 @@ definitions:
         type: string
     required:
     - game_mode
-    - match_strategy
     - mode_version
     - uid
     type: object
@@ -213,15 +201,12 @@ definitions:
         $ref: '#/definitions/constant.GameMode'
       glicko2_info:
         $ref: '#/definitions/pto.Glicko2Info'
-      match_strategy:
-        $ref: '#/definitions/constant.MatchStrategy'
       mode_version:
         type: integer
       uid:
         type: string
     required:
     - game_mode
-    - match_strategy
     - mode_version
     - uid
     type: object

@@ -123,7 +123,6 @@ func NewGroupBase(
 		state:                 GroupStateInvite,
 		GameMode:              playerBase.GameMode,
 		ModeVersion:           playerBase.ModeVersion,
-		MatchStrategy:         playerBase.MatchStrategy,
 		players:               make([]Player, 0, playerLimit),
 		roles:                 make(map[string]GroupRole, playerLimit),
 		inviteRecords:         make(map[string]int64, playerLimit),

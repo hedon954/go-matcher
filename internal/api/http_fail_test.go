@@ -341,11 +341,10 @@ func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
 func createGroupParamBad(uid string, mode constant.GameMode) []byte {
 	param := &pto.CreateGroup{
 		PlayerInfo: pto.PlayerInfo{
-			UID:           uid,
-			GameMode:      mode,
-			ModeVersion:   1,
-			MatchStrategy: constant.MatchStrategyGlicko2,
-			Glicko2Info:   &pto.Glicko2Info{},
+			UID:         uid,
+			GameMode:    mode,
+			ModeVersion: 1,
+			Glicko2Info: &pto.Glicko2Info{},
 		},
 	}
 	bs, _ := json.Marshal(param)

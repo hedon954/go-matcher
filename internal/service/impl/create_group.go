@@ -11,7 +11,6 @@ func (impl *Impl) getPlayer(param *pto.PlayerInfo) (entry.Player, error) {
 	if p != nil {
 		// TODO: add a refresh player info method
 		p.Base().GameMode = param.GameMode
-		p.Base().MatchStrategy = param.MatchStrategy
 		return p, nil
 	}
 

@@ -723,15 +723,6 @@ const docTemplate = `{
                 "GameModeGoatGame"
             ]
         },
-        "constant.MatchStrategy": {
-            "type": "integer",
-            "enum": [
-                1
-            ],
-            "x-enum-varnames": [
-                "MatchStrategyGlicko2"
-            ]
-        },
         "entry.GroupRole": {
             "type": "integer",
             "enum": [
@@ -758,7 +749,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "game_mode",
-                "match_strategy",
                 "mode_version",
                 "uid"
             ],
@@ -768,9 +758,6 @@ const docTemplate = `{
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
-                },
-                "match_strategy": {
-                    "$ref": "#/definitions/constant.MatchStrategy"
                 },
                 "mode_version": {
                     "type": "integer"
@@ -784,7 +771,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "game_mode",
-                "match_strategy",
                 "mode_version",
                 "uid"
             ],
@@ -794,9 +780,6 @@ const docTemplate = `{
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
-                },
-                "match_strategy": {
-                    "$ref": "#/definitions/constant.MatchStrategy"
                 },
                 "mode_version": {
                     "type": "integer"
@@ -857,7 +840,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "game_mode",
-                "match_strategy",
                 "mode_version",
                 "uid"
             ],
@@ -867,9 +849,6 @@ const docTemplate = `{
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
-                },
-                "match_strategy": {
-                    "$ref": "#/definitions/constant.MatchStrategy"
                 },
                 "mode_version": {
                     "type": "integer"
