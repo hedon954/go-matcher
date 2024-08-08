@@ -33,7 +33,7 @@ type Group interface {
 
 	// GetPlayerInfos returns the player infos of the group.
 	// This method usually used for sync group info to client.
-	GetPlayerInfos() pto.GroupUser
+	GetPlayerInfos() *pto.GroupPlayers
 
 	// CanStartMatch checks if the group can start to match.
 	// Maybe some game mode need to check if the group is full or not.
@@ -298,8 +298,8 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 	panic("unreachable")
 }
 
-func (g *GroupBase) GetPlayerInfos() pto.GroupUser {
-	return pto.GroupUser{
+func (g *GroupBase) GetPlayerInfos() *pto.GroupPlayers {
+	return &pto.GroupPlayers{
 		GroupID:  g.GroupID,
 		Owner:    g.GetCaptain().UID(),
 		GameMode: int(g.GameMode),

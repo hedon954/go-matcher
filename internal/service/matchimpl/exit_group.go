@@ -1,4 +1,4 @@
-package impl
+package matchimpl
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -8,11 +8,11 @@ func (impl *Impl) exitGroup(p entry.Player, g entry.Group) error {
 	p.Base().SetOnlineState(entry.PlayerOnlineStateOnline)
 	p.Base().GroupID = 0
 	empty := g.Base().RemovePlayer(p)
-	impl.connectorClient.UpdateOnlineState([]string{p.UID()}, int(entry.PlayerOnlineStateOnline))
+	impl.pushService.PushPlayerOnlineState([]string{p.UID()}, entry.PlayerOnlineStateOnline)
 	if empty {
 		return impl.dissolveGroup(p, g)
 	} else {
-		impl.connectorClient.PushGroupUsers(g.Base().UIDs(), g.GetPlayerInfos())
+		impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
 	}
 	return nil
 }

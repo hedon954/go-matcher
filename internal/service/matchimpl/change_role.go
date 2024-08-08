@@ -1,4 +1,4 @@
-package impl
+package matchimpl
 
 import (
 	"fmt"
@@ -15,6 +15,6 @@ func (impl *Impl) checkRole(role entry.GroupRole) error {
 
 func (impl *Impl) handoverCaptain(captain entry.Player, target entry.Player, g entry.Group) error {
 	g.SetCaptain(target)
-	impl.connectorClient.PushGroupUsers(g.Base().UIDs(), g.GetPlayerInfos())
+	impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
 	return nil
 }

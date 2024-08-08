@@ -1,4 +1,4 @@
-package impl
+package matchimpl
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"

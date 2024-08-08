@@ -23,7 +23,7 @@ type CreateGroup struct {
 	PlayerInfo
 }
 
-type GroupUser struct {
+type GroupPlayers struct {
 	GroupID     int64
 	Owner       string
 	UidList     []string

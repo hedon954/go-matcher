@@ -1,4 +1,4 @@
-package impl
+package matchimpl
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ func (impl *Impl) startMatch(g entry.Group) {
 	// update group state
 	base.SetState(entry.GroupStateMatch)
 	base.MatchID = uuid.NewString()
-	impl.connectorClient.PushGroupState(uids, g.ID(), base.GetState())
+	impl.pushService.PushGroupState(uids, g.ID(), base.GetState())
 
 	// update players state
 	for _, p := range base.GetPlayers() {
@@ -22,7 +22,7 @@ func (impl *Impl) startMatch(g entry.Group) {
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
 		p.Base().Unlock()
 	}
-	impl.connectorClient.UpdateOnlineState(uids, int(entry.PlayerOnlineStateInMatch))
+	impl.pushService.PushPlayerOnlineState(uids, entry.PlayerOnlineStateInMatch)
 
 	impl.removeInviteTimer(g.ID())
 	impl.addWaitAttrTimer(g.ID(), g.Base().GameMode)

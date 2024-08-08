@@ -5,7 +5,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
-type Service interface {
+type Match interface {
 	// CreateGroup creates a new group with the given parameters
 	CreateGroup(param *pto.CreateGroup) (entry.Group, error)
 

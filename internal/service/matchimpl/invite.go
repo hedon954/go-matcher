@@ -1,4 +1,4 @@
-package impl
+package matchimpl
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -23,7 +23,7 @@ func (impl *Impl) checkInviteeState(inviteeUID string) error {
 
 func (impl *Impl) invite(inviter entry.Player, inviteeUID string, g entry.Group) {
 	g.Base().AddInviteRecord(inviteeUID, impl.nowFunc())
-	impl.connectorClient.PushInviteMsg(&pto.InviteMsg{
+	impl.pushService.PushInviteMsg(&pto.InviteMsg{
 		InviterUID:  inviter.UID(),
 		InviteeUID:  inviteeUID,
 		Source:      pto.EnterGroupSourceTypeInvite,

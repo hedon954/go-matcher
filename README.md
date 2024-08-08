@@ -23,7 +23,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] gRPC
 - [ ] Service
   - [x] match service
-  - [ ] user service
+  - [ ] push service
   - [ ] settle service
 - [x] Swagger Doc
 - [ ] timer

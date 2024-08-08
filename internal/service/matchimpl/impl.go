@@ -1,16 +1,17 @@
-package impl
+package matchimpl
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/hedon954/go-matcher/internal/config"
-	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
-	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
+	"github.com/hedon954/go-matcher/internal/service"
+	"github.com/hedon954/go-matcher/internal/service/servicemock"
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/timer"
 )
@@ -26,8 +27,6 @@ type Impl struct {
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
 
-	connectorClient *connector.Client
-
 	groupPlayerLimit int
 	nowFunc          func() int64
 
@@ -35,6 +34,8 @@ type Impl struct {
 	// TODO: if match system is down, we should stop the server.
 	groupChannel chan entry.Group
 	roomChannel  chan entry.Room
+
+	pushService service.Push
 }
 
 type Option func(*Impl)
@@ -67,14 +68,14 @@ func NewDefault(
 	impl := &Impl{
 		playerMgr:        playerMgr,
 		groupMgr:         groupMgr,
-		connectorClient:  connector.New(), // TODO: change
 		groupPlayerLimit: groupPlayerLimit,
 		nowFunc:          time.Now().Unix,
 		groupChannel:     groupChannel,
 		roomChannel:      roomChannel,
-		delayTimer:       delayTimer,                   // TODO: change
-		DelayConfig:      new(mock2.DelayTimerMock),    // TODO: change
-		MSConfig:         new(mock2.MatchStrategyMock), // TODO: change
+		delayTimer:       delayTimer,                  // TODO: change
+		DelayConfig:      new(mock.DelayTimerMock),    // TODO: change
+		MSConfig:         new(mock.MatchStrategyMock), // TODO: change
+		pushService:      new(servicemock.PushMock),   // TODO: change
 	}
 
 	for _, opt := range options {
@@ -167,9 +168,9 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 					return err
 				}
 			} else {
-				// can play together, refresh the player info and  broadcast the group player infos
+				// can play together, refresh the player info and broadcast the group player infos
 				p.Base().PlayerInfo = info.PlayerInfo
-				impl.connectorClient.PushGroupUsers(g.Base().UIDs(), g.GetPlayerInfos())
+				impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
 				return nil
 			}
 		} else {
@@ -445,7 +446,7 @@ func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, ref
 	if refuseMsg == "" {
 		refuseMsg = defaultRefuseMsg
 	}
-	impl.connectorClient.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
+	impl.pushService.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
 }
 
 func (impl *Impl) StartMatch(captainUID string) error {
@@ -509,7 +510,7 @@ func (impl *Impl) SetVoiceState(uid string, state entry.PlayerVoiceState) error 
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	impl.connectorClient.PushVoiceState(g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
+	impl.pushService.PushVoiceState(g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
 	return nil
 }
 

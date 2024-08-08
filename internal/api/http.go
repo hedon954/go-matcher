@@ -13,7 +13,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/service"
-	"github.com/hedon954/go-matcher/internal/service/impl"
+	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/hedon954/go-matcher/pkg/safe"
 
@@ -23,7 +23,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           Match Service Swagger API
+// @title           Match Match Swagger API
 // @version         1.0
 // @description     This is the open api doc for match sergvice
 
@@ -69,7 +69,7 @@ func (api *API) setupRouter() *gin.Engine {
 }
 
 type API struct {
-	ms service.Service
+	ms service.Match
 	m  *matcher.Matcher
 	pm *repository.PlayerMgr
 	gm *repository.GroupMgr
@@ -102,7 +102,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		tm: teamMgr,
 		rm: roomMgr,
 		m:  matcher.New(groupChannel, glicko2Matcher),
-		ms: impl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, groupChannel, roomChannel, delayTimer),
+		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, groupChannel, roomChannel, delayTimer),
 	}
 
 	safe.Go(delayTimer.Start)
