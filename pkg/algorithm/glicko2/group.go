@@ -26,7 +26,6 @@ const (
 // players can form teams on their own or a single player will be assigned a team when they start matching,
 // the team before and after the match will not be broken up.
 type Group interface {
-
 	// GetID returns the team ID
 	GetID() string
 

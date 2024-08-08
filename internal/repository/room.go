@@ -29,14 +29,11 @@ func (m *RoomMgr) CreateRoom(t entry.Team) (r entry.Room, err error) {
 
 	switch base.GameMode {
 	case constant.GameModeGoatGame:
-		r, err = goat_game.CreateRoom(base)
+		r = goat_game.CreateRoom(base)
 	case constant.GameModeTest:
 		r = base
 	default:
 		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	r.Base().AddTeam(t)

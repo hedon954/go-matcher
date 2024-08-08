@@ -1061,12 +1061,6 @@ func (t *TeamMock) AddGroup(g Group) {
 	}
 }
 
-func (t *TeamMock) RemoveGroup(groupId string) {
-	t.Lock()
-	defer t.Unlock()
-	delete(t.groups, groupId)
-}
-
 func (t *TeamMock) PlayerCount() int {
 	t.RLock()
 	defer t.RUnlock()

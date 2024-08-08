@@ -8,9 +8,6 @@ type Team interface {
 	// Add a group to the team
 	AddGroup(group Group)
 
-	// Remove a group from the team
-	RemoveGroup(groupId string)
-
 	// Get the number of players in the team
 	PlayerCount() int
 

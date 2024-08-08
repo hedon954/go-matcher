@@ -18,6 +18,11 @@ type Group interface {
 	// to hold the common fields to avoid lots getter and setter method.
 	Base() *GroupBase
 
+	// SupportMatchStrategy returns the supported match strategies of the group.
+	// Do not implement this method in GroupBase, each game mode entry should implement it.
+	// TODO: refactor, tell, dont ask
+	SupportMatchStrategy() []constant.MatchStrategy
+
 	// IsFull checks if the group is full.
 	IsFull() bool
 
@@ -59,10 +64,15 @@ const (
 
 // GroupBase holds the common fields of a Group for all kinds of game mode and match strategy.
 type GroupBase struct {
-	GroupID       int64
-	GameMode      constant.GameMode
-	ModeVersion   int64
+	GroupID     int64
+	GameMode    constant.GameMode
+	ModeVersion int64
+
+	// MatchStrategy is the current match strategy of the group.
 	MatchStrategy constant.MatchStrategy
+
+	// SupportMatchStrategys is the supported match strategies of the group.
+	SupportMatchStrategys []constant.MatchStrategy
 
 	// Do not do synchronization at this layer,
 	// leave it to the caller to handle it uniformly,
@@ -108,15 +118,16 @@ func NewGroupBase(
 	groupID int64, playerLimit int, playerBase *PlayerBase,
 ) *GroupBase {
 	g := &GroupBase{
-		GroupID:       groupID,
-		state:         GroupStateInvite,
-		GameMode:      playerBase.GameMode,
-		ModeVersion:   playerBase.ModeVersion,
-		MatchStrategy: playerBase.MatchStrategy,
-		players:       make([]Player, 0, playerLimit),
-		roles:         make(map[string]GroupRole, playerLimit),
-		inviteRecords: make(map[string]int64, playerLimit),
-		Configs:       GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
+		GroupID:               groupID,
+		state:                 GroupStateInvite,
+		GameMode:              playerBase.GameMode,
+		ModeVersion:           playerBase.ModeVersion,
+		MatchStrategy:         playerBase.MatchStrategy,
+		players:               make([]Player, 0, playerLimit),
+		roles:                 make(map[string]GroupRole, playerLimit),
+		inviteRecords:         make(map[string]int64, playerLimit),
+		SupportMatchStrategys: make([]constant.MatchStrategy, 0),
+		Configs:               GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
 	}
 
 	return g
@@ -128,6 +139,10 @@ func (g *GroupBase) Base() *GroupBase {
 
 func (g *GroupBase) ID() int64 {
 	return g.GroupID
+}
+
+func (g *GroupBase) SupportMatchStrategy() []constant.MatchStrategy {
+	return g.SupportMatchStrategys
 }
 
 func (g *GroupBase) IsFull() bool {

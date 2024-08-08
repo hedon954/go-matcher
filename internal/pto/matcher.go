@@ -51,8 +51,6 @@ const (
 	EnterGroupSourceTypeWorldChannel EnterGroupSourceType = 4 // from world channel
 	EnterGroupSourceTypeClanChannel  EnterGroupSourceType = 5 // from clan channel
 	EnterGroupSourceTypeShare        EnterGroupSourceType = 6 // from share link
-
-	// TODO: add more
 )
 
 type InviteMsg struct {

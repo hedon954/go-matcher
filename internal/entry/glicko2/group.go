@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 
@@ -15,6 +16,8 @@ type GroupBaseGlicko2 struct {
 }
 
 func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
+	base.SupportMatchStrategys = append(base.SupportMatchStrategys, constant.MatchStrategyGlicko2)
+
 	g := &GroupBaseGlicko2{
 		GroupBase: base,
 	}
@@ -43,11 +46,11 @@ func (g *GroupBaseGlicko2) PlayerCount() int {
 }
 
 func (g *GroupBaseGlicko2) GetMMR() float64 {
-	total := 0.0
 	players := g.GetPlayers()
 	if len(players) == 0 {
 		return 0.0
 	}
+	total := 0.0
 	for _, p := range players {
 		total += p.GetMMR()
 	}
@@ -55,11 +58,11 @@ func (g *GroupBaseGlicko2) GetMMR() float64 {
 }
 
 func (g *GroupBaseGlicko2) GetStar() int {
-	total := 0
 	players := g.GetPlayers()
 	if len(players) == 0 {
 		return 0.0
 	}
+	total := 0
 	for _, p := range players {
 		total += p.GetStar()
 	}

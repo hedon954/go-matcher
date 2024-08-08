@@ -3,7 +3,6 @@ package glicko2
 import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
-	"github.com/spf13/cast"
 )
 
 type TeamBaseGlicko2 struct {
@@ -34,12 +33,6 @@ func (t *TeamBaseGlicko2) AddGroup(g glicko2.Group) {
 	t.Base().AddGroup(g.(entry.Group))
 }
 
-func (t *TeamBaseGlicko2) RemoveGroup(groupId string) {
-	t.Lock()
-	defer t.Unlock()
-	t.Base().RemoveGroup(cast.ToInt64(groupId))
-}
-
 func (t *TeamBaseGlicko2) PlayerCount() int {
 	count := 0
 	for _, g := range t.GetGroups() {
@@ -49,23 +42,25 @@ func (t *TeamBaseGlicko2) PlayerCount() int {
 }
 
 func (t *TeamBaseGlicko2) GetMMR() float64 {
+	groups := t.GetGroups()
+	if len(groups) == 0 {
+		return 0.0
+	}
 	total := 0.0
 	for _, g := range t.GetGroups() {
 		total += g.GetMMR()
-	}
-	if total == 0.0 {
-		return 0.0
 	}
 	return total / float64(len(t.GetGroups()))
 }
 
 func (t *TeamBaseGlicko2) GetStar() int {
+	groups := t.GetGroups()
+	if len(groups) == 0 {
+		return 0
+	}
 	total := 0
 	for _, g := range t.GetGroups() {
 		total += g.GetStar()
-	}
-	if total == 0 {
-		return 0
 	}
 	return total / len(t.GetGroups())
 }

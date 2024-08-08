@@ -1,6 +1,7 @@
 package impl
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hedon954/go-matcher/internal/config"
@@ -10,6 +11,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/rpc/rpcclient/connector"
+	"github.com/hedon954/go-matcher/pkg/collection"
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/timer"
 )
@@ -112,7 +114,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 		//  if not, exits the group and create a new one
 		//  if yes, return current group
 		if g.GetCaptain() != p || g.Base().GameMode != param.GameMode {
-			if g.Base().RemovePlayer(p) {
+			if groupEmpty := g.Base().RemovePlayer(p); groupEmpty {
 				impl.groupMgr.Delete(g.ID())
 			}
 			g, err = impl.createGroup(p)
@@ -459,6 +461,9 @@ func (impl *Impl) StartMatch(captainUID string) error {
 
 	if g.GetCaptain() != p {
 		return merr.ErrNotCaptain
+	}
+	if !collection.InSlice(g.Base().MatchStrategy, g.SupportMatchStrategy()) {
+		return fmt.Errorf("unsupported match strategy: %v", g.Base().MatchStrategy)
 	}
 
 	impl.startMatch(g)
