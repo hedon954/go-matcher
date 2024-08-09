@@ -795,6 +795,7 @@ const docTemplate = `{
         "pto.EnterGroupSourceType": {
             "type": "integer",
             "enum": [
+                0,
                 1,
                 2,
                 3,
@@ -805,12 +806,14 @@ const docTemplate = `{
             "x-enum-comments": {
                 "EnterGroupSourceTypeClanChannel": "from clan channel",
                 "EnterGroupSourceTypeFriend": "from friend list",
+                "EnterGroupSourceTypeInvite": "invited by other",
                 "EnterGroupSourceTypeNearby": "from recent list",
                 "EnterGroupSourceTypeRecent": "from nearby list",
                 "EnterGroupSourceTypeShare": "from share link",
                 "EnterGroupSourceTypeWorldChannel": "from world channel"
             },
             "x-enum-varnames": [
+                "EnterGroupSourceTypeInvite",
                 "EnterGroupSourceTypeNearby",
                 "EnterGroupSourceTypeRecent",
                 "EnterGroupSourceTypeFriend",
@@ -829,9 +832,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "star": {
-                    "type": "integer"
-                },
-                "start_match_sec": {
                     "type": "integer"
                 }
             }

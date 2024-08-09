@@ -34,6 +34,15 @@ type Push interface {
 	// PushKick pushes the kick message to the client.
 	PushKick(uid string, groupID int64)
 
+	// PushMatchInfo pushes the match success info to the client.
+	PushMatchInfo(uids []string, info *pto.MatchInfo)
+
 	// PushCancelMatch pushes the cancel match message to the client.
 	PushCancelMatch(uids []string, cancelUID string)
+
+	// PushReady pushes the ready message to the client.
+	PushReady(uids []string, readyUID string)
+
+	// PushUnReady pushes the unready message to the client.
+	PushUnReady(uids []string, readyUID string)
 }

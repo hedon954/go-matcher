@@ -5,28 +5,38 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/pkg/rand"
 )
 
 type Room interface {
 	Base() *RoomBase
 	ID() int64
+	NeedAI() bool
 	GetMatchInfo() *pto.MatchInfo
 }
 
 type RoomBase struct {
 	sync.RWMutex
-	id            int64
-	teams         []Team
-	GameMode      constant.GameMode
-	MatchStrategy constant.MatchStrategy
+	id        int64
+	teams     []Team
+	TeamLimit int
+
+	GameMode       constant.GameMode
+	MatchStrategy  constant.MatchStrategy
+	ModeVersion    int64
+	FinishMatchSec int64
+
+	GameServerInfo pto.GameServerInfo
 }
 
-func NewRoomBase(id int64, t Team) *RoomBase {
+func NewRoomBase(id int64, teamLimit int, t Team) *RoomBase {
 	r := &RoomBase{
 		id:            id,
+		TeamLimit:     teamLimit,
 		teams:         make([]Team, 0),
 		GameMode:      t.Base().GameMode,
 		MatchStrategy: t.Base().MatchStrategy,
+		ModeVersion:   t.Base().ModeVersion,
 	}
 	return r
 }
@@ -59,4 +69,26 @@ func (r *RoomBase) RemoveTeam(id int64) {
 func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
 	// TODO
 	return nil
+}
+
+func (r *RoomBase) NeedAI() bool {
+	return false
+}
+
+func (r *RoomBase) ShuffleTeamOrder() {
+	ids := rand.PermFrom1(len(r.teams))
+	for i := 0; i < len(r.teams); i++ {
+		team := r.teams[i]
+		team.Base().TeamID = ids[i]
+	}
+}
+
+func (r *RoomBase) UIDs() []string {
+	res := make([]string, 0, len(r.teams))
+	for _, t := range r.teams {
+		for _, g := range t.Base().GetGroups() {
+			res = append(res, g.Base().UIDs()...)
+		}
+	}
+	return res
 }

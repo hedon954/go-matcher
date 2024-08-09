@@ -163,6 +163,7 @@ definitions:
     type: object
   pto.EnterGroupSourceType:
     enum:
+    - 0
     - 1
     - 2
     - 3
@@ -173,11 +174,13 @@ definitions:
     x-enum-comments:
       EnterGroupSourceTypeClanChannel: from clan channel
       EnterGroupSourceTypeFriend: from friend list
+      EnterGroupSourceTypeInvite: invited by other
       EnterGroupSourceTypeNearby: from recent list
       EnterGroupSourceTypeRecent: from nearby list
       EnterGroupSourceTypeShare: from share link
       EnterGroupSourceTypeWorldChannel: from world channel
     x-enum-varnames:
+    - EnterGroupSourceTypeInvite
     - EnterGroupSourceTypeNearby
     - EnterGroupSourceTypeRecent
     - EnterGroupSourceTypeFriend
@@ -191,8 +194,6 @@ definitions:
       rank:
         type: integer
       star:
-        type: integer
-      start_match_sec:
         type: integer
     type: object
   pto.PlayerInfo:

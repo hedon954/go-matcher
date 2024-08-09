@@ -16,12 +16,10 @@ type PlayerBaseGlicko2 struct {
 
 func CreatePlayerBase(p *entry.PlayerBase, info *pto.Glicko2Info) *PlayerBaseGlicko2 {
 	return &PlayerBaseGlicko2{
-		PlayerBase:     p,
-		MMR:            info.MMR,
-		Star:           info.Star,
-		startMatchSec:  info.StartMatchSec,
-		finishMatchSec: 0,
-		rank:           info.Rank,
+		PlayerBase: p,
+		MMR:        info.MMR,
+		Star:       info.Star,
+		rank:       info.Rank,
 	}
 }
 

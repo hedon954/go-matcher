@@ -9,12 +9,7 @@ func (impl *Impl) dissolveGroup(player entry.Player, g entry.Group) error {
 
 	uids := g.Base().UIDs()
 	for _, p := range g.Base().GetPlayers() {
-		// to avoid deadlock
-		if player != nil && p.UID() == player.UID() {
-			p.Base().SetOnlineState(entry.PlayerOnlineStateOnline)
-		} else {
-			p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateOnline)
-		}
+		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateOnline)
 		impl.playerMgr.Delete(p.UID())
 	}
 	g.Base().ClearPlayers()

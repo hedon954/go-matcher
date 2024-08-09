@@ -30,7 +30,8 @@ func (m *Matcher) newGoatGameTeam(g glicko2.Group) glicko2.Team {
 }
 
 func (m *Matcher) newGoatGameRoom(t glicko2.Team) glicko2.Room {
-	r, err := m.roomMgr.CreateRoom(t.(entry.Team))
+	teamLimit := m.configer.Glicko2.GetQueueArgs(constant.GameModeGoatGame).RoomTeamLimit
+	r, err := m.roomMgr.CreateRoom(teamLimit, t.(entry.Team))
 	if err != nil {
 		panic(fmt.Sprintf("create room error: %s", err.Error()))
 	}

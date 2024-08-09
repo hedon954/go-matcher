@@ -3,3 +3,4 @@ ignore:
   - 'main.go'
   - 'docs'
   - 'thirdparty'
+  - 'fixtures'

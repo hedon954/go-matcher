@@ -24,8 +24,8 @@ func NewRoomMgr(roomIDStart int64) *RoomMgr {
 	return mgr
 }
 
-func (m *RoomMgr) CreateRoom(t entry.Team) (r entry.Room, err error) {
-	base := entry.NewRoomBase(m.roomIDIter.Add(1), t)
+func (m *RoomMgr) CreateRoom(teamLimit int, t entry.Team) (r entry.Room, err error) {
+	base := entry.NewRoomBase(m.roomIDIter.Add(1), teamLimit, t)
 
 	switch base.GameMode {
 	case constant.GameModeGoatGame:

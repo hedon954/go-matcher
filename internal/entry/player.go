@@ -1,10 +1,9 @@
 package entry
 
 import (
-	"sync"
-
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/pkg/concurrent"
 )
 
 // Player represents a player in a Group.
@@ -12,6 +11,7 @@ type Player interface {
 	Base() *PlayerBase
 	UID() string
 	GetPlayerInfo() *pto.PlayerInfo
+	SetAttr(attr *pto.UploadPlayerAttr) error
 }
 
 // PlayerOnlineState is the state of a player.
@@ -37,22 +37,28 @@ const (
 
 // PlayerBase holds the common fields of a Player for all kinds of game mode and match strategy.
 type PlayerBase struct {
-	sync.RWMutex
-	uid         string
-	GroupID     int64
+	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine
+	// Use it to help avoid deadlock.
+	*concurrent.ReentrantLock
+	uid     string
+	IsAI    bool
+	GroupID int64
+
 	onlineState PlayerOnlineState
-	VoiceState  PlayerVoiceState
+	voiceState  PlayerVoiceState
 
 	// TODO: other common attributes
 	pto.PlayerInfo
+	pto.Attribute
 }
 
 func NewPlayerBase(info *pto.PlayerInfo) *PlayerBase {
 	b := &PlayerBase{
-		uid:         info.UID,
-		onlineState: PlayerOnlineStateOnline,
-		VoiceState:  PlayerVoiceStateMute,
-		PlayerInfo:  *info,
+		ReentrantLock: new(concurrent.ReentrantLock),
+		uid:           info.UID,
+		onlineState:   PlayerOnlineStateOnline,
+		voiceState:    PlayerVoiceStateMute,
+		PlayerInfo:    *info,
 	}
 
 	return b
@@ -106,14 +112,19 @@ func (p *PlayerBase) SetOnlineStateWithLock(s PlayerOnlineState) {
 	p.onlineState = s
 }
 func (p *PlayerBase) GetOnlineStateWithLock() PlayerOnlineState {
-	p.RLock()
-	defer p.RUnlock()
+	p.Lock()
+	defer p.Unlock()
 	return p.onlineState
 }
 
 func (p *PlayerBase) SetVoiceState(s PlayerVoiceState) {
-	p.VoiceState = s
+	p.voiceState = s
 }
 func (p *PlayerBase) GetVoiceState() PlayerVoiceState {
-	return p.VoiceState
+	return p.voiceState
+}
+
+func (p *PlayerBase) SetAttr(attr *pto.UploadPlayerAttr) error {
+	p.Attribute = attr.Attribute
+	return nil
 }

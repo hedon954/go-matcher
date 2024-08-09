@@ -16,7 +16,7 @@ type GroupBaseGlicko2 struct {
 }
 
 func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
-	base.SupportMatchStrategys = append(base.SupportMatchStrategys, constant.MatchStrategyGlicko2)
+	base.SupportMatchStrategies = append(base.SupportMatchStrategies, constant.MatchStrategyGlicko2)
 
 	g := &GroupBaseGlicko2{
 		GroupBase: base,
@@ -70,8 +70,8 @@ func (g *GroupBaseGlicko2) GetStar() int {
 }
 
 func (g *GroupBaseGlicko2) GetState() glicko2.GroupState {
-	g.RLock()
-	defer g.RUnlock()
+	g.Lock()
+	defer g.Unlock()
 	switch g.Base().GetState() {
 	case entry.GroupStateDissolved, entry.GroupStateInvite:
 		return glicko2.GroupStateUnready

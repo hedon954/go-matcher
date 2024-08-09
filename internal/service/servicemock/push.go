@@ -16,4 +16,7 @@ func (p *PushMock) PushGroupDissolve([]string, int64)                       {}
 func (p *PushMock) PushGroupState([]string, int64, entry.GroupState)        {}
 func (p *PushMock) PushVoiceState([]string, *pto.UserVoiceState)            {}
 func (p *PushMock) PushKick(string, int64)                                  {}
+func (p *PushMock) PushMatchInfo([]string, *pto.MatchInfo)                  {}
 func (p *PushMock) PushCancelMatch([]string, string)                        {}
+func (p *PushMock) PushReady([]string, string)                              {}
+func (p *PushMock) PushUnReady([]string, string)                            {}

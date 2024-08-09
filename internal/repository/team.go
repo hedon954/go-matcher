@@ -40,3 +40,9 @@ func (m *TeamMgr) CreateTeam(g entry.Group) (t entry.Team, err error) {
 	m.Add(t.Base().ID(), t)
 	return t, nil
 }
+
+func (m *TeamMgr) CreateAITeam(g entry.Group) (t entry.Team, err error) {
+	base := entry.NewTeamBase(m.teamIDIter.Add(1), g)
+	base.Base().RemoveGroup(g.ID())
+	return t, nil
+}
