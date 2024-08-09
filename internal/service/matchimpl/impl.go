@@ -1,6 +1,7 @@
 package matchimpl
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -110,7 +111,7 @@ func NewDefault(
 	return impl
 }
 
-func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
+func (impl *Impl) CreateGroup(_ context.Context, param *pto.CreateGroup) (entry.Group, error) {
 	p, err := impl.getPlayer(&param.PlayerInfo)
 	if err != nil {
 		return nil, err
@@ -153,7 +154,7 @@ func (impl *Impl) CreateGroup(param *pto.CreateGroup) (entry.Group, error) {
 	return g, nil
 }
 
-func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
+func (impl *Impl) EnterGroup(ctx context.Context, info *pto.EnterGroup, groupID int64) error {
 	g := impl.groupMgr.Get(groupID)
 	if g == nil {
 		return merr.ErrGroupDissolved
@@ -187,13 +188,13 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 		if p.Base().GroupID == groupID {
 			// if p can not play together, should exit the origin group
 			if err := g.CanPlayTogether(&info.PlayerInfo); err != nil {
-				if err := impl.exitGroup(p, g); err != nil {
+				if err := impl.exitGroup(ctx, p, g); err != nil {
 					return err
 				}
 			} else {
 				// can play together, refresh the player info and broadcast the group player infos
 				p.Base().PlayerInfo = info.PlayerInfo
-				impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
+				impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
 				return nil
 			}
 		} else {
@@ -207,7 +208,7 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 			if originGroup != nil {
 				originGroup.Base().Lock()
 				defer originGroup.Base().Unlock()
-				if err := impl.exitGroup(p, originGroup); err != nil {
+				if err := impl.exitGroup(ctx, p, originGroup); err != nil {
 					return err
 				}
 			}
@@ -223,10 +224,10 @@ func (impl *Impl) EnterGroup(info *pto.EnterGroup, groupID int64) error {
 	p.Base().PlayerInfo = info.PlayerInfo
 
 	// enter the targeted group
-	return impl.enterGroup(p, g)
+	return impl.enterGroup(ctx, p, g)
 }
 
-func (impl *Impl) ExitGroup(uid string) error {
+func (impl *Impl) ExitGroup(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -249,10 +250,10 @@ func (impl *Impl) ExitGroup(uid string) error {
 	}
 
 	impl.playerMgr.Delete(p.UID())
-	return impl.exitGroup(p, g)
+	return impl.exitGroup(ctx, p, g)
 }
 
-func (impl *Impl) DissolveGroup(uid string) error {
+func (impl *Impl) DissolveGroup(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -271,10 +272,10 @@ func (impl *Impl) DissolveGroup(uid string) error {
 
 	p.Base().Lock()
 	defer p.Base().Unlock()
-	return impl.dissolveGroup(p, g)
+	return impl.dissolveGroup(ctx, g)
 }
 
-func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
+func (impl *Impl) KickPlayer(ctx context.Context, captainUID, kickedUID string) error {
 	if captainUID == kickedUID {
 		return merr.ErrKickSelf
 	}
@@ -306,10 +307,11 @@ func (impl *Impl) KickPlayer(captainUID, kickedUID string) error {
 	kicked.Base().Lock()
 	defer kicked.Base().Unlock()
 
-	return impl.kickPlayer(kicked, g)
+	impl.kickPlayer(ctx, kicked, g)
+	return nil
 }
 
-func (impl *Impl) ChangeRole(captainUID, targetUID string, role entry.GroupRole) error {
+func (impl *Impl) ChangeRole(ctx context.Context, captainUID, targetUID string, role entry.GroupRole) error {
 	if captainUID == targetUID {
 		return merr.ErrChangeSelfRole
 	}
@@ -342,10 +344,11 @@ func (impl *Impl) ChangeRole(captainUID, targetUID string, role entry.GroupRole)
 		return err
 	}
 
-	return impl.handoverCaptain(captain, target, g)
+	impl.handoverCaptain(ctx, target, g)
+	return nil
 }
 
-func (impl *Impl) SetNearbyJoinGroup(captainUID string, allow bool) error {
+func (impl *Impl) SetNearbyJoinGroup(_ context.Context, captainUID string, allow bool) error {
 	p, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
@@ -362,7 +365,7 @@ func (impl *Impl) SetNearbyJoinGroup(captainUID string, allow bool) error {
 	return nil
 }
 
-func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
+func (impl *Impl) SetRecentJoinGroup(_ context.Context, captainUID string, allow bool) error {
 	p, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
@@ -379,7 +382,7 @@ func (impl *Impl) SetRecentJoinGroup(captainUID string, allow bool) error {
 	return nil
 }
 
-func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
+func (impl *Impl) Invite(ctx context.Context, inviterUID, inviteeUID string) error {
 	if err := impl.checkInviteeState(inviteeUID); err != nil {
 		return err
 	}
@@ -401,11 +404,11 @@ func (impl *Impl) Invite(inviterUID, inviteeUID string) error {
 	}
 
 	// TODO: how to check if can play together?
-	impl.invite(inviter, inviteeUID, g)
+	impl.invite(ctx, inviter, inviteeUID, g)
 	return nil
 }
 
-func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error {
+func (impl *Impl) AcceptInvite(ctx context.Context, inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error {
 	g := impl.groupMgr.Get(groupID)
 	if g == nil {
 		return merr.ErrGroupDissolved
@@ -447,11 +450,11 @@ func (impl *Impl) AcceptInvite(inviterUID string, inviteeInfo *pto.PlayerInfo, g
 		return err
 	}
 
-	impl.acceptInvite(inviterUID, inviteeInfo.UID)
+	impl.acceptInvite(ctx, inviterUID, inviteeInfo.UID)
 	return nil
 }
 
-func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, refuseMsg string) {
+func (impl *Impl) RefuseInvite(ctx context.Context, inviterUID, inviteeUID string, groupID int64, refuseMsg string) {
 	const defaultRefuseMsg = "Sorry, I'm not available at the moment."
 
 	g := impl.groupMgr.Get(groupID)
@@ -469,10 +472,10 @@ func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, ref
 	if refuseMsg == "" {
 		refuseMsg = defaultRefuseMsg
 	}
-	impl.pushService.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
+	impl.pushService.PushRefuseInvite(ctx, inviterUID, inviteeUID, refuseMsg)
 }
 
-func (impl *Impl) Ready(uid string) error {
+func (impl *Impl) Ready(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -485,11 +488,11 @@ func (impl *Impl) Ready(uid string) error {
 		return err
 	}
 
-	impl.ready(p, g)
+	impl.ready(ctx, p, g)
 	return nil
 }
 
-func (impl *Impl) UnReady(uid string) error {
+func (impl *Impl) UnReady(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -502,11 +505,11 @@ func (impl *Impl) UnReady(uid string) error {
 		return err
 	}
 
-	impl.unready(p, g)
+	impl.unready(ctx, p, g)
 	return nil
 }
 
-func (impl *Impl) StartMatch(captainUID string) error {
+func (impl *Impl) StartMatch(ctx context.Context, captainUID string) error {
 	p, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
@@ -528,11 +531,11 @@ func (impl *Impl) StartMatch(captainUID string) error {
 		return fmt.Errorf("unsupported match strategy: %v", g.Base().MatchStrategy)
 	}
 
-	impl.startMatch(g)
+	impl.startMatch(ctx, g)
 	return nil
 }
 
-func (impl *Impl) CancelMatch(uid string) error {
+func (impl *Impl) CancelMatch(ctx context.Context, uid string) error {
 	_, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -545,11 +548,11 @@ func (impl *Impl) CancelMatch(uid string) error {
 		return err
 	}
 
-	impl.cancelMatch(uid, g)
+	impl.cancelMatch(ctx, uid, g)
 	return nil
 }
 
-func (impl *Impl) SetVoiceState(uid string, state entry.PlayerVoiceState) error {
+func (impl *Impl) SetVoiceState(ctx context.Context, uid string, state entry.PlayerVoiceState) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -567,11 +570,11 @@ func (impl *Impl) SetVoiceState(uid string, state entry.PlayerVoiceState) error 
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	impl.pushService.PushVoiceState(g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
+	impl.pushService.PushVoiceState(ctx, g.Base().UIDs(), &pto.UserVoiceState{UID: uid, State: int(state)})
 	return nil
 }
 
-func (impl *Impl) UploadPlayerAttr(uid string, attr *pto.UploadPlayerAttr) error {
+func (impl *Impl) UploadPlayerAttr(ctx context.Context, uid string, attr *pto.UploadPlayerAttr) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -588,13 +591,13 @@ func (impl *Impl) UploadPlayerAttr(uid string, attr *pto.UploadPlayerAttr) error
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	return impl.uploadPlayerAttr(p, g, attr)
+	return impl.uploadPlayerAttr(ctx, p, g, attr)
 }
 
 func (impl *Impl) HandleMatchResult(r entry.Room) {
 	r.Base().Lock()
 	defer r.Base().Unlock()
-	if err := impl.handleMatchResult(r); err != nil {
+	if err := impl.handleMatchResult(context.Background(), r); err != nil {
 		log.Error().
 			Any("room", r).
 			Err(err).

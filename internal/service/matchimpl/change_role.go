@@ -1,6 +1,7 @@
 package matchimpl
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -13,8 +14,7 @@ func (impl *Impl) checkRole(role entry.GroupRole) error {
 	return fmt.Errorf("unsupported role: %d", role)
 }
 
-func (impl *Impl) handoverCaptain(captain entry.Player, target entry.Player, g entry.Group) error {
+func (impl *Impl) handoverCaptain(ctx context.Context, target entry.Player, g entry.Group) {
 	g.SetCaptain(target)
-	impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
-	return nil
+	impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
 }

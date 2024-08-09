@@ -1,8 +1,12 @@
 package matchimpl
 
-import "github.com/hedon954/go-matcher/internal/entry"
+import (
+	"context"
 
-func (impl *Impl) unready(p entry.Player, g entry.Group) {
+	"github.com/hedon954/go-matcher/internal/entry"
+)
+
+func (impl *Impl) unready(ctx context.Context, p entry.Player, g entry.Group) {
 	g.Base().UnReadyPlayer[p.UID()] = struct{}{}
-	impl.pushService.PushUnReady(g.Base().UIDs(), p.UID())
+	impl.pushService.PushUnReady(ctx, g.Base().UIDs(), p.UID())
 }

@@ -1,6 +1,8 @@
 package matchimpl
 
 import (
+	"context"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
@@ -22,11 +24,11 @@ func (impl *Impl) checkEnterSourceValidation(g entry.Group, source pto.EnterGrou
 	return nil
 }
 
-func (impl *Impl) enterGroup(p entry.Player, g entry.Group) error {
+func (impl *Impl) enterGroup(ctx context.Context, p entry.Player, g entry.Group) error {
 	if err := g.Base().AddPlayer(p); err != nil {
 		return err
 	}
-	impl.pushService.PushPlayerOnlineState([]string{p.UID()}, entry.PlayerOnlineStateInGroup)
-	impl.pushService.PushGroupPlayers(g.Base().UIDs(), g.GetPlayerInfos())
+	impl.pushService.PushPlayerOnlineState(ctx, []string{p.UID()}, entry.PlayerOnlineStateInGroup)
+	impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
 	return nil
 }

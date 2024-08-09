@@ -1,10 +1,12 @@
 package matchimpl
 
 import (
+	"context"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
-func (impl *Impl) dissolveGroup(player entry.Player, g entry.Group) error {
+func (impl *Impl) dissolveGroup(ctx context.Context, g entry.Group) error {
 	g.Base().SetState(entry.GroupStateDissolved)
 
 	uids := g.Base().UIDs()
@@ -14,10 +16,10 @@ func (impl *Impl) dissolveGroup(player entry.Player, g entry.Group) error {
 	}
 	g.Base().ClearPlayers()
 
-	impl.pushService.PushPlayerOnlineState(uids, entry.PlayerOnlineStateOnline)
+	impl.pushService.PushPlayerOnlineState(ctx, uids, entry.PlayerOnlineStateOnline)
 
 	impl.groupMgr.Delete(g.ID())
-	impl.pushService.PushGroupDissolve(uids, g.ID())
+	impl.pushService.PushGroupDissolve(ctx, uids, g.ID())
 
 	impl.removeInviteTimer(g.ID())
 	impl.removeWaitAttrTimer(g.ID())

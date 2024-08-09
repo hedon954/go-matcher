@@ -33,7 +33,7 @@ func TestImpl_inviteTimeoutHandler_shouldwork(t *testing.T) {
 		WithMatchStrategyConfiger(new(mock.MatchStrategyMock)),
 	)
 
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
+	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 	time.Sleep(inviteTimeoutMs + 10*time.Millisecond)
@@ -43,10 +43,10 @@ func TestImpl_inviteTimeoutHandler_shouldwork(t *testing.T) {
 func TestImpl_matchTimeoutHandler_shouldwork(t *testing.T) {
 	impl := defaultImpl(2, WithDelayConfiger(new(delayConfiger)))
 
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
+	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
 
-	err = impl.StartMatch(g.GetCaptain().UID())
+	err = impl.StartMatch(ctx, g.GetCaptain().UID())
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
 	time.Sleep(matchTimeoutMs + 3*time.Millisecond)
@@ -55,9 +55,9 @@ func TestImpl_matchTimeoutHandler_shouldwork(t *testing.T) {
 
 func TestImpl_waitAttrTimeoutHandler_shouldwork(t *testing.T) {
 	impl := defaultImpl(1, WithDelayConfiger(new(delayConfiger)))
-	g, err := impl.CreateGroup(newCreateGroupParam(UID))
+	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
-	err = impl.StartMatch(g.GetCaptain().UID())
+	err = impl.StartMatch(ctx, g.GetCaptain().UID())
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
 	assert.NotNil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, g.ID()))

@@ -127,7 +127,7 @@ func (api *API) CreateGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	g, err := api.ms.CreateGroup(&req)
+	g, err := api.ms.CreateGroup(c, &req)
 	if err != nil {
 		response.GinError(c, err)
 		return
@@ -152,7 +152,7 @@ func (api *API) EnterGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.EnterGroup(&req.PlayerInfo, req.GroupID); err != nil {
+	if err := api.ms.EnterGroup(c, &req.PlayerInfo, req.GroupID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -171,7 +171,7 @@ func (api *API) EnterGroup(c *gin.Context) {
 // @Router /match/exit_group/{uid} [post]
 func (api *API) ExitGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.ExitGroup(uid); err != nil {
+	if err := api.ms.ExitGroup(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -190,7 +190,7 @@ func (api *API) ExitGroup(c *gin.Context) {
 // @Router /match/dissolve_group/{uid} [post]
 func (api *API) DissolveGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.DissolveGroup(uid); err != nil {
+	if err := api.ms.DissolveGroup(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -214,7 +214,7 @@ func (api *API) KickPlayer(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.KickPlayer(req.CaptainUID, req.KickedUID); err != nil {
+	if err := api.ms.KickPlayer(c, req.CaptainUID, req.KickedUID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -238,7 +238,7 @@ func (api *API) ChangeRole(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.ChangeRole(req.CaptainUID, req.TargetUID, req.Role); err != nil {
+	if err := api.ms.ChangeRole(c, req.CaptainUID, req.TargetUID, req.Role); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -262,7 +262,7 @@ func (api *API) Invite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.Invite(req.InviterUID, req.InviteeUID); err != nil {
+	if err := api.ms.Invite(c, req.InviterUID, req.InviteeUID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -286,7 +286,7 @@ func (api *API) AcceptInvite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.AcceptInvite(req.InviterUID, req.InviteeInfo, req.GroupID); err != nil {
+	if err := api.ms.AcceptInvite(c, req.InviterUID, req.InviteeInfo, req.GroupID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -310,7 +310,7 @@ func (api *API) RefuseInvite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	api.ms.RefuseInvite(req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg)
+	api.ms.RefuseInvite(c, req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg)
 	response.GinSuccess(c, nil)
 }
 
@@ -331,7 +331,7 @@ func (api *API) SetNearbyJoinGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetNearbyJoinGroup(req.CaptainUID, req.Allow); err != nil {
+	if err := api.ms.SetNearbyJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -355,7 +355,7 @@ func (api *API) SetRecentJoinGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetRecentJoinGroup(req.CaptainUID, req.Allow); err != nil {
+	if err := api.ms.SetRecentJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -379,7 +379,7 @@ func (api *API) SetVoiceState(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetVoiceState(req.UID, req.State); err != nil {
+	if err := api.ms.SetVoiceState(c, req.UID, req.State); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -399,7 +399,7 @@ func (api *API) SetVoiceState(c *gin.Context) {
 // @Router /match/start_match/{uid} [post]
 func (api *API) StartMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.StartMatch(uid); err != nil {
+	if err := api.ms.StartMatch(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -419,7 +419,7 @@ func (api *API) StartMatch(c *gin.Context) {
 // @Router /match/cancel_match/{uid} [post]
 func (api *API) CancelMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.CancelMatch(uid); err != nil {
+	if err := api.ms.CancelMatch(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}

@@ -1,20 +1,21 @@
 package matchimpl
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
-func (impl *Impl) startMatch(g entry.Group) {
+func (impl *Impl) startMatch(ctx context.Context, g entry.Group) {
 	base := g.Base()
 	uids := base.UIDs()
 
 	// update group state
 	base.SetState(entry.GroupStateMatch)
 	base.MatchID = uuid.NewString()
-	impl.pushService.PushGroupState(uids, g.ID(), base.GetState())
+	impl.pushService.PushGroupState(ctx, uids, g.ID(), base.GetState())
 
 	// update players state
 	for _, p := range base.GetPlayers() {
@@ -22,7 +23,7 @@ func (impl *Impl) startMatch(g entry.Group) {
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
 		p.Base().Unlock()
 	}
-	impl.pushService.PushPlayerOnlineState(uids, entry.PlayerOnlineStateInMatch)
+	impl.pushService.PushPlayerOnlineState(ctx, uids, entry.PlayerOnlineStateInMatch)
 
 	impl.removeInviteTimer(g.ID())
 	impl.addWaitAttrTimer(g.ID(), g.Base().GameMode)

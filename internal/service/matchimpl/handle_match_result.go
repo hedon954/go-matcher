@@ -1,6 +1,8 @@
 package matchimpl
 
 import (
+	"context"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
@@ -10,13 +12,13 @@ func (impl *Impl) waitForMatchResult() {
 	}
 }
 
-func (impl *Impl) handleMatchResult(r entry.Room) error {
+func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) error {
 	// ---------------------------
 	// some operations without AI
 	// ---------------------------
 	r.Base().FinishMatchSec = impl.nowFunc()
 	impl.clearDelayTimer(r)
-	impl.updateStateToGame(r)
+	impl.updateStateToGame(ctx, r)
 
 	// ----------------------------
 	// some operations may need AI
@@ -24,14 +26,14 @@ func (impl *Impl) handleMatchResult(r entry.Room) error {
 	if err := impl.fillRoomInfo(r); err != nil {
 		return err
 	}
-	impl.pushService.PushMatchInfo(r.Base().UIDs(), r.GetMatchInfo())
+	impl.pushService.PushMatchInfo(ctx, r.Base().UIDs(), r.GetMatchInfo())
 	impl.addClearRoomTimer(r.ID(), r.Base().GameMode)
 	return nil
 }
 
 func (impl *Impl) fillRoomInfo(r entry.Room) (err error) {
 	// dispatch a game server address
-	r.Base().GameServerInfo, err = impl.gameServerDispatch.Dispatch(r.Base().GameMode, r.Base().ModeVersion)
+	r.Base().GameServerInfo, err = impl.gameServerDispatch.Dispatch(context.Background(), r.Base().GameMode, r.Base().ModeVersion)
 	if err != nil {
 		return err
 	}
@@ -87,26 +89,26 @@ func (impl *Impl) clearDelayTimer(r entry.Room) {
 	}
 }
 
-func (impl *Impl) updateStateToGame(r entry.Room) {
+func (impl *Impl) updateStateToGame(ctx context.Context, r entry.Room) {
 	for _, t := range r.Base().GetTeams() {
-		impl.updateTeamStateToGame(t)
+		impl.updateTeamStateToGame(ctx, t)
 	}
 }
 
-func (impl *Impl) updateTeamStateToGame(t entry.Team) {
+func (impl *Impl) updateTeamStateToGame(ctx context.Context, t entry.Team) {
 	t.Base().Lock()
 	defer t.Base().Unlock()
 	for _, g := range t.Base().GetGroups() {
-		impl.updateGroupStateToGame(g)
+		impl.updateGroupStateToGame(ctx, g)
 	}
 }
 
-func (impl *Impl) updateGroupStateToGame(g entry.Group) {
+func (impl *Impl) updateGroupStateToGame(ctx context.Context, g entry.Group) {
 	g.Base().Lock()
 	defer g.Base().Unlock()
 	g.Base().SetState(entry.GroupStateGame)
 	for _, p := range g.Base().GetPlayers() {
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInGame)
 	}
-	impl.pushService.PushPlayerOnlineState(g.Base().UIDs(), entry.PlayerOnlineStateInGame)
+	impl.pushService.PushPlayerOnlineState(ctx, g.Base().UIDs(), entry.PlayerOnlineStateInGame)
 }

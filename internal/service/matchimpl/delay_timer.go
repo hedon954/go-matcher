@@ -1,6 +1,8 @@
 package matchimpl
 
 import (
+	"context"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/timer"
@@ -36,7 +38,7 @@ func (impl *Impl) inviteTimeoutHandler(groupID int64) {
 	if g != nil {
 		g.Base().Lock()
 		defer g.Base().Unlock()
-		if err := impl.dissolveGroup(nil, g); err != nil {
+		if err := impl.dissolveGroup(context.Background(), g); err != nil {
 			log.Error().
 				Int64("group_id", g.Base().GroupID).
 				Any("group", g).
@@ -52,7 +54,7 @@ func (impl *Impl) matchTimeoutHandler(groupID int64) {
 		g.Base().Lock()
 		defer g.Base().Unlock()
 		if g.Base().GetState() == entry.GroupStateMatch {
-			impl.cancelMatch("", g)
+			impl.cancelMatch(context.Background(), "", g)
 		}
 	}
 }

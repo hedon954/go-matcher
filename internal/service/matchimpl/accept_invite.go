@@ -1,5 +1,7 @@
 package matchimpl
 
-func (impl *Impl) acceptInvite(inviterUID, inviteeUID string) {
-	impl.pushService.PushAcceptInvite(inviterUID, inviteeUID)
+import "context"
+
+func (impl *Impl) acceptInvite(ctx context.Context, inviterUID, inviteeUID string) {
+	impl.pushService.PushAcceptInvite(ctx, inviterUID, inviteeUID)
 }

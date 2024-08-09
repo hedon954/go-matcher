@@ -1,8 +1,12 @@
 package matchimpl
 
-import "github.com/hedon954/go-matcher/internal/entry"
+import (
+	"context"
 
-func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
+	"github.com/hedon954/go-matcher/internal/entry"
+)
+
+func (impl *Impl) cancelMatch(ctx context.Context, cancelUID string, g entry.Group) {
 	base := g.Base()
 
 	base.SetState(entry.GroupStateInvite)
@@ -15,8 +19,8 @@ func (impl *Impl) cancelMatch(cancelUID string, g entry.Group) {
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
 		p.Base().Unlock()
 	}
-	impl.pushService.PushGroupState(uids, g.ID(), base.GetState())
-	impl.pushService.PushCancelMatch(base.UIDs(), cancelUID)
+	impl.pushService.PushGroupState(ctx, uids, g.ID(), base.GetState())
+	impl.pushService.PushCancelMatch(ctx, base.UIDs(), cancelUID)
 
 	impl.removeCancelMatchTimer(g.ID())
 	impl.removeWaitAttrTimer(g.ID())
