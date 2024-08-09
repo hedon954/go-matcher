@@ -1,10 +1,9 @@
 package main
 
 import (
-	"log/slog"
-
 	"github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/pkg/safe"
+	"github.com/rs/zerolog/log"
 )
 
 // swag init --generalInfo  ../../internal/api/http.go --dir ../../internal/api
@@ -16,10 +15,10 @@ func main() {
 
 func startSafe() {
 	safe.Callback(func(err any, stack []byte) {
-		slog.Error("safe occurs panic",
-			slog.Any("err", err),
-			slog.String("stack", string(stack)),
-		)
+		log.Error().
+			Any("err", err).
+			Str("stack", string(stack)).
+			Msg("safe occurs panic")
 	})
 }
 

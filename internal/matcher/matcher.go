@@ -1,12 +1,12 @@
 package matcher
 
 import (
-	"log/slog"
 	"runtime/debug"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
+	"github.com/rs/zerolog/log"
 
 	glicko2Algo "github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
@@ -37,7 +37,11 @@ func (m *Matcher) Stop() {
 func (m *Matcher) handle(g entry.Group) {
 	defer func() {
 		if err := recover(); err != nil {
-			slog.Error("handle group match error: \n"+string(debug.Stack()), slog.Any("group", g), slog.Any("err", err))
+			log.Error().
+				Any("err", err).
+				Any("group", g).
+				Str("stack", string(debug.Stack())).
+				Msg("handle group match error")
 		}
 	}()
 
@@ -45,6 +49,11 @@ func (m *Matcher) handle(g entry.Group) {
 	case constant.MatchStrategyGlicko2:
 		m.Glicko2Matcher.Match(g.(glicko2Algo.Group))
 	default:
-		slog.Error("unknown match strategy", slog.Any("group", g), slog.Int("strategy", int(g.Base().MatchStrategy)))
+		log.Error().
+			Int64("group_id", g.ID()).
+			Int("game_mode", int(g.Base().GameMode)).
+			Any("group", g).
+			Int("strategy", int(g.Base().MatchStrategy)).
+			Msg("unknown match strategy")
 	}
 }

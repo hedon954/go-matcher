@@ -2,7 +2,6 @@ package asynq
 
 import (
 	"errors"
-	"log/slog"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -10,6 +9,7 @@ import (
 	ptimer "github.com/hedon954/go-matcher/pkg/timer"
 	"github.com/hedon954/go-matcher/thirdparty"
 	"github.com/hibiken/asynq"
+	"github.com/rs/zerolog/log"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -28,11 +28,11 @@ func TestAsynqTimer(t *testing.T) {
 	}
 
 	handle1 := func(id int64) {
-		slog.Info("handle1 running")
+		log.Info().Msg("handle1 running")
 		numMap[id].Add(1)
 	}
 	handle2 := func(id int64) {
-		slog.Info("handle2 running")
+		log.Info().Msg("handle2 running")
 		numMap[id].Add(-1)
 	}
 

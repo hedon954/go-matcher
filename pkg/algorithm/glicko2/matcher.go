@@ -2,9 +2,10 @@ package glicko2
 
 import (
 	"fmt"
-	"log/slog"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -76,10 +77,10 @@ func (qm *Matcher) Match(interval time.Duration) {
 	for {
 		select {
 		case <-qm.quitChan:
-			slog.Info("stop glicko2 matcher")
+			log.Info().Msg("stop glicko2 matcher")
 			return
 		case <-ticker:
-			slog.Info("glicko2 matcher tick")
+			log.Info().Msg("glicko2 matcher tick")
 			func() {
 				defer func() {
 					if err := recover(); err != nil {

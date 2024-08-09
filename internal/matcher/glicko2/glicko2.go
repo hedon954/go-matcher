@@ -2,7 +2,6 @@ package glicko2
 
 import (
 	"fmt"
-	"log/slog"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 	"github.com/hedon954/go-matcher/pkg/safe"
+	"github.com/rs/zerolog/log"
 )
 
 // Matcher is the glicko2 matcher.
@@ -167,12 +167,12 @@ func (m *Matcher) handleMatchResult() {
 
 func (m *Matcher) handleError(err error) {
 	m.ErrCount++
-	slog.Error("glicko2 matcher occurs error", slog.Any("err", err))
+	log.Error().Err(err).Msg("glicko2 matcher occurs error")
 }
 
 func (m *Matcher) handleSuccess(room glicko2.Room) {
 	m.RoomCount.Add(1)
-	slog.Info("match success", slog.Any("room", room))
+	log.Info().Any("room", room).Msg("glicko2 match success")
 	m.roomChannelToService <- room.(entry.Room)
 }
 
@@ -201,11 +201,17 @@ func (m *Matcher) Match(g glicko2.Group) {
 	matcher, err := m.NewMatcher(g.QueueKey(),
 		funcs.ArgsFunc, funcs.NewTeamFunc, funcs.NewRoomFunc, funcs.NewRoomWithAIFunc)
 	if err != nil {
-		slog.Error("match by glicko2 error", slog.Any("group", g), slog.String("err", err.Error()))
+		log.Error().
+			Any("group", g).
+			Err(err).
+			Msg("match by glicko2 error")
 		return
 	}
 	if err = matcher.AddGroups(g); err != nil {
-		slog.Error("add group to glicko2 error", slog.Any("group", g), slog.String("err", err.Error()))
+		log.Error().
+			Any("group", g).
+			Err(err).
+			Msg("add group to glicko2 error")
 		return
 	}
 }

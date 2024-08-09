@@ -64,8 +64,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] apollo
   - [ ] consul
 - [ ] logger
-  - [x] slog
-  - [ ] zerolog
+  - [x] zerolog
   - [ ] zap
   - [ ] logrus
 - [ ] tracer

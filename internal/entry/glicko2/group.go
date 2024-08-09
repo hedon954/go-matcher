@@ -2,11 +2,11 @@ package glicko2
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
+	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/cast"
 )
@@ -125,11 +125,11 @@ func (g *GroupBaseGlicko2) CanFillAi() bool {
 }
 
 func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
-	slog.Info("force cancel match",
-		slog.Any("group", g),
-		slog.String("reason", reason),
-		slog.Int64("wait_sec", waitSec),
-	)
+	log.Info().
+		Any("group", g).
+		Str("reason", reason).
+		Int64("wait_sec", waitSec).
+		Msg("force cancel match")
 	g.Lock()
 	defer g.Unlock()
 	g.Base().SetState(entry.GroupStateInvite)

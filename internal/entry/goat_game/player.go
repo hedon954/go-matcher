@@ -31,7 +31,7 @@ func (p *Player) withMatchStrategy(base *entry.PlayerBase, info *pto.Glicko2Info
 	// ... other match strategy initialization
 }
 
-// SetAttrs rewrite the base method if needed.
+// SetAttr rewrite the base method if needed.
 func (p *Player) SetAttr(attr *pto.UploadPlayerAttr) error {
 	if err := p.Base().SetAttr(attr); err != nil {
 		return err
