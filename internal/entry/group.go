@@ -82,11 +82,10 @@ type GroupBase struct {
 	ModeVersion int64
 
 	// MatchStrategy is the current match strategy of the group.
-	// TODO: make it to a interface{} to support dynamic change
 	MatchStrategy constant.MatchStrategy
 
-	// SupportMatchStrategys is the supported match strategies of the group.
-	SupportMatchStrategys []constant.MatchStrategy
+	// SupportMatchStrategies is the supported match strategies of the group.
+	SupportMatchStrategies []constant.MatchStrategy
 
 	// State is the current state of the group.
 	state GroupState
@@ -100,16 +99,24 @@ type GroupBase struct {
 	// roles holds the roles of the players in the group.
 	roles map[string]GroupRole
 
-	// Settings holds the settings of the group.
-	Settings GroupSettings
-
-	// Configs holds the config of the group.
 	Configs GroupConfig
+
+	// ReadyPlayer holds the unready players in the group.
+	// In the project, we assume that the default does not
+	// require all players to prepare to start matching,
+	// so the map will be empty by default,
+	// and you will need to re-initialize this field in the game mode that requires preparation
+	UnReadyPlayer map[string]struct{}
 
 	// inviteRecords holds the invite records of the group.
 	// key: uid
 	// value: expire time (s)
 	inviteRecords map[string]int64
+
+	// Settings holds the settings of the group.
+	Settings GroupSettings
+
+	// Configs holds the config of the group.
 }
 
 // GroupSettings defines the settings of a group.
@@ -131,16 +138,17 @@ func NewGroupBase(
 	groupID int64, playerLimit int, playerBase *PlayerBase,
 ) *GroupBase {
 	g := &GroupBase{
-		ReentrantLock:         new(concurrent.ReentrantLock),
-		GroupID:               groupID,
-		state:                 GroupStateInvite,
-		GameMode:              playerBase.GameMode,
-		ModeVersion:           playerBase.ModeVersion,
-		players:               make([]Player, 0, playerLimit),
-		roles:                 make(map[string]GroupRole, playerLimit),
-		inviteRecords:         make(map[string]int64, playerLimit),
-		SupportMatchStrategys: make([]constant.MatchStrategy, 0),
-		Configs:               GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
+		ReentrantLock:          new(concurrent.ReentrantLock),
+		GroupID:                groupID,
+		state:                  GroupStateInvite,
+		GameMode:               playerBase.GameMode,
+		ModeVersion:            playerBase.ModeVersion,
+		players:                make([]Player, 0, playerLimit),
+		roles:                  make(map[string]GroupRole, playerLimit),
+		inviteRecords:          make(map[string]int64, playerLimit),
+		SupportMatchStrategies: make([]constant.MatchStrategy, 0),
+		UnReadyPlayer:          make(map[string]struct{}, playerLimit),
+		Configs:                GroupConfig{PlayerLimit: playerLimit, InviteExpireSec: InviteExpireSec},
 	}
 
 	return g
@@ -156,7 +164,7 @@ func (g *GroupBase) ID() int64 {
 
 // IsMatchStrategySupported checks if the group supports the current match strategy.
 func (g *GroupBase) IsMatchStrategySupported() bool {
-	return slices.Index(g.SupportMatchStrategys, g.MatchStrategy) >= 0
+	return slices.Index(g.SupportMatchStrategies, g.MatchStrategy) >= 0
 }
 
 func (g *GroupBase) IsFull() bool {

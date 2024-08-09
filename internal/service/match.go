@@ -42,15 +42,24 @@ type Match interface {
 	// SetVoiceState sets whether the player can speak in the group
 	SetVoiceState(uid string, state entry.PlayerVoiceState) error
 
+	// Ready marks the player as ready
+	Ready(uid string) error
+
+	// UnReady marks the player as unready
+	UnReady(uid string) error
+
 	// StartMatch starts to add the group to matching queue
 	StartMatch(captainUID string) error
 
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(uid string) error
 
-	// UploadAttribute uploads user attributes
+	// UploadPlayerAttr uploads player attributes
 	UploadPlayerAttr(uid string, attrs *pto.UploadPlayerAttr) error
 
 	// HandleMatchResult handles the match result
 	HandleMatchResult(r entry.Room)
+
+	// HandleGameResult handles the game result
+	HandleGameResult(result *pto.GameResult) error
 }

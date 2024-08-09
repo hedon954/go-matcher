@@ -31,7 +31,7 @@ type GroupPlayers struct {
 	// Positions indicate whether positions in the room are occupied.
 	Positions []bool
 
-	// Infos holds the player infos, releated to the player position.
+	// Infos holds the player infos, related to the player position.
 	// If Positions[i] == false, means Infos[i] would be nil.
 	Infos []*GroupPlayerInfo
 }
@@ -57,5 +57,5 @@ type CancelMatch struct {
 type GameServerInfo struct {
 	Host     string
 	Port     uint16
-	Protocal constant.NetProtocal
+	Protocol constant.NetProtocol
 }

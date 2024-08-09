@@ -32,6 +32,7 @@ func TestReentrantLock(t *testing.T) {
 	// lock and unlock multiple times in one goroutine should success
 	rl.Lock()
 	rl.Lock()
+	assert.Equal(t, int64(2), rl.reentrant.Load())
 	rl.Unlock()
 	rl.Unlock()
 

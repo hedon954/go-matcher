@@ -26,7 +26,9 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	rc := make(chan entry.Room, 1024)
 	pm := repository.NewPlayerMgr()
 	gm := repository.NewGroupMgr(0)
-	return NewDefault(playerLimit, pm, gm, gc, rc, mock.NewTimer(), opts...)
+	tm := repository.NewTeamMgr(0)
+	rm := repository.NewRoomMgr(0)
+	return NewDefault(playerLimit, pm, gm, tm, rm, gc, rc, mock.NewTimer(), opts...)
 }
 
 func newCreateGroupParam(uid string) *pto.CreateGroup {
@@ -82,6 +84,23 @@ func createFullGroup(impl *Impl, t *testing.T) (entry.Player, entry.Group) {
 	}
 	assert.Equal(t, true, g.IsFull())
 	return p, g
+}
+
+func createTempTeam(impl *Impl, g entry.Group, t *testing.T) entry.Team {
+	team, err := impl.teamMgr.CreateTeam(g)
+	assert.Nil(t, err)
+	assert.NotNil(t, impl.teamMgr.Get(team.ID()))
+	assert.Equal(t, 1, len(team.Base().GetGroups()))
+	return team
+}
+
+func createTempRoom(uid string, impl *Impl, t *testing.T) entry.Room {
+	_, g := createTempGroup(uid, impl, t)
+	room, err := impl.roomMgr.CreateRoom(1, createTempTeam(impl, g, t))
+	assert.Nil(t, err)
+	assert.NotNil(t, impl.roomMgr.Get(room.ID()))
+	assert.Equal(t, 1, len(room.Base().GetTeams()))
+	return room
 }
 
 func TestImpl_CreateGroup(t *testing.T) {
@@ -877,4 +896,111 @@ func TestImpl_CancelMatch(t *testing.T) {
 	err = impl.CancelMatch(UID)
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
+}
+
+func TestImpl_Ready(t *testing.T) {
+	impl := defaultImpl(PlayerLimit)
+
+	// 1. if player not exists, should return err
+	err := impl.Ready(UID)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if group not exists, should return err
+	impl.playerMgr.Add(UID, entry.NewPlayerBase(new(pto.PlayerInfo))) // add temp
+	err = impl.Ready(UID)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.playerMgr.Delete(UID) // delete temp
+
+	// 3. group state is not `invite`, should return err
+	p, g := createTempGroup(UID, impl, t)
+	g.Base().SetStateWithLock(entry.GroupStateGame)
+	err = impl.Ready(p.UID())
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetStateWithLock(entry.GroupStateDissolved)
+	err = impl.Ready(p.UID())
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetStateWithLock(entry.GroupStateMatch)
+	err = impl.Ready(p.UID())
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetStateWithLock(entry.GroupStateInvite) // set back
+
+	// 4. return success and the unready record should be deleted
+	g.Base().UnReadyPlayer[p.UID()] = struct{}{}
+	err = impl.Ready(p.UID())
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(g.Base().UnReadyPlayer))
+}
+
+func TestImpl_Unready(t *testing.T) {
+	impl := defaultImpl(PlayerLimit)
+
+	// 1. if player not exists, should return err
+	err := impl.UnReady(UID)
+	assert.Equal(t, merr.ErrPlayerNotExists, err)
+
+	// 2. if group not exists, should return err
+	impl.playerMgr.Add(UID, entry.NewPlayerBase(new(pto.PlayerInfo))) // add temp
+	err = impl.UnReady(UID)
+	assert.Equal(t, merr.ErrGroupNotExists, err)
+	impl.playerMgr.Delete(UID) // delete temp
+
+	// 3. group state is not `invite`, should return err
+	p, g := createTempGroup(UID, impl, t)
+	g.Base().SetStateWithLock(entry.GroupStateGame)
+	err = impl.UnReady(p.UID())
+	assert.Equal(t, merr.ErrGroupInGame, err)
+	g.Base().SetStateWithLock(entry.GroupStateDissolved)
+	err = impl.UnReady(p.UID())
+	assert.Equal(t, merr.ErrGroupDissolved, err)
+	g.Base().SetStateWithLock(entry.GroupStateMatch)
+	err = impl.UnReady(p.UID())
+	assert.Equal(t, merr.ErrGroupInMatch, err)
+	g.Base().SetStateWithLock(entry.GroupStateInvite) // set back
+
+	// 4. return success and the unready record should be deleted
+	err = impl.UnReady(p.UID())
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(g.Base().UnReadyPlayer))
+}
+
+func TestImpl_HandleMatchResult(t *testing.T) {
+	impl := defaultImpl(PlayerLimit)
+
+	room := createTempRoom(UID, impl, t)
+	impl.HandleMatchResult(room)
+
+	room.Base().Lock()
+	defer room.Base().Unlock()
+
+	assert.Equal(t, impl.nowFunc(), room.Base().FinishMatchSec)
+	assert.Equal(t, pto.GameServerInfo{
+		Host:     "127.0.0.1",
+		Port:     8080,
+		Protocol: constant.KCP,
+	}, room.Base().GameServerInfo)
+
+	for _, team := range room.Base().GetTeams() {
+		team.Base().Lock()
+		for _, group := range team.Base().GetGroups() {
+			group.Base().Lock()
+			assert.Equal(t, entry.GroupStateGame, group.Base().GetState())
+			for _, p := range group.Base().GetPlayers() {
+				assert.Equal(t, entry.PlayerOnlineStateInGame, p.Base().GetOnlineStateWithLock())
+			}
+			group.Base().Unlock()
+		}
+		team.Base().Unlock()
+	}
+}
+
+func TestImpl_HandleGameResult(t *testing.T) {
+	impl := defaultImpl(PlayerLimit)
+
+	const RID = 1
+	impl.addClearRoomTimer(RID, constant.GameModeGoatGame)
+	assert.NotNil(t, impl.delayTimer.Get(TimeOpTypeClearRoom, RID))
+	err := impl.HandleGameResult(&pto.GameResult{RoomID: RID, GameMode: constant.GameModeGoatGame})
+	assert.Nil(t, err)
+	assert.Equal(t, RID, len(impl.result))
+	assert.Nil(t, impl.delayTimer.Get(TimeOpTypeClearRoom, RID))
 }

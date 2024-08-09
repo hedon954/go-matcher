@@ -46,10 +46,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 
 
 
-## Problems
-
-- [ ] lack of `GameEnd` and `Ready` services。
-
 ## Todo
 
 - [ ] network
@@ -83,13 +79,11 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 
 
 
-
-
 ## Schedule
 
-- [ ] HandleMatchSuccess（8.9）
-- [ ] GameEnd（8.9）
-- [ ] Ready（8.9）
+- [x] HandleMatchSuccess（8.9）
+- [x] HandleGameResult（8.9）
+- [x] Ready & Unready（8.9）
 - [ ] Push Service by gRPC（8.12）
 - [ ] Static Config（8.13）
 - [ ] Dynamic Config by nacos（8.13）

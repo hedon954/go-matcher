@@ -16,7 +16,7 @@ type GroupBaseGlicko2 struct {
 }
 
 func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
-	base.SupportMatchStrategys = append(base.SupportMatchStrategys, constant.MatchStrategyGlicko2)
+	base.SupportMatchStrategies = append(base.SupportMatchStrategies, constant.MatchStrategyGlicko2)
 
 	g := &GroupBaseGlicko2{
 		GroupBase: base,

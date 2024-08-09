@@ -10,7 +10,7 @@ type GameServerDispatch struct{}
 func (d *GameServerDispatch) Dispatch(_ constant.GameMode, _ int64) (pto.GameServerInfo, error) {
 	return pto.GameServerInfo{
 		Host:     "127.0.0.1",
-		Port:     8080,
-		Protocal: constant.KCP,
+		Port:     8080, //nolint:mnd
+		Protocol: constant.KCP,
 	}, nil
 }

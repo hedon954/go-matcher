@@ -40,6 +40,7 @@ type Impl struct {
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
 	teamMgr   *repository.TeamMgr
+	roomMgr   *repository.RoomMgr
 
 	groupPlayerLimit int
 	nowFunc          func() int64
@@ -51,6 +52,8 @@ type Impl struct {
 
 	pushService        service.Push
 	gameServerDispatch service.GameServerDispatch
+
+	result map[int64]*pto.GameResult // TODO: change
 }
 
 type Option func(*Impl)
@@ -75,7 +78,8 @@ func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 
 func NewDefault(
 	groupPlayerLimit int,
-	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr, teamMgr *repository.TeamMgr,
+	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
+	teamMgr *repository.TeamMgr, roomMgr *repository.RoomMgr,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
 	delayTimer timer.Operator[int64],
 	options ...Option,
@@ -83,6 +87,8 @@ func NewDefault(
 	impl := &Impl{
 		playerMgr:          playerMgr,
 		groupMgr:           groupMgr,
+		teamMgr:            teamMgr,
+		roomMgr:            roomMgr,
 		groupPlayerLimit:   groupPlayerLimit,
 		nowFunc:            time.Now().Unix,
 		groupChannel:       groupChannel,
@@ -92,6 +98,7 @@ func NewDefault(
 		MSConfig:           new(mock.MatchStrategyMock),         // TODO: change
 		pushService:        new(servicemock.PushMock),           // TODO: change
 		gameServerDispatch: new(servicemock.GameServerDispatch), // TODO: change
+		result:             make(map[int64]*pto.GameResult),     // TODO: change
 	}
 
 	for _, opt := range options {
@@ -465,6 +472,40 @@ func (impl *Impl) RefuseInvite(inviterUID, inviteeUID string, groupID int64, ref
 	impl.pushService.PushRefuseInvite(inviterUID, inviteeUID, refuseMsg)
 }
 
+func (impl *Impl) Ready(uid string) error {
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	impl.ready(p, g)
+	return nil
+}
+
+func (impl *Impl) UnReady(uid string) error {
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
+	}
+
+	g.Base().Lock()
+	defer g.Base().Unlock()
+
+	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
+		return err
+	}
+
+	impl.unready(p, g)
+	return nil
+}
+
 func (impl *Impl) StartMatch(captainUID string) error {
 	p, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
@@ -561,6 +602,22 @@ func (impl *Impl) HandleMatchResult(r entry.Room) {
 	}
 }
 
+func (impl *Impl) HandleGameResult(result *pto.GameResult) error {
+	impl.result[result.RoomID] = result
+	impl.removeClearRoomTimer(result.RoomID)
+
+	log.Info().
+		Int64("room_id", result.RoomID).
+		Int("game_mode", int(result.GameMode)).
+		Int64("mode_version", result.ModeVersion).
+		Int("match_strategy", int(result.MatchStrategy)).
+		Any("player_meta_infos", result.PlayerMetaInfo).
+		Msg("handle game result")
+
+	// ... do something
+	return nil
+}
+
 // getPlayerAndGroup returns the player and group of the given uid.
 func (impl *Impl) getPlayerAndGroup(uid string) (entry.Player, entry.Group, error) {
 	p := impl.playerMgr.Get(uid)
@@ -572,9 +629,4 @@ func (impl *Impl) getPlayerAndGroup(uid string) (entry.Player, entry.Group, erro
 		return nil, nil, merr.ErrGroupNotExists
 	}
 	return p, g, nil
-}
-
-func (impl *Impl) createAITeam() entry.Team {
-	impl.teamMgr.CreateTeam()
-	return nil
 }

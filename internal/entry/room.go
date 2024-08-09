@@ -82,3 +82,13 @@ func (r *RoomBase) ShuffleTeamOrder() {
 		team.Base().TeamID = ids[i]
 	}
 }
+
+func (r *RoomBase) UIDs() []string {
+	res := make([]string, 0, len(r.teams))
+	for _, t := range r.teams {
+		for _, g := range t.Base().GetGroups() {
+			res = append(res, g.Base().UIDs()...)
+		}
+	}
+	return res
+}

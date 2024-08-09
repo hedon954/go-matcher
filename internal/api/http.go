@@ -103,7 +103,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		tm: teamMgr,
 		rm: roomMgr,
 		m:  matcher.New(groupChannel, glicko2Matcher),
-		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, groupChannel, roomChannel, delayTimer),
+		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, roomMgr, groupChannel, roomChannel, delayTimer),
 	}
 
 	safe.Go(delayTimer.Start)

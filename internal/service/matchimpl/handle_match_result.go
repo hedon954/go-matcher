@@ -1,8 +1,6 @@
 package matchimpl
 
 import (
-	"fmt"
-
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
@@ -13,15 +11,21 @@ func (impl *Impl) waitForMatchResult() {
 }
 
 func (impl *Impl) handleMatchResult(r entry.Room) error {
+	// ---------------------------
+	// some operations without AI
+	// ---------------------------
 	r.Base().FinishMatchSec = impl.nowFunc()
-
 	impl.clearDelayTimer(r)
+	impl.updateStateToGame(r)
+
+	// ----------------------------
+	// some operations may need AI
+	// ----------------------------
 	if err := impl.fillRoomInfo(r); err != nil {
 		return err
 	}
-	impl.updateStateToGame(r)
-	impl.pushMatchResult(r)
-
+	impl.pushService.PushMatchInfo(r.Base().UIDs(), r.GetMatchInfo())
+	impl.addClearRoomTimer(r.ID(), r.Base().GameMode)
 	return nil
 }
 
@@ -33,7 +37,7 @@ func (impl *Impl) fillRoomInfo(r entry.Room) (err error) {
 	}
 
 	// fill room with AI
-	if err = impl.fillRoomWithAI(r); err != nil {
+	if err := impl.fillRoomWithAI(r); err != nil {
 		return err
 	}
 
@@ -55,9 +59,6 @@ func (impl *Impl) fillRoomWithAI(r entry.Room) error {
 
 	teamCount := len(r.Base().GetTeams())
 	for i := teamCount; i < r.Base().TeamLimit; i++ {
-		// TODO
-		for j := 0; j < impl.groupPlayerLimit; j++ {
-		}
 		r.Base().AddTeam(impl.createAITeam())
 	}
 
@@ -65,23 +66,25 @@ func (impl *Impl) fillRoomWithAI(r entry.Room) error {
 }
 
 func (impl *Impl) fillTeamWithAI(t entry.Team) error {
+	// TODO implement AI generator
+	return nil
+}
+
+func (impl *Impl) createAITeam() entry.Team {
+	// TODO implement AI generator
 	return nil
 }
 
 func (impl *Impl) clearDelayTimer(r entry.Room) {
-	fmt.Println("handle match result: ", r)
 	for _, t := range r.Base().GetTeams() {
+		t.Base().Lock()
 		for _, g := range t.Base().GetGroups() {
 			impl.removeWaitAttrTimer(g.ID())
 			impl.removeWaitAttrTimer(g.ID())
 			impl.removeCancelMatchTimer(g.ID())
 		}
+		t.Base().Unlock()
 	}
-}
-
-func (impl *Impl) setFinishMatchSec(r entry.Room) {
-	now := impl.nowFunc()
-	r.Base().FinishMatchSec = now
 }
 
 func (impl *Impl) updateStateToGame(r entry.Room) {
@@ -106,8 +109,4 @@ func (impl *Impl) updateGroupStateToGame(g entry.Group) {
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInGame)
 	}
 	impl.pushService.PushPlayerOnlineState(g.Base().UIDs(), entry.PlayerOnlineStateInGame)
-}
-
-func (impl *Impl) pushMatchResult(r entry.Room) {
-
 }

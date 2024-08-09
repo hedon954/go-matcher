@@ -124,7 +124,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 
 	// 15. 'a' set voice state
 	requestSetVoiceState(router, UIDA, entry.PlayerVoiceStateUnmute, t)
-	assert.Equal(t, entry.PlayerVoiceStateUnmute, ua.Base().voiceState)
+	assert.Equal(t, entry.PlayerVoiceStateUnmute, ua.Base().GetVoiceState())
 
 	// 16. 'a' set 'g2' allow nearby join
 	assert.False(t, g2.Base().AllowNearbyJoin())

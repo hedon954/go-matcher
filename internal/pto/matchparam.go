@@ -2,8 +2,9 @@ package pto
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 // EnterGroupSourceType is the source type of entering a group.
@@ -57,24 +58,43 @@ type Attribute struct {
 
 func FromAttrJson[T any](a *UploadPlayerAttr) (*T, error) {
 	var t T
-	err := json.Unmarshal(a.Extra, &t)
-	return &t, err
+	if err := json.Unmarshal(a.Extra, &t); err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
 
 func MustFromAttrJson[T any](a *UploadPlayerAttr) *T {
 	var t T
-	_ = json.Unmarshal(a.Extra, &t)
+	err := json.Unmarshal(a.Extra, &t)
+	if err != nil {
+		panic(fmt.Sprintf("unmarshal attribute json extra to *T(type=%T) error: %v", t, err))
+	}
 	return &t
 }
 
-func FromAttrPb[T proto.Message](a *UploadPlayerAttr) (*T, error) {
+func FromAttrPb[T any](a *UploadPlayerAttr) (*T, error) {
 	var t T
-	err := proto.Unmarshal(a.Extra, t)
-	return &t, err
+	msg, ok := any(&t).(proto.Message)
+	if !ok {
+		return nil, fmt.Errorf("type %T does not implement proto.Message", t)
+	}
+	err := proto.Unmarshal(a.Extra, msg)
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
 }
 
-func MustFromAttrPb[T proto.Message](a *UploadPlayerAttr) *T {
+func MustFromAttrPb[T any](a *UploadPlayerAttr) *T {
 	var t T
-	_ = proto.Unmarshal(a.Extra, t)
+	msg, ok := any(&t).(proto.Message)
+	if !ok {
+		panic(fmt.Sprintf("type *%T does not implement proto.Message", t))
+	}
+	err := proto.Unmarshal(a.Extra, msg)
+	if err != nil {
+		panic(fmt.Sprintf("unmarshal attribute protobuf extra to *T(type=%T) error: %v", t, err))
+	}
 	return &t
 }
