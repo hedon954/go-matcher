@@ -50,8 +50,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 
 - [ ] lack of `GameEnd` and `Ready` services。
 
-
-
 ## Todo
 
 - [ ] network
@@ -71,12 +69,37 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] consul
 - [ ] logger
   - [x] slog
+  - [ ] zerolog
   - [ ] zap
   - [ ] logrus
 - [ ] tracer
-- [ ] opentelementry
+- [ ] open telemetry
 - [ ] repository stats
 - [ ] match queue stats
+- [ ] graceful restart
+- [ ] repository by redis
+- [ ] hot upgrade
+- [ ] horizontal expansion
+
+
+
+
+
+## Schedule
+
+- [ ] HandleMatchSuccess（8.9）
+- [ ] GameEnd（8.9）
+- [ ] Ready（8.9）
+- [ ] Push Service by gRPC（8.12）
+- [ ] Static Config（8.13）
+- [ ] Dynamic Config by nacos（8.13）
+- [ ] repository by redis（8.14）
+- [ ] entry encode & decode（8.14）
+- [ ] zerolog logger & tracer & open telemetry（8.15-8.16）
+- [ ] repository stats & match queue stats（8.19）
+- [ ] zinx（8.20-8.23）
+- [ ] TCP api（8.26）
+- [ ] WebSocket api（8.27）
 
 
 
