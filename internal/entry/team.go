@@ -13,10 +13,13 @@ type Team interface {
 
 type TeamBase struct {
 	sync.RWMutex
-	id            int64
+	id            int64 // id is the global unique team id.
+	TeamID        int   // TeamID is the unique team id in one room, start from 1.
+	IsAI          bool
 	groups        map[int64]Group
 	GameMode      constant.GameMode
 	MatchStrategy constant.MatchStrategy
+	ModeVersion   int64
 }
 
 func NewTeamBase(id int64, g Group) *TeamBase {
@@ -25,6 +28,7 @@ func NewTeamBase(id int64, g Group) *TeamBase {
 		groups:        make(map[int64]Group),
 		GameMode:      g.Base().GameMode,
 		MatchStrategy: g.Base().MatchStrategy,
+		ModeVersion:   g.Base().ModeVersion,
 	}
 	t.groups[g.ID()] = g
 	return t

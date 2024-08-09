@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -102,7 +103,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		tm: teamMgr,
 		rm: roomMgr,
 		m:  matcher.New(groupChannel, glicko2Matcher),
-		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, groupChannel, roomChannel, delayTimer),
+		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, groupChannel, roomChannel, delayTimer),
 	}
 
 	safe.Go(delayTimer.Start)

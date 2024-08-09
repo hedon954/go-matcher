@@ -48,6 +48,9 @@ type Match interface {
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(uid string) error
 
+	// UploadAttribute uploads user attributes
+	UploadPlayerAttr(uid string, attrs *pto.UploadPlayerAttr) error
+
 	// HandleMatchResult handles the match result
 	HandleMatchResult(r entry.Room)
 }

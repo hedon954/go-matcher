@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/response"
-	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -123,7 +124,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 
 	// 15. 'a' set voice state
 	requestSetVoiceState(router, UIDA, entry.PlayerVoiceStateUnmute, t)
-	assert.Equal(t, entry.PlayerVoiceStateUnmute, ua.Base().VoiceState)
+	assert.Equal(t, entry.PlayerVoiceStateUnmute, ua.Base().voiceState)
 
 	// 16. 'a' set 'g2' allow nearby join
 	assert.False(t, g2.Base().AllowNearbyJoin())

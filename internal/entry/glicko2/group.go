@@ -70,8 +70,8 @@ func (g *GroupBaseGlicko2) GetStar() int {
 }
 
 func (g *GroupBaseGlicko2) GetState() glicko2.GroupState {
-	g.RLock()
-	defer g.RUnlock()
+	g.Lock()
+	defer g.Unlock()
 	switch g.Base().GetState() {
 	case entry.GroupStateDissolved, entry.GroupStateInvite:
 		return glicko2.GroupStateUnready

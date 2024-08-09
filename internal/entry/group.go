@@ -2,11 +2,11 @@ package entry
 
 import (
 	"slices"
-	"sync"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/pkg/concurrent"
 )
 
 // Group represents a group of players.
@@ -64,8 +64,21 @@ const (
 
 // GroupBase holds the common fields of a Group for all kinds of game mode and match strategy.
 type GroupBase struct {
-	GroupID     int64
-	GameMode    constant.GameMode
+	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine.
+	// Use it to help avoid deadlock.
+	*concurrent.ReentrantLock
+
+	// GroupID is the unique id of the group.
+	GroupID int64
+
+	// IsAI indicates if the group is an AI group.
+	IsAI bool
+
+	// GameMode is the game mode of the group.
+	GameMode constant.GameMode
+
+	// ModeVersion is the version of the game mode of the group.
+	// Only the same version of the players can be played together.
 	ModeVersion int64
 
 	// MatchStrategy is the current match strategy of the group.
@@ -75,11 +88,10 @@ type GroupBase struct {
 	// SupportMatchStrategys is the supported match strategies of the group.
 	SupportMatchStrategys []constant.MatchStrategy
 
-	// Do not do synchronization at this layer,
-	// leave it to the caller to handle it uniformly,
-	// to avoid deadlocks.
-	sync.RWMutex
-	state   GroupState
+	// State is the current state of the group.
+	state GroupState
+
+	// players holds the players in the group.
 	players []Player
 
 	// MatchID is a unique id to identify each match action.
@@ -119,6 +131,7 @@ func NewGroupBase(
 	groupID int64, playerLimit int, playerBase *PlayerBase,
 ) *GroupBase {
 	g := &GroupBase{
+		ReentrantLock:         new(concurrent.ReentrantLock),
 		GroupID:               groupID,
 		state:                 GroupStateInvite,
 		GameMode:              playerBase.GameMode,
@@ -263,8 +276,8 @@ func (g *GroupBase) SetStateWithLock(s GroupState) {
 }
 
 func (g *GroupBase) GetStateWithLock() GroupState {
-	g.RLock()
-	defer g.RUnlock()
+	g.Lock()
+	defer g.Unlock()
 	return g.state
 }
 
@@ -299,10 +312,23 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 }
 
 func (g *GroupBase) GetPlayerInfos() *pto.GroupPlayers {
+	// TODO: player can change position, set position when crate group or enter group
+	// positions := make([]bool, g.PlayerLimit())
+	// infos := make([]*pto.GroupPlayerInfo, len(g.players))
+	//
+	// for _, p := range g.players {
+	// 	infos = append(infos, &pto.GroupPlayerInfo{
+	// 		UID:   "",
+	// 		State: 0,
+	// 		Role:  0,
+	// 	})
+	// }
+
 	return &pto.GroupPlayers{
-		GroupID:  g.GroupID,
-		Owner:    g.GetCaptain().UID(),
-		GameMode: int(g.GameMode),
+		GroupID:     g.GroupID,
+		Captain:     g.GetCaptain().UID(),
+		GameMode:    g.GameMode,
+		ModeVersion: g.ModeVersion,
 		// TODO: other info
 	}
 }
