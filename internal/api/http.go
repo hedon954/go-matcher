@@ -23,9 +23,9 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-// @title           Match Match Swagger API
+// @title           Match Service Swagger API
 // @version         1.0
-// @description     This is the open api doc for match sergvice
+// @description     This is the open api doc for match service
 
 // @host      :5050
 // @BasePath  /
