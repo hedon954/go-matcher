@@ -1,10 +1,12 @@
 package api
 
 import (
-	"log"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config/mock"
@@ -34,8 +36,14 @@ import (
 func SetupHTTPServer() {
 	api := NewAPI(1, time.Second)
 	r := api.setupRouter()
-	if err := r.Run(":5050"); err != nil {
-		log.Fatal(err)
+	r.Use(otelgin.Middleware("go-matcher"))
+	srv := &http.Server{
+		Addr:              ":5050",
+		Handler:           r.Handler(),
+		ReadHeaderTimeout: time.Minute,
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		log.Error().Err(err).Msg("error occurs in http server")
 	}
 }
 

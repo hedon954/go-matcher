@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// swag init --generalInfo  ../../internal/api/http.go --dir ../../internal/api
 func main() {
 	startSafe()
 	defer stopSafe()
