@@ -4,3 +4,5 @@ ignore:
   - 'docs'
   - 'thirdparty'
   - 'fixtures'
+  - 'examples/otel'
+  - 'examples/zinx'

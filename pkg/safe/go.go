@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// sg is a global instance of safeGo which holds the panic callbacks and a sync.WaitGroup.
+// sg is a utils instance of safeGo which holds the panic callbacks and a sync.WaitGroup.
 // Each program only has one instance of safeGo.
 var sg = safeGo{
 	goCallbacks:   make([]PanicCallback, 0),
@@ -32,13 +32,13 @@ func Callback(callbacks ...PanicCallback) {
 	sg.callCallbacks = append(sg.callCallbacks, callbacks...)
 }
 
-// GoCallBack appends the global callbacks for safe.Go,
+// GoCallBack appends the utils callbacks for safe.Go,
 // it should be used only in the main package.
 func GoCallBack(callbacks ...PanicCallback) {
 	sg.goCallbacks = append(sg.goCallbacks, callbacks...)
 }
 
-// CallCallBack appends the global callbacks for safe.Call,
+// CallCallBack appends the utils callbacks for safe.Call,
 // it should be used only in the main package.
 func CallCallBack(callbacks ...PanicCallback) {
 	sg.callCallbacks = append(sg.callCallbacks, callbacks...)

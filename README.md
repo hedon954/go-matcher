@@ -49,6 +49,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 ## Todo
 
 - [ ] network
+  - [x] zinx
   - [ ] TCP
   - [ ] UDP
   - [ ] KCP
@@ -90,7 +91,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [ ] entry encode & decode（8.14）
 - [ ] zerolog logger & tracer & open telemetry（8.15-8.16）
 - [ ] repository stats & match queue stats（8.19）
-- [ ] zinx（8.20-8.23）
+- [x] zinx（8.20-8.23）
 - [ ] TCP api（8.26）
 - [ ] WebSocket api（8.27）
 

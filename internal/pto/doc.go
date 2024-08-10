@@ -1,4 +1,4 @@
-// Package pto provides general global definitions
+// Package pto provides general utils definitions
 // that are intended for use by other packages.
 //
 // This package can import and reference the `constant` package,
