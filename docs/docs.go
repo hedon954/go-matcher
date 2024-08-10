@@ -32,7 +32,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -78,7 +78,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -122,7 +122,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -168,7 +168,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -208,7 +208,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -246,7 +246,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -292,7 +292,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -330,7 +330,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -376,7 +376,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -422,7 +422,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -468,7 +468,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -514,7 +514,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -560,7 +560,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -606,7 +606,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {

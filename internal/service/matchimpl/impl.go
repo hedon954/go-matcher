@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
@@ -111,7 +110,8 @@ func NewDefault(
 	return impl
 }
 
-func (impl *Impl) CreateGroup(_ context.Context, param *pto.CreateGroup) (entry.Group, error) {
+func (impl *Impl) CreateGroup(ctx context.Context, param *pto.CreateGroup) (entry.Group, error) {
+	log.Ctx(ctx).Info().Str("uid", param.UID).Msg("creating group")
 	p, err := impl.getPlayer(&param.PlayerInfo)
 	if err != nil {
 		return nil, err

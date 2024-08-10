@@ -2,7 +2,11 @@ package response
 
 import "encoding/json"
 
-const RequestIDHeader = "request_id"
+const (
+	XRequestID   = "X-Request-ID"
+	RequestIDKey = "request_id"
+	TraceIDKey   = "trace_id"
+)
 
 type HTTPResponse struct {
 	Code      int    `json:"code"`

@@ -7,11 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const TraceIDKey = "trace_id"
-
 func GinParamError(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, HTTPResponse{
-		RequestID: c.GetHeader(RequestIDHeader),
+		RequestID: c.GetHeader(XRequestID),
 		TraceID:   c.GetString(TraceIDKey),
 		Code:      http.StatusBadRequest,
 		Message:   err.Error(),
@@ -21,7 +19,7 @@ func GinParamError(c *gin.Context, err error) {
 
 func GinError(c *gin.Context, err error) {
 	c.JSON(http.StatusOK, HTTPResponse{
-		RequestID: c.GetHeader(RequestIDHeader),
+		RequestID: c.GetHeader(XRequestID),
 		TraceID:   c.GetString(TraceIDKey),
 		Code:      http.StatusOK,
 		Message:   err.Error(),
@@ -31,7 +29,7 @@ func GinError(c *gin.Context, err error) {
 
 func GinSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, HTTPResponse{
-		RequestID: c.GetHeader(RequestIDHeader),
+		RequestID: c.GetHeader(XRequestID),
 		TraceID:   c.GetString(TraceIDKey),
 		Code:      http.StatusOK,
 		Message:   "ok",

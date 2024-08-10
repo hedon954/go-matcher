@@ -222,7 +222,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Accept Invite Request Body
         in: body
@@ -252,7 +252,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: player uid
         in: path
@@ -281,7 +281,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Change Role Request Body
         in: body
@@ -311,7 +311,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Create Group Request Body
         in: body
@@ -337,7 +337,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: User ID
         in: path
@@ -362,7 +362,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Enter Group Request Body
         in: body
@@ -392,7 +392,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: User ID
         in: path
@@ -417,7 +417,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Invite Request Body
         in: body
@@ -447,7 +447,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Kick Player Request Body
         in: body
@@ -477,7 +477,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Refuse Invite Request Body
         in: body
@@ -507,7 +507,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Set Nearby Join Group Request Body
         in: body
@@ -537,7 +537,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Set Recent Join Group Request Body
         in: body
@@ -567,7 +567,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: Set Voice State Request Body
         in: body
@@ -597,7 +597,7 @@ paths:
       parameters:
       - description: Request ID
         in: header
-        name: request_id
+        name: x-request-id
         type: string
       - description: player uid
         in: path

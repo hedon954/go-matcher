@@ -21,7 +21,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -67,7 +67,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -111,7 +111,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -157,7 +157,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -197,7 +197,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -235,7 +235,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -281,7 +281,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -319,7 +319,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -365,7 +365,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -411,7 +411,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -457,7 +457,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -503,7 +503,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -549,7 +549,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
@@ -595,7 +595,7 @@
                     {
                         "type": "string",
                         "description": "Request ID",
-                        "name": "request_id",
+                        "name": "x-request-id",
                         "in": "header"
                     },
                     {
