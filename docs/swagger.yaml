@@ -220,6 +220,10 @@ paths:
       - application/json
       description: accept an invitation based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Accept Invite Request Body
         in: body
         name: AcceptInviteReq
@@ -246,6 +250,10 @@ paths:
       - application/json
       description: cancel match
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: player uid
         in: path
         name: uid
@@ -271,6 +279,10 @@ paths:
       - application/json
       description: change a player's role based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Change Role Request Body
         in: body
         name: ChangeRoleReq
@@ -297,6 +309,10 @@ paths:
       - application/json
       description: create a new group based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Create Group Request Body
         in: body
         name: CreateGroup
@@ -319,6 +335,10 @@ paths:
       - application/json
       description: dissolve a group based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: User ID
         in: path
         name: uid
@@ -340,6 +360,10 @@ paths:
       - application/json
       description: enter a group based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Enter Group Request Body
         in: body
         name: EnterGroupReq
@@ -366,6 +390,10 @@ paths:
       - application/json
       description: exit a group based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: User ID
         in: path
         name: uid
@@ -387,6 +415,10 @@ paths:
       - application/json
       description: invite a player based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Invite Request Body
         in: body
         name: InviteReq
@@ -413,6 +445,10 @@ paths:
       - application/json
       description: kick a player based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Kick Player Request Body
         in: body
         name: KickPlayerReq
@@ -439,6 +475,10 @@ paths:
       - application/json
       description: refuse an invitation based on the request
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Refuse Invite Request Body
         in: body
         name: RefuseInviteReq
@@ -465,6 +505,10 @@ paths:
       - application/json
       description: set whether group can be entered from nearby players list
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Set Nearby Join Group Request Body
         in: body
         name: SetNearbyJoinGroupReq
@@ -491,6 +535,10 @@ paths:
       - application/json
       description: set whether group can be entered from recent players list
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Set Recent Join Group Request Body
         in: body
         name: SetRecentJoinGroupReq
@@ -517,6 +565,10 @@ paths:
       - application/json
       description: set player voice state
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: Set Voice State Request Body
         in: body
         name: SetVoiceStateReq
@@ -543,6 +595,10 @@ paths:
       - application/json
       description: start to match
       parameters:
+      - description: Request ID
+        in: header
+        name: request_id
+        type: string
       - description: player uid
         in: path
         name: uid

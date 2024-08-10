@@ -30,6 +30,12 @@ const docTemplate = `{
                 "summary": "accept an invitation",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
                         "description": "Accept Invite Request Body",
                         "name": "AcceptInviteReq",
                         "in": "body",
@@ -71,6 +77,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "description": "player uid",
                         "name": "uid",
                         "in": "path",
@@ -107,6 +119,12 @@ const docTemplate = `{
                 ],
                 "summary": "change a player's role",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "description": "Change Role Request Body",
                         "name": "ChangeRoleReq",
@@ -148,6 +166,12 @@ const docTemplate = `{
                 "summary": "create a new group",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
                         "description": "Create Group Request Body",
                         "name": "CreateGroup",
                         "in": "body",
@@ -183,6 +207,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "description": "User ID",
                         "name": "uid",
                         "in": "path",
@@ -213,6 +243,12 @@ const docTemplate = `{
                 ],
                 "summary": "enter a group",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "description": "Enter Group Request Body",
                         "name": "EnterGroupReq",
@@ -255,6 +291,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "description": "User ID",
                         "name": "uid",
                         "in": "path",
@@ -285,6 +327,12 @@ const docTemplate = `{
                 ],
                 "summary": "invite a player",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "description": "Invite Request Body",
                         "name": "InviteReq",
@@ -326,6 +374,12 @@ const docTemplate = `{
                 "summary": "kick a player",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
                         "description": "Kick Player Request Body",
                         "name": "KickPlayerReq",
                         "in": "body",
@@ -365,6 +419,12 @@ const docTemplate = `{
                 ],
                 "summary": "refuse an invitation",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "description": "Refuse Invite Request Body",
                         "name": "RefuseInviteReq",
@@ -406,6 +466,12 @@ const docTemplate = `{
                 "summary": "set nearby join group",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
                         "description": "Set Nearby Join Group Request Body",
                         "name": "SetNearbyJoinGroupReq",
                         "in": "body",
@@ -445,6 +511,12 @@ const docTemplate = `{
                 ],
                 "summary": "set recent join group",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "description": "Set Recent Join Group Request Body",
                         "name": "SetRecentJoinGroupReq",
@@ -486,6 +558,12 @@ const docTemplate = `{
                 "summary": "set voice state",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
+                    {
                         "description": "Set Voice State Request Body",
                         "name": "SetVoiceStateReq",
                         "in": "body",
@@ -525,6 +603,12 @@ const docTemplate = `{
                 ],
                 "summary": "start match",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "request_id",
+                        "in": "header"
+                    },
                     {
                         "type": "string",
                         "description": "player uid",

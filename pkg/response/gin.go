@@ -7,38 +7,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type HTTPResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-	Data    any    `json:"data"`
-}
-
-func NewHTTPResponse(bs []byte) *HTTPResponse {
-	var res = new(HTTPResponse)
-	_ = json.Unmarshal(bs, res)
-	return res
-}
+const TraceIDKey = "trace_id"
 
 func GinParamError(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, HTTPResponse{
-		Code:    http.StatusBadRequest,
-		Message: err.Error(),
-		Data:    nil,
+		RequestID: c.GetHeader(RequestIDHeader),
+		TraceID:   c.GetString(TraceIDKey),
+		Code:      http.StatusBadRequest,
+		Message:   err.Error(),
+		Data:      nil,
 	})
 }
 
 func GinError(c *gin.Context, err error) {
 	c.JSON(http.StatusOK, HTTPResponse{
-		Code:    http.StatusOK,
-		Message: err.Error(),
-		Data:    nil,
+		RequestID: c.GetHeader(RequestIDHeader),
+		TraceID:   c.GetString(TraceIDKey),
+		Code:      http.StatusOK,
+		Message:   err.Error(),
+		Data:      nil,
 	})
 }
+
 func GinSuccess(c *gin.Context, data any) {
 	c.JSON(http.StatusOK, HTTPResponse{
-		Code:    http.StatusOK,
-		Message: "ok",
-		Data:    data,
+		RequestID: c.GetHeader(RequestIDHeader),
+		TraceID:   c.GetString(TraceIDKey),
+		Code:      http.StatusOK,
+		Message:   "ok",
+		Data:      data,
 	})
 }
 

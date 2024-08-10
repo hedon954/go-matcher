@@ -5,9 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
-	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
-
+	"github.com/google/uuid"
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -19,6 +17,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/hedon954/go-matcher/pkg/safe"
+	"github.com/rs/zerolog/log"
 
 	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
 
@@ -36,7 +35,6 @@ import (
 func SetupHTTPServer() {
 	api := NewAPI(1, time.Second)
 	r := api.setupRouter()
-	r.Use(otelgin.Middleware("go-matcher"))
 	srv := &http.Server{
 		Addr:              ":5050",
 		Handler:           r.Handler(),
@@ -49,6 +47,8 @@ func SetupHTTPServer() {
 
 func (api *API) setupRouter() *gin.Engine {
 	r := gin.Default()
+	r.Use(func(c *gin.Context) { c.Set(response.TraceIDKey, uuid.NewString()) })
+
 	mg := r.Group("/match")
 	{
 		mg.POST("/create_group", api.CreateGroup)
@@ -66,11 +66,6 @@ func (api *API) setupRouter() *gin.Engine {
 		mg.POST("/start_match/:uid", api.StartMatch)
 		mg.POST("/cancel_match/:uid", api.CancelMatch)
 	}
-
-	// sg := r.Group("/stat")
-	// {
-	// 	sg.POST("/group/:group_id", api.StatGroup)
-	// }
 
 	docs.SwaggerInfo.BasePath = "/"
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
@@ -125,6 +120,7 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param CreateGroup body pto.CreateGroup true "Create Group Request Body"
 // @Success 200 {object} CreateGroupRsp
 // @Failure 200 {object} string
@@ -149,6 +145,7 @@ func (api *API) CreateGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param EnterGroupReq body EnterGroupReq true "Enter Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -173,6 +170,7 @@ func (api *API) EnterGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param uid path string true "User ID"
 // @Success 200 {object} string "ok"
 // @Failure 200 {object} string "Concrete Error Msg"
@@ -192,6 +190,7 @@ func (api *API) ExitGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param uid path string true "User ID"
 // @Success 200 {object} string "ok"
 // @Failure 200 {object} string "Concrete Error Msg"
@@ -211,6 +210,7 @@ func (api *API) DissolveGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param KickPlayerReq body KickPlayerReq true "Kick Player Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -235,6 +235,7 @@ func (api *API) KickPlayer(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param ChangeRoleReq body ChangeRoleReq true "Change Role Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -259,6 +260,7 @@ func (api *API) ChangeRole(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param InviteReq body InviteReq true "Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -283,6 +285,7 @@ func (api *API) Invite(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param AcceptInviteReq body AcceptInviteReq true "Accept Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -307,6 +310,7 @@ func (api *API) AcceptInvite(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param RefuseInviteReq body RefuseInviteReq true "Refuse Invite Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -328,6 +332,7 @@ func (api *API) RefuseInvite(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param SetNearbyJoinGroupReq body SetNearbyJoinGroupReq true "Set Nearby Join Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -352,6 +357,7 @@ func (api *API) SetNearbyJoinGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param SetRecentJoinGroupReq body SetRecentJoinGroupReq true "Set Recent Join Group Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -376,6 +382,7 @@ func (api *API) SetRecentJoinGroup(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param SetVoiceStateReq body SetVoiceStateReq true "Set Voice State Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -400,6 +407,7 @@ func (api *API) SetVoiceState(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param uid path string true "player uid"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
@@ -420,6 +428,7 @@ func (api *API) StartMatch(c *gin.Context) {
 // @Tags match service
 // @Accept json
 // @Produce json
+// @Param request_id header string false "Request ID"
 // @Param uid path string true "player uid"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
