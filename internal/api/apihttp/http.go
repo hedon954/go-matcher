@@ -16,7 +16,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/response"
-	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/rs/zerolog/log"
 
 	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
@@ -109,8 +108,8 @@ func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
 		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, roomMgr, groupChannel, roomChannel, delayTimer),
 	}
 
-	safe.Go(delayTimer.Start)
-	safe.Go(api.m.Start)
+	go delayTimer.Start()
+	go api.m.Start()
 	return api
 }
 

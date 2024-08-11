@@ -11,7 +11,7 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
-	server := apitcp.SetupTCPServer("zinx.yml")
+	server := apitcp.SetupTCPServer("cmd/tcp/zinx.yml")
 	defer server.Stop()
 
 	sigs := make(chan os.Signal, 1)

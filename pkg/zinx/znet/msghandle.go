@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
@@ -44,7 +43,7 @@ func (mh *MsgHandle) AddRouter(msgID uint32, handle ziface.HandleFunc) {
 func (mh *MsgHandle) StarWorkerPool() {
 	for i := 0; i < int(mh.WorkerPoolSize); i++ {
 		mh.TaskQueue[i] = make(chan ziface.IRequest, zutils.GlobalObject.MaxWorkerTaskLen)
-		safe.Go(func() { mh.startOneWorker(i, mh.TaskQueue[i]) })
+		go mh.startOneWorker(i, mh.TaskQueue[i])
 	}
 }
 

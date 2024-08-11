@@ -42,8 +42,8 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, mh z
 }
 
 func (c *Connection) Start() {
-	safe.Go(c.startReader)
-	safe.Go(c.startWriter)
+	go c.startReader()
+	go c.startWriter()
 
 	c.TCPServer.CallOnConnStart(c)
 }

@@ -6,7 +6,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
@@ -60,7 +59,7 @@ func (s *Server) Start() {
 	time.Sleep(time.Millisecond)
 	fmt.Printf("start Zinx server: %s successfully, now listening\n", s.Name)
 
-	safe.Go(func() {
+	go func() {
 		for {
 			conn, err := listener.AcceptTCP()
 			if err != nil {
@@ -75,9 +74,9 @@ func (s *Server) Start() {
 			}
 
 			dealConn := NewConnection(s, conn, s.ConnIDGen.Add(1), s.msgHandler)
-			safe.Go(dealConn.Start)
+			go dealConn.Start()
 		}
-	})
+	}()
 }
 
 func (s *Server) Stop() {

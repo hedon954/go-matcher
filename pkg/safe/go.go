@@ -64,6 +64,7 @@ func Call(f func(), panicCallback ...PanicCallback) {
 
 // Go safely executes the provided function f in a new goroutine and recovers from any panic,
 // invoking the registered panic callbacks with the error and stack trace.
+// NOTE: don't use it in the function never return!!!!!
 func Go(f func(), panicCallback ...PanicCallback) {
 	sg.Add(1)
 	go func() {
