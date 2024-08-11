@@ -91,8 +91,8 @@ func (s *Server) Serve() {
 	select {}
 }
 
-func (s *Server) AddRouter(msgID uint32, route ziface.IRouter) {
-	s.msgHandler.AddRouter(msgID, route)
+func (s *Server) AddRouter(msgID uint32, handle ziface.HandleFunc) {
+	s.msgHandler.AddRouter(msgID, handle)
 
 	fmt.Printf("Add Router[%d] successfully!\n", msgID)
 }

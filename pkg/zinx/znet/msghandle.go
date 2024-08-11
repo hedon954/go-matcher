@@ -10,36 +10,34 @@ import (
 )
 
 type MsgHandle struct {
-	Apis           map[uint32]ziface.IRouter
+	Apis           map[uint32]ziface.HandleFunc
 	WorkerPoolSize uint32
 	TaskQueue      []chan ziface.IRequest
 }
 
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
-		Apis:           make(map[uint32]ziface.IRouter),
+		Apis:           make(map[uint32]ziface.HandleFunc),
 		WorkerPoolSize: zutils.GlobalObject.WorkPoolSize,
 		TaskQueue:      make([]chan ziface.IRequest, zutils.GlobalObject.WorkPoolSize),
 	}
 }
 
 func (mh *MsgHandle) DoMsgHandle(request ziface.IRequest) {
-	handler, ok := mh.Apis[request.GetMsgID()]
+	handle, ok := mh.Apis[request.GetMsgID()]
 	if !ok {
 		fmt.Println("api msgID = ", request.GetMsgID(), " is not FOUND")
 		return
 	}
 
-	handler.PreHandle(request)
-	handler.Handle(request)
-	handler.PostHandle(request)
+	handle(request)
 }
 
-func (mh *MsgHandle) AddRouter(msgID uint32, router ziface.IRouter) {
+func (mh *MsgHandle) AddRouter(msgID uint32, handle ziface.HandleFunc) {
 	if _, ok := mh.Apis[msgID]; ok {
 		panic("repeated api, msgID = " + strconv.Itoa(int(msgID)))
 	}
-	mh.Apis[msgID] = router
+	mh.Apis[msgID] = handle
 	fmt.Println("Add api msgID = ", msgID)
 }
 

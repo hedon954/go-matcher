@@ -14,8 +14,8 @@ func main() {
 	s.SetOnConnStart(DoConnectionStart)
 	s.SetOnConnStop(DoConnectionStop)
 
-	s.AddRouter(0, &PingRouter{})
-	s.AddRouter(1, &HelloZinxRouter{})
+	s.AddRouter(0, PingHandle)
+	s.AddRouter(1, HelloHandle)
 
 	s.Serve()
 }
