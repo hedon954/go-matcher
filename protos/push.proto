@@ -1,0 +1,69 @@
+syntax = "proto3";
+
+option go_package = "internal/pb";
+package pb;
+
+import "protos/common.proto";
+import "protos/match.proto";
+
+message PushPlayerOnlineState {
+  PlayerOnlineState online_state = 1;
+}
+
+message PushGroupInfo {
+  GroupInfo group_info = 1;
+}
+
+
+message PushInviteMsg {
+  string inviter_uid = 1;
+  string inviter_name = 2;
+  string invitee_uid = 3;
+  EnterGroupSource source = 4;
+  GameMode game_mode = 5;
+  int64 mode_version = 6;
+}
+
+message PushAcceptInvite {
+  string invitee_uid = 1;
+  string invitee_name = 2;
+}
+
+message PushRefuseInvite {
+  string invitee_uid = 1;
+  string invitee_name = 2;
+  string refuse_msg = 3;
+}
+
+message PushGroupDissolve {
+  int64 group_id = 1;
+}
+
+message PushGroupState {
+  GroupState group_state = 1;
+}
+
+message PushPlayerVoiceState {
+  string uid = 1;
+  PlayerVoiceState voice_state = 2;
+}
+
+message PushKick {
+  int64 group_id = 2;
+}
+
+message PushMatchInfo {
+  MatchInfo match_info = 1;
+}
+
+message PushCancelMatch {
+  string cancel_uid = 1;
+}
+
+message PushReady {
+  string ready_uid = 1;
+}
+
+message PushUnready {
+  string unready_uid = 1;
+}

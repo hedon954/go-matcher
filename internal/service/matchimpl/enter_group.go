@@ -29,6 +29,6 @@ func (impl *Impl) enterGroup(ctx context.Context, p entry.Player, g entry.Group)
 		return err
 	}
 	impl.pushService.PushPlayerOnlineState(ctx, []string{p.UID()}, entry.PlayerOnlineStateInGroup)
-	impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
+	impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 	return nil
 }

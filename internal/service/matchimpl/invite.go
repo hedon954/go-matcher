@@ -27,6 +27,7 @@ func (impl *Impl) invite(ctx context.Context, inviter entry.Player, inviteeUID s
 	g.Base().AddInviteRecord(inviteeUID, impl.nowFunc())
 	impl.pushService.PushInviteMsg(ctx, &pto.InviteMsg{
 		InviterUID:  inviter.UID(),
+		InviterName: inviter.Base().Nickname,
 		InviteeUID:  inviteeUID,
 		Source:      pto.EnterGroupSourceTypeInvite,
 		GameMode:    g.Base().GameMode,

@@ -11,6 +11,6 @@ func (impl *Impl) uploadPlayerAttr(ctx context.Context, p entry.Player, g entry.
 	if err := p.SetAttr(attr); err != nil {
 		return err
 	}
-	impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
+	impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 	return nil
 }

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/hedon954/go-matcher/pkg/safe"
-	"github.com/hedon954/go-matcher/pkg/zinx/utils"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
+	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 type Server struct {
@@ -24,13 +24,13 @@ type Server struct {
 }
 
 func NewServer(conf string) ziface.IServer {
-	utils.GlobalObject.Reload(conf)
+	zutils.GlobalObject.Reload(conf)
 
 	s := &Server{
 		IPVersion:  "tcp4",
-		Name:       utils.GlobalObject.Name,
-		IP:         utils.GlobalObject.Host,
-		Port:       utils.GlobalObject.TCPPort,
+		Name:       zutils.GlobalObject.Name,
+		IP:         zutils.GlobalObject.Host,
+		Port:       zutils.GlobalObject.TCPPort,
 		ConnIDGen:  atomic.Uint64{},
 		msgHandler: NewMsgHandle(),
 		ConnMgr:    NewConnManager(),
@@ -41,8 +41,8 @@ func NewServer(conf string) ziface.IServer {
 func (s *Server) Start() {
 	fmt.Printf("[START] Server listener at IP: %s, Port: %d, is starting\n", s.IP, s.Port)
 	fmt.Printf("[Zinx] Version: %s, MaxConn: %d, WorkerPoolSize: %d, MaxWorkerTaskLen: %d\n",
-		utils.GlobalObject.Version, utils.GlobalObject.MaxConn,
-		utils.GlobalObject.WorkPoolSize, utils.GlobalObject.MaxWorkerTaskLen)
+		zutils.GlobalObject.Version, zutils.GlobalObject.MaxConn,
+		zutils.GlobalObject.WorkPoolSize, zutils.GlobalObject.MaxWorkerTaskLen)
 
 	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
 	if err != nil {
@@ -68,8 +68,8 @@ func (s *Server) Start() {
 				continue
 			}
 
-			if utils.GlobalObject.MaxConn > 0 && s.ConnMgr.Len() > utils.GlobalObject.MaxConn {
-				fmt.Println("too many connections, MaxConn = ", utils.GlobalObject.MaxConn)
+			if zutils.GlobalObject.MaxConn > 0 && s.ConnMgr.Len() > zutils.GlobalObject.MaxConn {
+				fmt.Println("too many connections, MaxConn = ", zutils.GlobalObject.MaxConn)
 				_ = conn.Close()
 				continue
 			}

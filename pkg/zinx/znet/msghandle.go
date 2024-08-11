@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/hedon954/go-matcher/pkg/safe"
-	"github.com/hedon954/go-matcher/pkg/zinx/utils"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
+	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 type MsgHandle struct {
@@ -18,8 +18,8 @@ type MsgHandle struct {
 func NewMsgHandle() *MsgHandle {
 	return &MsgHandle{
 		Apis:           make(map[uint32]ziface.IRouter),
-		WorkerPoolSize: utils.GlobalObject.WorkPoolSize,
-		TaskQueue:      make([]chan ziface.IRequest, utils.GlobalObject.WorkPoolSize),
+		WorkerPoolSize: zutils.GlobalObject.WorkPoolSize,
+		TaskQueue:      make([]chan ziface.IRequest, zutils.GlobalObject.WorkPoolSize),
 	}
 }
 
@@ -45,7 +45,7 @@ func (mh *MsgHandle) AddRouter(msgID uint32, router ziface.IRouter) {
 
 func (mh *MsgHandle) StarWorkerPool() {
 	for i := 0; i < int(mh.WorkerPoolSize); i++ {
-		mh.TaskQueue[i] = make(chan ziface.IRequest, utils.GlobalObject.MaxWorkerTaskLen)
+		mh.TaskQueue[i] = make(chan ziface.IRequest, zutils.GlobalObject.MaxWorkerTaskLen)
 		safe.Go(func() { mh.startOneWorker(i, mh.TaskQueue[i]) })
 	}
 }

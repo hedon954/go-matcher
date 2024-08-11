@@ -6,3 +6,4 @@ ignore:
   - 'fixtures'
   - 'examples/otel'
   - 'examples/zinx'
+  - 'internal/pb'

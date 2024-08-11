@@ -9,6 +9,7 @@ import (
 // InviteMsg is the invitation message pushed to the client.
 type InviteMsg struct {
 	InviterUID  string
+	InviterName string
 	InviteeUID  string
 	Source      EnterGroupSourceType
 	GameMode    constant.GameMode
@@ -21,8 +22,8 @@ type UserVoiceState struct {
 	State int
 }
 
-// GroupPlayers is the group players info pushed to the clients to sync group info.
-type GroupPlayers struct {
+// GroupInfo is the group players info pushed to the clients to sync group info.
+type GroupInfo struct {
 	GroupID     int64
 	Captain     string
 	GameMode    constant.GameMode
@@ -31,21 +32,39 @@ type GroupPlayers struct {
 	// Positions indicate whether positions in the room are occupied.
 	Positions []bool
 
-	// Infos holds the player infos, related to the player position.
-	// If Positions[i] == false, means Infos[i] would be nil.
-	Infos []*GroupPlayerInfo
+	// PlayerInfos holds the player infos, related to the player position.
+	// If Positions[i] == false, means PlayerInfos[i] would be nil.
+	PlayerInfos []*GroupPlayerInfo
 }
 
 type GroupPlayerInfo struct {
-	UID   string
-	State int
-	Role  int
-
+	UID         string
+	Role        int
+	OnlineState int
+	VoiceState  int
+	Ready       bool
 	// ... add more common fields according to your requirement
 }
 
 // MatchInfo is the match result pushed to the client.
-type MatchInfo struct{}
+type MatchInfo struct {
+	RoomID          int64
+	GameMode        constant.GameMode
+	ModeVersion     int64
+	MatchStrategy   constant.MatchStrategy
+	MatchedTimeUnix int64
+	Teams           []MatchTeamInfo
+	GameServerInfo  GameServerInfo
+}
+type MatchTeamInfo struct {
+	TeamID  int
+	Players []MatchPlayerInfo
+}
+type MatchPlayerInfo struct {
+	UID     string
+	GroupID int64
+	Attr    Attribute
+}
 
 // CancelMatch is the cancel match signal pushed to the client.
 type CancelMatch struct {

@@ -194,7 +194,7 @@ func (impl *Impl) EnterGroup(ctx context.Context, info *pto.EnterGroup, groupID 
 			} else {
 				// can play together, refresh the player info and broadcast the group player infos
 				p.Base().PlayerInfo = info.PlayerInfo
-				impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
+				impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 				return nil
 			}
 		} else {

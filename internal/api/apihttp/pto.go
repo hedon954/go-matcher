@@ -1,4 +1,4 @@
-package api
+package apihttp
 
 import (
 	"github.com/hedon954/go-matcher/internal/entry"

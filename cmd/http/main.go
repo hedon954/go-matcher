@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/hedon954/go-matcher/internal/api"
+	"github.com/hedon954/go-matcher/internal/api/apihttp"
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/rs/zerolog/log"
 )
@@ -9,7 +9,7 @@ import (
 func main() {
 	startSafe()
 	defer stopSafe()
-	api.SetupHTTPServer()
+	apihttp.SetupHTTPServer()
 }
 
 func startSafe() {

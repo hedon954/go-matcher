@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 
 	"github.com/hedon954/go-matcher/pkg/safe"
-	"github.com/hedon954/go-matcher/pkg/zinx/utils"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
+	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 type Connection struct {
@@ -33,7 +33,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, mh z
 		isClosed:     atomic.Bool{},
 		MsgHandler:   mh,
 		ExitBuffChan: make(chan struct{}, 1),
-		msgChan:      make(chan []byte, utils.GlobalObject.MaxMsgChanLen),
+		msgChan:      make(chan []byte, zutils.GlobalObject.MaxMsgChanLen),
 		properties:   make(map[string]any),
 	}
 
@@ -152,7 +152,7 @@ func (c *Connection) startReader() {
 
 		// handle request
 		req := Request{conn: c, msg: msg}
-		if utils.GlobalObject.WorkPoolSize > 0 {
+		if zutils.GlobalObject.WorkPoolSize > 0 {
 			c.MsgHandler.SendMsgToTaskQueue(&req)
 		} else {
 			safe.Go(func() { c.MsgHandler.DoMsgHandle(&req) })

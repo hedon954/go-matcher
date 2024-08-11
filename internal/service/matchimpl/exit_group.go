@@ -14,7 +14,7 @@ func (impl *Impl) exitGroup(ctx context.Context, p entry.Player, g entry.Group) 
 	if empty {
 		return impl.dissolveGroup(ctx, g)
 	} else {
-		impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
+		impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 	}
 	return nil
 }

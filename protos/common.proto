@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+option go_package = "internal/pb";
+package pb;
+
+// CommonRsp is a general-purpose response structure used in request-response scenarios.
+// It provides a standardized way to return the status of a request along with optional
+// serialized data and tracing information.
+//
+// Fields:
+// - code: The response code indicating the result of the request. This can be an enum
+//   representing success, failure, or any specific error codes.
+// - message: A human-readable error message or informational message. Typically used when
+//   `code` indicates a failure.
+// - req_type: The type of the request that this response corresponds to. This can help in
+//   identifying the nature or category of the request, and can be an enum indicating
+//   different request types.
+// - request_id: The ID of the original request that this response corresponds to. This
+//   helps in tracking and correlating requests and responses, especially in asynchronous
+//   or distributed systems.
+// - trace_id: A unique identifier used for tracing the request across multiple services or
+//   processes. Useful for debugging and performance monitoring in complex systems.
+// - data: Serialized protobuf data that may include additional information relevant to the
+//   response. This field is repeated to support multiple pieces of data.
+message CommonRsp {
+  RspCode code = 1;
+  string message = 2; // error message
+  ReqType req_type = 3;
+  string request_id = 4;
+  string trace_id = 5;
+  repeated bytes data = 6; // protobuf serialized data
+}
+
+
+// PushMsg is the structure used for server-initiated messages sent to the client.
+// These messages are typically used for events or updates that the server needs
+// to notify the client about, without a prior request from the client.
+//
+// Fields:
+// - push_type: Indicates the type of push notification being sent. This is determined by
+//   the PUSH_TYPE enum.
+// - data: Serialized protobuf data containing the content of the push message.
+//   This could include event details, state updates, or any relevant information
+//   the server needs to convey to the client.
+message PushMsg {
+  PushType push_type = 1;
+  bytes data = 2; // protobuf serialized data
+}
+
+
+// a REQTYPE means one type of api call
+enum ReqType {
+  REQ_TYPE_BIND = 0;
+  REQ_TYPE_CREATE_GROUP = 1;
+  REQ_TYPE_ENTER_GROUP = 2;
+  REQ_TYPE_EXIT_GROUP = 3;
+  REQ_TYPE_DISSOLVE_GROUP = 4;
+  REQ_TYPE_INVITE = 5;
+  REQ_TYPE_ACCEPT_INVITE = 6;
+  REQ_TYPE_REFUSE_INVITE = 7;
+  REQ_TYPE_KICK_PLAYER = 8;
+  REQ_TYPE_CHANGE_ROLE = 9;
+  REQ_TYPE_SET_NEARBY_JOIN_GROUP = 10;
+  REQ_TYPE_SET_RECENT_JOIN_GROUP = 11;
+  REQ_TYPE_SET_VOICE_STATE = 12;
+  REQ_TYPE_READY = 13;
+  REQ_TYPE_UNREADY = 14;
+  REQ_TYPE_START_MATCH = 15;
+  REQ_TYPE_CANCEL_MATCH = 16;
+  REQ_TYPE_UPLOAD_PLAYER_ATTR = 17;
+}
+
+enum RspCode {
+  RSP_CODE_UNKNOWN = 0;          // unknown
+  RSP_CODE_SUCCESS = 200;        // success
+  RSP_CODE_BAD_REQUEST = 400;    // bad request (param error, etc...)
+  RSP_CODE_UNAUTHORIZED = 401;   // no login
+  RSP_CODE_FORBIDDEN = 403;      // no permission
+  RSP_CODE_NOT_FOUND = 404;      // msg id not found
+  RSP_CODE_SERVER_ERROR = 500;   // unified server error
+  RSP_CODE_USER_ERROR = 4000;    // unified user error
+}
+
+enum PushType {
+  PUSH_TYPE_UNDEFINED = 0;
+  PUSH_TYPE_PLAYER_ONLINE_STATE = 1;
+  PUSH_TYPE_GROUP_INFO = 2;
+  PUSH_TYPE_INVITE_MSG = 3;
+  PUSH_TYPE_ACCEPT_INVITE = 4;
+  PUSH_TYPE_REFUSE_INVITE = 5;
+  PUSH_TYPE_GROUP_DISSOLVE = 6;
+  PUSH_TYPE_GROUP_STATE = 7;
+  PUSH_TYPE_PLAYER_VOICE_STATE = 8;
+  PUSH_TYPE_KICK_MSG = 9;
+  PUSH_TYPE_MATCH_SUCCESS = 10;
+  PUSH_TYPE_CANCEL_MATCH = 11;
+  PUSH_TYPE_READY = 12;
+  PUSH_TYPE_UNREADY = 13;
+}
+
+
+enum PlayerOnlineState {
+  PLAYER_ONLINE_STATE_OFFLINE = 0;
+  PLAYER_ONLINE_STATE_ONLINE = 1;
+  PLAYER_ONLINE_STATE_IN_GROUP = 2;
+  PLAYER_ONLINE_STATE_IN_MATCH = 3;
+  PLAYER_ONLINE_STATE_IN_GAME = 4;
+  PLAYER_ONLINE_STATE_IN_SETTLE = 5;
+}
+
+enum GameMode {
+  GAME_MODE_TEST = 0;
+  GAME_MODE_GOAT_GAME = 905;
+}
+
+enum PlayerVoiceState {
+  PLAYER_VOICE_STATE_MUTE = 0;
+  PLAYER_VOICE_STATE_UNMUTE = 1;
+}
+
+enum GroupState {
+  GROUP_STATE_INVITE = 0;
+  GROUP_STATE_MATCH = 1;
+  GROUP_STATE_GAME = 2;
+  GROUP_STATE_DISSOLVED = 3;
+}
+
+enum NetProtocol {
+  NET_PROTOCOL_TCP = 0;
+  NET_PROTOCOL_UDP = 1;
+  NET_PROTOCOL_WS = 2;
+  NET_PROTOCOL_WSS = 3;
+  NET_PROTOCOL_KCP = 4;
+  NET_PROTOCOL_GRPC = 5;
+  NET_PROTOCOL_GRPCS = 6;
+}

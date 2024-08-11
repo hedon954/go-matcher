@@ -33,7 +33,7 @@ type Group interface {
 
 	// GetPlayerInfos returns the player infos of the group.
 	// This method usually used for sync group info to client.
-	GetPlayerInfos() *pto.GroupPlayers
+	GetGroupInfo() *pto.GroupInfo
 
 	// CanStartMatch checks if the group can start to match.
 	// Maybe some game mode need to check if the group is full or not.
@@ -319,7 +319,7 @@ func (g *GroupBase) CheckState(valids ...GroupState) error {
 	panic("unreachable")
 }
 
-func (g *GroupBase) GetPlayerInfos() *pto.GroupPlayers {
+func (g *GroupBase) GetGroupInfo() *pto.GroupInfo {
 	// TODO: player can change position, set position when crate group or enter group
 	// positions := make([]bool, g.PlayerLimit())
 	// infos := make([]*pto.GroupPlayerInfo, len(g.players))
@@ -332,7 +332,7 @@ func (g *GroupBase) GetPlayerInfos() *pto.GroupPlayers {
 	// 	})
 	// }
 
-	return &pto.GroupPlayers{
+	return &pto.GroupInfo{
 		GroupID:     g.GroupID,
 		Captain:     g.GetCaptain().UID(),
 		GameMode:    g.GameMode,

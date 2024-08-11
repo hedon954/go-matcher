@@ -1,0 +1,231 @@
+syntax = "proto3";
+
+option go_package = "internal/pb";
+package pb;
+
+import "protos/common.proto";
+
+enum EnterGroupSource {
+  ENTER_GROUP_SOURCE_INVITATION = 0;
+  ENTER_GROUP_SOURCE_NEARBY = 1;
+  ENTER_GROUP_SOURCE_RECENT = 2;
+  ENTER_GROUP_SOURCE_FRIEND = 3;
+  ENTER_GROUP_SOURCE_WORLD_CHANNEL = 4;
+  ENTER_GROUP_SOURCE_CLAN_CHANNEL = 5;
+  ENTER_GROUP_SOURCE_SHARE = 6;
+}
+
+enum GroupRole {
+  GROUP_ROLE_NORMAL = 0;
+  GROUP_ROLE_CAPTAIN = 1;
+}
+
+message PlayerInfo {
+  string uid = 1;
+  GameMode game_mode = 2;
+  int64 mode_version = 3;
+  int64 star = 4;
+  int64 rank = 5;
+}
+
+// --->[START] Bind
+message BindReq {
+  string uid = 1;
+  string token = 2; // get from auth service, should contains user basic infos
+  string client_version = 3;
+  string hotfix_version = 4;
+  string client_external_ip = 5;
+  map<int32,int64> mode_versions = 6;  // key: game mode, value: mode version
+}
+
+message BindRsp {
+  PlayerOnlineState online_state = 1;
+  GroupInfo group_info = 2; // if not nil, means player is in a group, client should recover it
+  MatchInfo match_info = 3; // if not nil, means player is in a game, client should recover it
+}
+
+message GroupInfo {
+  int64 group_id = 1;
+  string captain = 2;
+  GameMode game_mode = 3;
+  int64 mode_version = 4;
+  repeated bool positions = 5;
+  repeated GroupPlayerInfo player_infos = 6;
+}
+
+message GroupPlayerInfo {
+  string uid = 1;
+  int32 role = 2;
+  PlayerOnlineState online_state = 3;
+  PlayerVoiceState voice_state = 4;
+  bool ready = 5;
+}
+
+message MatchInfo {
+  int64 room_id = 1;
+  GameMode game_mode = 2;
+  int64 mode_version = 3;
+  int32 match_strategy = 4;
+  int64 matched_time_unix = 5;
+  repeated MatchTeamInfo teams = 6;
+  GameServerInfo game_server_info = 7;
+}
+message MatchTeamInfo {
+  int32 team_id = 1;
+  repeated MatchPlayerInfo players = 2;
+}
+message MatchPlayerInfo {
+  string uid = 1;
+  int64 group_id = 2;
+  UserAttribute attr = 3;
+}
+message GameServerInfo {
+  string host = 1;
+  int32 port = 2;
+  NetProtocol protocol = 3;
+}
+
+message UserAttribute {
+  string nickname = 1;
+  string avatar = 2;
+  int64 star = 3;
+}
+// <---[END] Bind
+
+// --->[START] CreateGroup
+message CreateGroupReq {
+  PlayerInfo player_info = 1;
+  Glicko2Info glicko2_info = 2;
+}
+message Glicko2Info {
+  double mmr = 1;
+  int64 star = 2;
+  int64 rank = 3;
+}
+message CreateGroupRsp {
+  int64 group_id = 1;
+}
+// <---[END] CreateGroup
+
+// --->[START] EnterGroup
+message EnterGroupReq {
+  PlayerInfo player_info = 1;
+  EnterGroupSource source = 2;
+}
+
+message EnterGroupRsp {}
+// <---[END] EnterGroup
+
+// --->[START] ExitGroup
+message ExitGroupReq {}
+message ExitGroupRsp {}
+// <---[END] ExitGroup
+
+// --->[START] DissolveGroup
+message DissolveGroupReq {}
+message DissolveGroupRsp {}
+// <---[END] DissolveGroup
+
+// --->[START] Invite
+message InviteReq {
+  string invitee_uid = 1;
+}
+message InviteRsp {}
+// <---[END] Invite
+
+// --->[START] AcceptInvite
+message AcceptInviteReq {
+  string inviter_uid = 1;
+  PlayerInfo invitee_info = 2;
+  int64 group_id = 3;
+}
+
+message AcceptInviteRsp {}
+// <---[END] AcceptInvite
+
+// --->[START] RefuseInvite
+message RefuseInviteReq {
+  string inviter_uid = 1;
+  int64 group_id = 2;
+  string refuse_msg = 3;
+}
+
+message RefuseInviteRsp {}
+// <---[END] RefuseInvite
+
+
+// --->[START] KickPlayer
+message KickPlayerReq {
+  string kicked_uid = 1;
+}
+
+message KickPlayerRsp {}
+// <---[END] KickPlayer
+
+// --->[START] ChangeRole
+message ChangeRoleReq {
+  string target_uid = 1;
+  GroupRole role = 2;
+}
+
+message ChangeRoleRsp {}
+// <---[END] ChangeRole
+
+// --->[START] SetNearbyJoinGroup
+message SetNearbyJoinGroupReq {
+  bool allow = 1;
+}
+message SetNearbyJoinGroupRsp {}
+// <---[END] SetNearbyJoinGroup
+
+
+// --->[START] SetRecentJoinGroup
+message SetRecentJoinGroupReq {
+  bool allow = 1;
+}
+
+message SetRecentJoinGroupRsp {}
+// <---[END] SetRecentJoinGroup
+
+// --->[START] SetVoiceState
+message SetVoiceStateReq {
+  PlayerVoiceState state = 1;
+}
+
+message SetVoiceStateRsp {}
+// <---[END] SetVoiceState
+
+// --->[START] Ready
+message ReadyReq {}
+message ReadyRsp {}
+// <---[END] Ready
+
+// --->[START] Unready
+message UnreadyReq {}
+message UnreadyRsp {}
+// <---[END] Unready
+
+// --->[START] StartMatch
+message StartMatchReq {}
+message StartMatchRsp {}
+// <---[END] StartMatch
+
+// --->[START] CancelMatch
+message CancelMatchReq {}
+message CancelMatchRsp {}
+// <---[END] CancelMatch
+
+// --->[START] UploadPlayerAttr
+message UploadPlayerAttrReq {
+  UserAttribute attr = 1;
+  oneof type {
+    GoatGameAttribute goat_game_attr = 2;
+  }
+}
+
+message GoatGameAttribute {
+  double mmr = 1;
+}
+
+message UploadPlayerAttrRsp {}
+// <---[END] UploadPlayerAttr

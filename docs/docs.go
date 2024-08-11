@@ -41,7 +41,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.AcceptInviteReq"
+                            "$ref": "#/definitions/apihttp.AcceptInviteReq"
                         }
                     }
                 ],
@@ -131,7 +131,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.ChangeRoleReq"
+                            "$ref": "#/definitions/apihttp.ChangeRoleReq"
                         }
                     }
                 ],
@@ -255,7 +255,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.EnterGroupReq"
+                            "$ref": "#/definitions/apihttp.EnterGroupReq"
                         }
                     }
                 ],
@@ -339,7 +339,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.InviteReq"
+                            "$ref": "#/definitions/apihttp.InviteReq"
                         }
                     }
                 ],
@@ -385,7 +385,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.KickPlayerReq"
+                            "$ref": "#/definitions/apihttp.KickPlayerReq"
                         }
                     }
                 ],
@@ -431,7 +431,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.RefuseInviteReq"
+                            "$ref": "#/definitions/apihttp.RefuseInviteReq"
                         }
                     }
                 ],
@@ -477,7 +477,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.SetNearbyJoinGroupReq"
+                            "$ref": "#/definitions/apihttp.SetNearbyJoinGroupReq"
                         }
                     }
                 ],
@@ -523,7 +523,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.SetRecentJoinGroupReq"
+                            "$ref": "#/definitions/apihttp.SetRecentJoinGroupReq"
                         }
                     }
                 ],
@@ -569,7 +569,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.SetVoiceStateReq"
+                            "$ref": "#/definitions/apihttp.SetVoiceStateReq"
                         }
                     }
                 ],
@@ -635,7 +635,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api.AcceptInviteReq": {
+        "apihttp.AcceptInviteReq": {
             "type": "object",
             "required": [
                 "group_id",
@@ -654,7 +654,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ChangeRoleReq": {
+        "apihttp.ChangeRoleReq": {
             "type": "object",
             "required": [
                 "captain_uid",
@@ -673,7 +673,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CreateGroupRsp": {
+        "apihttp.CreateGroupRsp": {
             "type": "object",
             "properties": {
                 "group_id": {
@@ -681,7 +681,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.EnterGroupReq": {
+        "apihttp.EnterGroupReq": {
             "type": "object",
             "required": [
                 "group_id",
@@ -696,7 +696,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.InviteReq": {
+        "apihttp.InviteReq": {
             "type": "object",
             "required": [
                 "invitee_uid",
@@ -711,7 +711,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.KickPlayerReq": {
+        "apihttp.KickPlayerReq": {
             "type": "object",
             "required": [
                 "captain_uid",
@@ -726,7 +726,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.RefuseInviteReq": {
+        "apihttp.RefuseInviteReq": {
             "type": "object",
             "required": [
                 "group_id",
@@ -748,7 +748,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.SetNearbyJoinGroupReq": {
+        "apihttp.SetNearbyJoinGroupReq": {
             "type": "object",
             "required": [
                 "captain_uid"
@@ -762,7 +762,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.SetRecentJoinGroupReq": {
+        "apihttp.SetRecentJoinGroupReq": {
             "type": "object",
             "required": [
                 "captain_uid"
@@ -776,7 +776,7 @@ const docTemplate = `{
                 }
             }
         },
-        "api.SetVoiceStateReq": {
+        "apihttp.SetVoiceStateReq": {
             "type": "object",
             "required": [
                 "uid"
@@ -838,12 +838,24 @@ const docTemplate = `{
             ],
             "properties": {
                 "game_mode": {
-                    "$ref": "#/definitions/constant.GameMode"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constant.GameMode"
+                        }
+                    ],
+                    "example": 905
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
                 },
                 "mode_version": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "star": {
                     "type": "integer"
                 },
                 "uid": {
@@ -860,16 +872,28 @@ const docTemplate = `{
             ],
             "properties": {
                 "game_mode": {
-                    "$ref": "#/definitions/constant.GameMode"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constant.GameMode"
+                        }
+                    ],
+                    "example": 905
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
                 },
                 "mode_version": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rank": {
                     "type": "integer"
                 },
                 "source": {
                     "$ref": "#/definitions/pto.EnterGroupSourceType"
+                },
+                "star": {
+                    "type": "integer"
                 },
                 "uid": {
                     "type": "string"
@@ -929,12 +953,24 @@ const docTemplate = `{
             ],
             "properties": {
                 "game_mode": {
-                    "$ref": "#/definitions/constant.GameMode"
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/constant.GameMode"
+                        }
+                    ],
+                    "example": 905
                 },
                 "glicko2_info": {
                     "$ref": "#/definitions/pto.Glicko2Info"
                 },
                 "mode_version": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "star": {
                     "type": "integer"
                 },
                 "uid": {

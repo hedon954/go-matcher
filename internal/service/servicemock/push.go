@@ -10,7 +10,7 @@ import (
 type PushMock struct{}
 
 func (p *PushMock) PushPlayerOnlineState(context.Context, []string, entry.PlayerOnlineState) {}
-func (p *PushMock) PushGroupPlayers(context.Context, []string, *pto.GroupPlayers)            {}
+func (p *PushMock) PushGroupInfo(context.Context, []string, *pto.GroupInfo)                  {}
 func (p *PushMock) PushInviteMsg(context.Context, *pto.InviteMsg)                            {}
 func (p *PushMock) PushAcceptInvite(context.Context, string, string)                         {}
 func (p *PushMock) PushRefuseInvite(context.Context, string, string, string)                 {}

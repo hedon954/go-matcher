@@ -17,5 +17,5 @@ func (impl *Impl) kickPlayer(ctx context.Context, kicked entry.Player, g entry.G
 
 func (impl *Impl) removePlayerFromGroup(ctx context.Context, p entry.Player, g entry.Group) {
 	g.Base().RemovePlayer(p)
-	impl.pushService.PushGroupPlayers(ctx, g.Base().UIDs(), g.GetPlayerInfos())
+	impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 }

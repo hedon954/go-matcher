@@ -12,8 +12,8 @@ type Push interface {
 	// PushPlayerOnlineState pushes the player's online state to the client.
 	PushPlayerOnlineState(ctx context.Context, uids []string, state entry.PlayerOnlineState)
 
-	// PushGroupPlayers pushes the group's players infos to the client.
-	PushGroupPlayers(ctx context.Context, uids []string, users *pto.GroupPlayers)
+	// PushGroupInfo pushes the group's players infos to the client.
+	PushGroupInfo(ctx context.Context, uids []string, users *pto.GroupInfo)
 
 	// PushInviteMsg pushes the invite message to the client.
 	PushInviteMsg(ctx context.Context, param *pto.InviteMsg)
@@ -46,5 +46,5 @@ type Push interface {
 	PushReady(ctx context.Context, uids []string, readyUID string)
 
 	// PushUnReady pushes the unready message to the client.
-	PushUnReady(ctx context.Context, uids []string, readyUID string)
+	PushUnReady(ctx context.Context, uids []string, unreadyUID string)
 }
