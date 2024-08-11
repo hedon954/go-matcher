@@ -551,6 +551,10 @@ func (impl *Impl) CancelMatch(ctx context.Context, uid string) error {
 	return nil
 }
 
+func (impl *Impl) ExitGame(ctx context.Context, uid string, roomID int64) error {
+	panic("implement me")
+}
+
 func (impl *Impl) SetVoiceState(ctx context.Context, uid string, state entry.PlayerVoiceState) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {

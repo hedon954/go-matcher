@@ -56,6 +56,9 @@ type Match interface {
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(ctx context.Context, uid string) error
 
+	// ExitGame exits the game (escape)
+	ExitGame(ctx context.Context, uid string, roomID int64) error
+
 	// UploadPlayerAttr uploads player attributes
 	UploadPlayerAttr(ctx context.Context, uid string, attrs *pto.UploadPlayerAttr) error
 
