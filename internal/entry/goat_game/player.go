@@ -6,6 +6,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
 
 type Player struct {
@@ -18,12 +19,15 @@ type Player struct {
 	TodayPvpCount int64
 }
 
-func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) entry.Player {
+func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) (entry.Player, error) {
 	p := &Player{}
 	// ... other common fields
 
+	if pInfo.Glicko2Info == nil {
+		return nil, fmt.Errorf("game[%d] need glicko2 info", base.GameMode)
+	}
 	p.withMatchStrategy(base, pInfo.Glicko2Info)
-	return p
+	return p, nil
 }
 
 func (p *Player) withMatchStrategy(base *entry.PlayerBase, info *pto.Glicko2Info) {
@@ -37,7 +41,7 @@ func (p *Player) SetAttr(attr *pto.UploadPlayerAttr) error {
 		return err
 	}
 
-	attribute, err := pto.FromAttrJson[Attribute](attr)
+	attribute, err := typeconv.FromJson[Attribute](attr.Extra)
 	if err != nil {
 		return fmt.Errorf("invalid attribute: %w", err)
 	}

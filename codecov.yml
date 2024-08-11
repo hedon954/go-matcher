@@ -7,3 +7,4 @@ ignore:
   - 'examples/otel'
   - 'examples/zinx'
   - 'internal/pb'
+  - 'cmd/tcp/client'

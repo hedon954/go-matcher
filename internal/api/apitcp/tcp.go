@@ -19,7 +19,6 @@ func SetupTCPServer(conf string) ziface.IServer {
 }
 
 func (api *API) setupRouter(s ziface.IServer) {
-	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_BIND), api.Bind)
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_CREATE_GROUP), api.CreateGroup)
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_ENTER_GROUP), api.EnterGroup)
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_EXIT_GROUP), api.ExitGroup)

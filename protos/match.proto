@@ -26,6 +26,8 @@ message PlayerInfo {
   int64 mode_version = 3;
   int64 star = 4;
   int64 rank = 5;
+
+  Glicko2Info glicko2_info = 6;
 }
 
 // --->[START] Bind
@@ -95,7 +97,6 @@ message UserAttribute {
 // --->[START] CreateGroup
 message CreateGroupReq {
   PlayerInfo player_info = 1;
-  Glicko2Info glicko2_info = 2;
 }
 message Glicko2Info {
   double mmr = 1;
@@ -111,24 +112,30 @@ message CreateGroupRsp {
 message EnterGroupReq {
   PlayerInfo player_info = 1;
   EnterGroupSource source = 2;
+  int64 group_id = 3;
 }
 
 message EnterGroupRsp {}
 // <---[END] EnterGroup
 
 // --->[START] ExitGroup
-message ExitGroupReq {}
+message ExitGroupReq {
+  string uid = 1;
+}
 message ExitGroupRsp {}
 // <---[END] ExitGroup
 
 // --->[START] DissolveGroup
-message DissolveGroupReq {}
+message DissolveGroupReq {
+  string uid = 1;
+}
 message DissolveGroupRsp {}
 // <---[END] DissolveGroup
 
 // --->[START] Invite
 message InviteReq {
-  string invitee_uid = 1;
+  string inviter_uid = 1;
+  string invitee_uid = 2;
 }
 message InviteRsp {}
 // <---[END] Invite
@@ -146,8 +153,9 @@ message AcceptInviteRsp {}
 // --->[START] RefuseInvite
 message RefuseInviteReq {
   string inviter_uid = 1;
-  int64 group_id = 2;
-  string refuse_msg = 3;
+  string invitee_uid = 2;
+  int64 group_id = 3;
+  string refuse_msg = 4;
 }
 
 message RefuseInviteRsp {}
@@ -156,7 +164,8 @@ message RefuseInviteRsp {}
 
 // --->[START] KickPlayer
 message KickPlayerReq {
-  string kicked_uid = 1;
+  string captain_uid = 1;
+  string kicked_uid = 2;
 }
 
 message KickPlayerRsp {}
@@ -164,8 +173,9 @@ message KickPlayerRsp {}
 
 // --->[START] ChangeRole
 message ChangeRoleReq {
-  string target_uid = 1;
-  GroupRole role = 2;
+  string captain_uid = 1;
+  string target_uid = 2;
+  GroupRole role = 3;
 }
 
 message ChangeRoleRsp {}
@@ -173,7 +183,8 @@ message ChangeRoleRsp {}
 
 // --->[START] SetNearbyJoinGroup
 message SetNearbyJoinGroupReq {
-  bool allow = 1;
+  string uid = 1;
+  bool allow = 2;
 }
 message SetNearbyJoinGroupRsp {}
 // <---[END] SetNearbyJoinGroup
@@ -181,7 +192,8 @@ message SetNearbyJoinGroupRsp {}
 
 // --->[START] SetRecentJoinGroup
 message SetRecentJoinGroupReq {
-  bool allow = 1;
+  string uid = 1;
+  bool allow = 2;
 }
 
 message SetRecentJoinGroupRsp {}
@@ -189,37 +201,39 @@ message SetRecentJoinGroupRsp {}
 
 // --->[START] SetVoiceState
 message SetVoiceStateReq {
-  PlayerVoiceState state = 1;
+  string uid = 1;
+  PlayerVoiceState state = 2;
 }
 
 message SetVoiceStateRsp {}
 // <---[END] SetVoiceState
 
 // --->[START] Ready
-message ReadyReq {}
+message ReadyReq {string uid = 1;}
 message ReadyRsp {}
 // <---[END] Ready
 
 // --->[START] Unready
-message UnreadyReq {}
+message UnreadyReq {string uid = 1;}
 message UnreadyRsp {}
 // <---[END] Unready
 
 // --->[START] StartMatch
-message StartMatchReq {}
+message StartMatchReq {string uid = 1;}
 message StartMatchRsp {}
 // <---[END] StartMatch
 
 // --->[START] CancelMatch
-message CancelMatchReq {}
+message CancelMatchReq {string uid = 1;}
 message CancelMatchRsp {}
 // <---[END] CancelMatch
 
 // --->[START] UploadPlayerAttr
 message UploadPlayerAttrReq {
-  UserAttribute attr = 1;
+  string uid = 1;
+  UserAttribute attr = 2;
   oneof type {
-    GoatGameAttribute goat_game_attr = 2;
+    GoatGameAttribute goat_game_attr = 3;
   }
 }
 
