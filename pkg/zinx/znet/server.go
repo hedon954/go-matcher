@@ -94,6 +94,8 @@ func (s *Server) Stop() {
 	fmt.Printf("[STOP] Zinx server, name: %s\n", s.Name)
 
 	s.ConnMgr.ClearConn()
+
+	time.Sleep(10 * time.Millisecond) // todo: refact it
 	close(s.notifyConnClose)
 }
 
