@@ -98,13 +98,13 @@ func createTempTeam(impl *Impl, g entry.Group, t *testing.T) entry.Team {
 	return team
 }
 
-func createTempRoom(uid string, impl *Impl, t *testing.T) entry.Room {
-	_, g := createTempGroup(uid, impl, t)
+func createTempRoom(uid string, impl *Impl, t *testing.T) (entry.Player, entry.Group, entry.Room) {
+	p, g := createTempGroup(uid, impl, t)
 	room, err := impl.roomMgr.CreateRoom(1, createTempTeam(impl, g, t))
 	assert.Nil(t, err)
 	assert.NotNil(t, impl.roomMgr.Get(room.ID()))
 	assert.Equal(t, 1, len(room.Base().GetTeams()))
-	return room
+	return p, g, room
 }
 
 func TestImpl_CreateGroup(t *testing.T) {
@@ -970,7 +970,7 @@ func TestImpl_Unready(t *testing.T) {
 func TestImpl_HandleMatchResult(t *testing.T) {
 	impl := defaultImpl(PlayerLimit)
 
-	room := createTempRoom(UID, impl, t)
+	_, _, room := createTempRoom(UID, impl, t)
 	impl.HandleMatchResult(room)
 
 	room.Base().Lock()
@@ -1007,4 +1007,31 @@ func TestImpl_HandleGameResult(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, RID, len(impl.result))
 	assert.Nil(t, impl.delayTimer.Get(TimeOpTypeClearRoom, RID))
+}
+
+func TestImpl_ExitGame(t *testing.T) {
+	impl := defaultImpl(PlayerLimit)
+
+	p, g, r := createTempRoom(UID, impl, t)
+	assert.Equal(t, 0, len(r.Base().GetEscapePlayers()))
+
+	// room not exists should return error
+	err := impl.ExitGame(context.Background(), UID, -1)
+	assert.Equal(t, merr.ErrRoomNotExists, err)
+
+	// player not in room should return error
+	_, _ = createTempGroup(UID+"1", impl, t)
+	err = impl.ExitGame(context.Background(), UID+"1", r.ID())
+	assert.Equal(t, merr.ErrPlayerNotInRoom, err)
+
+	// player in room should return success and add escape record
+	// and the player should be removed from group
+	// and because the group only has one player, so it would be dissoved.
+	err = impl.ExitGame(context.Background(), p.UID(), r.ID())
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(r.Base().GetEscapePlayers()))
+	assert.False(t, g.Base().PlayerExists(p.UID()))
+	assert.Equal(t, entry.GroupStateDissolved, g.Base().GetState())
+	assert.Nil(t, impl.playerMgr.Get(p.UID()))
+	assert.Nil(t, impl.groupMgr.Get(g.ID()))
 }

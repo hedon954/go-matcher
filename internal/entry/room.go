@@ -26,6 +26,8 @@ type RoomBase struct {
 	ModeVersion    int64
 	FinishMatchSec int64
 
+	escapePlayer []string
+
 	GameServerInfo pto.GameServerInfo
 }
 
@@ -34,6 +36,7 @@ func NewRoomBase(id int64, teamLimit int, t Team) *RoomBase {
 		id:            id,
 		TeamLimit:     teamLimit,
 		teams:         make([]Team, 0),
+		escapePlayer:  make([]string, 0),
 		GameMode:      t.Base().GameMode,
 		MatchStrategy: t.Base().MatchStrategy,
 		ModeVersion:   t.Base().ModeVersion,
@@ -91,4 +94,12 @@ func (r *RoomBase) UIDs() []string {
 		}
 	}
 	return res
+}
+
+func (r *RoomBase) AddEscapePlayer(uid string) {
+	r.escapePlayer = append(r.escapePlayer, uid)
+}
+
+func (r *RoomBase) GetEscapePlayers() []string {
+	return r.escapePlayer
 }
