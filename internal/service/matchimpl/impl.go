@@ -491,7 +491,7 @@ func (impl *Impl) Ready(ctx context.Context, uid string) error {
 	return nil
 }
 
-func (impl *Impl) UnReady(ctx context.Context, uid string) error {
+func (impl *Impl) Unready(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err

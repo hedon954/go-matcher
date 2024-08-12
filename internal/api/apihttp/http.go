@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
+
 	"github.com/hedon954/go-matcher/docs"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -16,7 +18,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/response"
-	"github.com/rs/zerolog/log"
 
 	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
 
@@ -64,6 +65,9 @@ func (api *API) setupRouter() *gin.Engine {
 		mg.POST("/set_voice_state", api.SetVoiceState)
 		mg.POST("/start_match/:uid", api.StartMatch)
 		mg.POST("/cancel_match/:uid", api.CancelMatch)
+		mg.POST("/upload_player_attr", api.UploadPlayerAttr)
+		mg.POST("/ready/:uid", api.Ready)
+		mg.POST("/unready/:uid", api.Unready)
 	}
 
 	docs.SwaggerInfo.BasePath = "/"
@@ -436,6 +440,73 @@ func (api *API) StartMatch(c *gin.Context) {
 func (api *API) CancelMatch(c *gin.Context) {
 	uid := c.Param("uid")
 	if err := api.ms.CancelMatch(c, uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
+}
+
+// UploadPlayerAttr godoc
+// @Summary upload player attr
+// @Description upload player attr
+// @Tags match service
+// @Accept json
+// @Produce json
+// @Param x-request-id header string false "Request ID"
+// @Param UploadPlayerAttrReq body UploadPlayerAttr true "Upload Player Attr Request Body"
+// @Success 200 {object} string "ok"
+// @Failure 400 {object} string "Bad Request"
+// @Failure 200 {object} string "Concrete Error Msg"
+// @Router /match/upload_player_attr [post]
+func (api *API) UploadPlayerAttr(c *gin.Context) {
+	var req UploadPlayerAttr
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinParamError(c, err)
+		return
+	}
+	if err := api.ms.UploadPlayerAttr(c, req.UID, &req.UploadPlayerAttr); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
+}
+
+// Ready godoc
+// @Summary ready
+// @Description ready
+// @Tags match service
+// @Accept json
+// @Produce json
+// @Param x-request-id header string false "Request ID"
+// @Param uid path string true "player uid"
+// @Success 200 {object} string "ok"
+// @Failure 400 {object} string "Bad Request"
+// @Failure 200 {object} string "Concrete Error Msg"
+// @Router /match/ready/{uid} [post]
+func (api *API) Ready(c *gin.Context) {
+	uid := c.Param("uid")
+	if err := api.ms.Ready(c, uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
+}
+
+// Unready godoc
+// @Summary unready
+// @Description unready
+// @Tags match service
+// @Accept json
+// @Produce json
+// @Param x-request-id header string false "Request ID"
+// @Param uid path string true "player uid"
+// @Success 200 {object} string "ok"
+// @Failure 400 {object} string "Bad Request"
+// @Failure 200 {object} string "Concrete Error Msg"
+// @Router /match/unready/{uid} [post]
+func (api *API) Unready(c *gin.Context) {
+	uid := c.Param("uid")
+	if err := api.ms.Unready(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}

@@ -7,13 +7,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/pkg/timer/mock"
-	"github.com/stretchr/testify/assert"
 )
 
 const GameMode = constant.GameModeGoatGame
@@ -938,30 +939,30 @@ func TestImpl_Unready(t *testing.T) {
 	impl := defaultImpl(PlayerLimit)
 
 	// 1. if player not exists, should return err
-	err := impl.UnReady(ctx, UID)
+	err := impl.Unready(ctx, UID)
 	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 2. if group not exists, should return err
 	impl.playerMgr.Add(UID, entry.NewPlayerBase(new(pto.PlayerInfo))) // add temp
-	err = impl.UnReady(ctx, UID)
+	err = impl.Unready(ctx, UID)
 	assert.Equal(t, merr.ErrGroupNotExists, err)
 	impl.playerMgr.Delete(UID) // delete temp
 
 	// 3. group state is not `invite`, should return err
 	p, g := createTempGroup(UID, impl, t)
 	g.Base().SetStateWithLock(entry.GroupStateGame)
-	err = impl.UnReady(ctx, p.UID())
+	err = impl.Unready(ctx, p.UID())
 	assert.Equal(t, merr.ErrGroupInGame, err)
 	g.Base().SetStateWithLock(entry.GroupStateDissolved)
-	err = impl.UnReady(ctx, p.UID())
+	err = impl.Unready(ctx, p.UID())
 	assert.Equal(t, merr.ErrGroupDissolved, err)
 	g.Base().SetStateWithLock(entry.GroupStateMatch)
-	err = impl.UnReady(ctx, p.UID())
+	err = impl.Unready(ctx, p.UID())
 	assert.Equal(t, merr.ErrGroupInMatch, err)
 	g.Base().SetStateWithLock(entry.GroupStateInvite) // set back
 
 	// 4. return success and the unready record should be deleted
-	err = impl.UnReady(ctx, p.UID())
+	err = impl.Unready(ctx, p.UID())
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().UnReadyPlayer))
 }

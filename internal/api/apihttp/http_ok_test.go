@@ -136,39 +136,51 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	requestSetRecentJoinGroup(router, UIDA, true, t)
 	assert.True(t, g2.Base().AllowRecentJoin())
 
-	// 18. 'a' start match 'g2'
+	// 18. 'a' unready
+	requestUnready(router, UIDA, t)
+	assert.Equal(t, 1, len(g2.Base().UnReadyPlayer))
+
+	// 19. 'a' ready
+	requestReady(router, UIDA, t)
+	assert.Equal(t, 0, len(g2.Base().UnReadyPlayer))
+
+	// 20. 'a' upload player attr
+	requestUnloadPlayerAttr(router, UIDA, t)
+	assert.Equal(t, "hedon2", api.pm.Get(UIDA).Base().Attribute.Nickname)
+
+	// 21. 'a' start match 'g2'
 	requestStartMatch(router, UIDA, t)
 	time.Sleep(11 * time.Millisecond) // for at least get one round match
 	assert.Equal(t, entry.GroupStateMatch, getGroupStateWithLock(g2))
 	assert.Equal(t, entry.PlayerOnlineStateInMatch, getPlayerOnlineStateWithLock(ua))
 
-	// 19. 'a' cancel match 'g2'
+	// 22. 'a' cancel match 'g2'
 	requestCancelMatch(router, UIDA, t)
 	time.Sleep(11 * time.Millisecond) // for at least get one round match
 	assert.Equal(t, entry.GroupStateInvite, getGroupStateWithLock(g2))
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, getPlayerOnlineStateWithLock(ua))
 
-	// 20. 'a' start match 'g2'
+	// 23. 'a' start match 'g2'
 	requestStartMatch(router, UIDA, t)
 	assert.Equal(t, entry.GroupStateMatch, getGroupStateWithLock(g2))
 	assert.Equal(t, entry.PlayerOnlineStateInMatch, getPlayerOnlineStateWithLock(ua))
 
-	// 21. 'b' create a full group 'g3'
+	// 24. 'b' create a full group 'g3'
 	requestCreateFullGroup(router, UIDB, UIDBB, t)
 	g3 := api.gm.Get(G3)
 	assert.Equal(t, 2, len(g3.Base().GetPlayers()))
 
-	// 22. 'c' create a full group 'g4'
+	// 25. 'c' create a full group 'g4'
 	requestCreateFullGroup(router, UIDC, UIDCC, t)
 	g4 := api.gm.Get(G4)
 	assert.Equal(t, 2, len(g4.Base().GetPlayers()))
 
-	// 23. 'd' create group 'g5'
+	// 26. 'd' create group 'g5'
 	requestCreateGroup(router, UIDD, t)
 	g5 := api.gm.Get(G5)
 	assert.Equal(t, 1, len(g5.Base().GetPlayers()))
 
-	// 24, start g3, g4 to match
+	// 27, start g3, g4 to match
 	requestStartMatch(router, UIDB, t)
 	requestStartMatch(router, UIDC, t)
 	time.Sleep(20 * time.Millisecond)
@@ -176,7 +188,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	assert.Equal(t, entry.GroupStateMatch, getGroupStateWithLock(g4))
 	assert.Equal(t, entry.GroupStateMatch, getGroupStateWithLock(g2))
 
-	// 25. start g5 to match, match success and create a new room
+	// 28. start g5 to match, match success and create a new room
 	requestStartMatch(router, UIDD, t)
 
 	for i := 0; i <= 10; i++ {
@@ -202,6 +214,30 @@ func getPlayerOnlineStateWithLock(p entry.Player) entry.PlayerOnlineState {
 	p.Base().Lock()
 	defer p.Base().Unlock()
 	return p.Base().GetOnlineState()
+}
+
+func requestReady(router *gin.Engine, uid string, t *testing.T) {
+	req, _ := http.NewRequest("POST", "/match/ready/"+uid, http.NoBody)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assertRspOk(w, t)
+}
+
+func requestUnready(router *gin.Engine, uid string, t *testing.T) {
+	req, _ := http.NewRequest("POST", "/match/unready/"+uid, http.NoBody)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assertRspOk(w, t)
+}
+
+func requestUnloadPlayerAttr(router *gin.Engine, uid string, t *testing.T) {
+	req, _ := http.NewRequest("POST", "/match/upload_player_attr", bytes.NewBuffer(uploadPlayerAttrParam(uid)))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assertRspOk(w, t)
 }
 
 func requestCreateFullGroup(router *gin.Engine, uid1, uid2 string, t *testing.T) {
@@ -427,6 +463,34 @@ func createGroupRsp(w *httptest.ResponseRecorder) *CreateGroupRsp {
 	var rsp response.HTTPResponse
 	_ = json.Unmarshal(w.Body.Bytes(), &rsp)
 	return response.FromHTTPResponse[CreateGroupRsp](&rsp)
+}
+
+func uploadPlayerAttrParam(uid string) []byte {
+	param := &UploadPlayerAttr{
+		UID: uid,
+		UploadPlayerAttr: pto.UploadPlayerAttr{
+			Attribute: pto.Attribute{
+				Nickname: "hedon2",
+			},
+			Extra: nil,
+		},
+	}
+	bs, _ := json.Marshal(param)
+	return bs
+}
+
+func uploadPlayerAttrParamInvalid(uid string) []byte {
+	param := &UploadPlayerAttr{
+		UID: uid,
+		UploadPlayerAttr: pto.UploadPlayerAttr{
+			Attribute: pto.Attribute{
+				Nickname: "hedon2",
+			},
+			Extra: []byte("xxxx"),
+		},
+	}
+	bs, _ := json.Marshal(param)
+	return bs
 }
 
 func createGroupParam(uid string) []byte {

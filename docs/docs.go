@@ -405,6 +405,50 @@ const docTemplate = `{
                 }
             }
         },
+        "/match/ready/{uid}": {
+            "post": {
+                "description": "ready",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "match service"
+                ],
+                "summary": "ready",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "x-request-id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "player uid",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concrete Error Msg",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/match/refuse_invite": {
             "post": {
                 "description": "refuse an invitation based on the request",
@@ -632,6 +676,96 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/match/unready/{uid}": {
+            "post": {
+                "description": "unready",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "match service"
+                ],
+                "summary": "unready",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "x-request-id",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "description": "player uid",
+                        "name": "uid",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concrete Error Msg",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/match/upload_player_attr": {
+            "post": {
+                "description": "upload player attr",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "match service"
+                ],
+                "summary": "upload player attr",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "x-request-id",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Upload Player Attr Request Body",
+                        "name": "UploadPlayerAttrReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apihttp.UploadPlayerAttr"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concrete Error Msg",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -790,6 +924,33 @@ const docTemplate = `{
                             "$ref": "#/definitions/entry.PlayerVoiceState"
                         }
                     ]
+                },
+                "uid": {
+                    "type": "string"
+                }
+            }
+        },
+        "apihttp.UploadPlayerAttr": {
+            "type": "object",
+            "required": [
+                "uid"
+            ],
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "extra": {
+                    "description": "Extra is the extra information of a player needed by different game mode.\nHere, if you want to do each game mode is independent,\nyou need to use 1+n interfaces (uploadCommonAttr +n * uploadxxxGameAttr),\nthe development efficiency is relatively low.\n\nAfter weighing, it was decided to use a common interface for processing,\nand then use Extra extension fields for different game modes,\nin the specific game mode implementation,\nneed to parse and carry out the corresponding processing logic.",
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "star": {
+                    "type": "integer"
                 },
                 "uid": {
                     "type": "string"

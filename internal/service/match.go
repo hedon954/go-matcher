@@ -48,7 +48,7 @@ type Match interface {
 	Ready(ctx context.Context, uid string) error
 
 	// UnReady marks the player as unready
-	UnReady(ctx context.Context, uid string) error
+	Unready(ctx context.Context, uid string) error
 
 	// StartMatch starts to add the group to matching queue
 	StartMatch(ctx context.Context, captainUID string) error

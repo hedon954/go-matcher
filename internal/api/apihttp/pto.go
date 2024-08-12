@@ -62,3 +62,8 @@ type SetVoiceStateReq struct {
 	UID   string                 `json:"uid" binding:"required"`
 	State entry.PlayerVoiceState `json:"state" binding:"gte=0,lte=1"`
 }
+
+type UploadPlayerAttr struct {
+	UID string `json:"uid" binding:"required"`
+	pto.UploadPlayerAttr
+}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
@@ -47,6 +48,78 @@ func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
+}
+
+func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
+	api := NewAPI(2, time.Second)
+	router := api.setupRouter()
+
+	rsp := requestCreateGroup(router, "uid", t)
+
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	req, _ := http.NewRequest("POST", "/match/upload_player_attr", bytes.NewBuffer(uploadPlayerAttrParam("")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
+	api := NewAPI(2, time.Second)
+	router := api.setupRouter()
+
+	rsp := requestCreateGroup(router, "uid", t)
+
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	req, _ := http.NewRequest("POST", "/match/upload_player_attr", bytes.NewBuffer(uploadPlayerAttrParamInvalid("uid")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, "invalid attribute: invalid character 'x' looking for beginning of value", assertRspNotOk(w, t))
+}
+
+//nolint:dupl
+func TestAPI_Unready_StateNotInvite(t *testing.T) {
+	api := NewAPI(2, time.Second)
+	router := api.setupRouter()
+
+	rsp := requestCreateGroup(router, "uid", t)
+
+	// in match can unready
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	req, _ := http.NewRequest("POST", "/match/unready/uid", http.NoBody)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
+
+	// in game can not unready
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
+}
+
+//nolint:dupl
+func TestAPI_Ready_StateNotInvite(t *testing.T) {
+	api := NewAPI(2, time.Second)
+	router := api.setupRouter()
+
+	rsp := requestCreateGroup(router, "uid", t)
+
+	// in match can ready
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	req, _ := http.NewRequest("POST", "/match/ready/uid", http.NoBody)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
+
+	// in game can not ready
+	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
 }
 
 func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
