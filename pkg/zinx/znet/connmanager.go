@@ -47,6 +47,8 @@ func (cm *ConnManager) Get(connID uint64) (ziface.IConnection, error) {
 }
 
 func (cm *ConnManager) Len() int {
+	cm.connLock.RLock()
+	defer cm.connLock.RUnlock()
 	return len(cm.connections)
 }
 

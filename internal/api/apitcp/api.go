@@ -290,6 +290,48 @@ func (api *API) Unready(request ziface.IRequest) {
 	api.responseSuccess(request, &pb.UnreadyRsp{})
 }
 
+func (api *API) UploadPlayerAttr(request ziface.IRequest) {
+	param := typeconv.MustFromProto[pb.UploadPlayerAttrReq](request.GetData())
+	if param.Attr == nil {
+		api.responseParamError(request, errors.New("lack of basic attr"))
+		return
+	}
+
+	var extra []byte
+	if param.GetGoatGameAttr() != nil {
+		extra, _ = proto.Marshal(param.GetGoatGameAttr())
+	}
+
+	if err := api.ms.UploadPlayerAttr(context.Background(), param.Uid, &pto.UploadPlayerAttr{
+		Attribute: pto.Attribute{
+			Nickname: param.Attr.Nickname,
+			Avatar:   param.Attr.Avatar,
+			Star:     param.Attr.Star,
+		},
+		Extra: extra,
+	}); err != nil {
+		api.responseError(request, err)
+		return
+	}
+
+	api.responseSuccess(request, &pb.UnreadyRsp{})
+}
+
+func (api *API) ExitGame(request ziface.IRequest) {
+	param := typeconv.MustFromProto[pb.ExitGameReq](request.GetData())
+	if param.RoomId == 0 {
+		api.responseParamError(request, errors.New("lack of room id"))
+		return
+	}
+
+	if err := api.ms.ExitGame(context.Background(), param.Uid, param.RoomId); err != nil {
+		api.responseError(request, err)
+		return
+	}
+
+	api.responseSuccess(request, &pb.ExitGameRsp{})
+}
+
 func (api *API) createAndSendResponse(req ziface.IRequest, code pb.RspCode, err error) {
 	rsp := &pb.CommonRsp{
 		Code:      code,

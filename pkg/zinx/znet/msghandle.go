@@ -37,7 +37,6 @@ func (mh *MsgHandle) AddRouter(msgID uint32, handle ziface.HandleFunc) {
 		panic("repeated api, msgID = " + strconv.Itoa(int(msgID)))
 	}
 	mh.Apis[msgID] = handle
-	fmt.Println("Add api msgID = ", msgID)
 }
 
 func (mh *MsgHandle) StarWorkerPool() {

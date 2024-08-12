@@ -243,3 +243,13 @@ message GoatGameAttribute {
 
 message UploadPlayerAttrRsp {}
 // <---[END] UploadPlayerAttr
+
+
+// -->[START] ExitGame
+message ExitGameReq {
+  string uid = 1;
+  int64 room_id = 2;
+}
+
+message ExitGameRsp {}
+// <--[END] ExitGame

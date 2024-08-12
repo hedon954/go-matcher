@@ -11,28 +11,32 @@ import (
 )
 
 type Server struct {
-	Name        string
-	IPVersion   string
-	IP          string
-	Port        int
-	ConnIDGen   atomic.Uint64 // TODO: use distributed unique id to support multiple servers
-	msgHandler  ziface.IMsgHandle
-	ConnMgr     ziface.IConnManager
-	onConnStart func(conn ziface.IConnection)
-	onConnStop  func(conn ziface.IConnection)
+	Name            string
+	IPVersion       string
+	IP              string
+	Port            int
+	ConnIDGen       atomic.Uint64 // TODO: use distributed unique id to support multiple servers
+	msgHandler      ziface.IMsgHandle
+	ConnMgr         ziface.IConnManager
+	notifyConnClose chan ziface.IConnection
+	onConnStart     func(conn ziface.IConnection)
+	onConnStop      func(conn ziface.IConnection)
 }
 
 func NewServer(conf string) ziface.IServer {
-	zutils.GlobalObject.Reload(conf)
+	if conf != "" {
+		zutils.GlobalObject.Reload(conf)
+	}
 
 	s := &Server{
-		IPVersion:  "tcp4",
-		Name:       zutils.GlobalObject.Name,
-		IP:         zutils.GlobalObject.Host,
-		Port:       zutils.GlobalObject.TCPPort,
-		ConnIDGen:  atomic.Uint64{},
-		msgHandler: NewMsgHandle(),
-		ConnMgr:    NewConnManager(),
+		IPVersion:       "tcp4",
+		Name:            zutils.GlobalObject.Name,
+		IP:              zutils.GlobalObject.Host,
+		Port:            zutils.GlobalObject.TCPPort,
+		ConnIDGen:       atomic.Uint64{},
+		notifyConnClose: make(chan ziface.IConnection, 1),
+		msgHandler:      NewMsgHandle(),
+		ConnMgr:         NewConnManager(),
 	}
 	return s
 }
@@ -77,17 +81,25 @@ func (s *Server) Start() {
 			go dealConn.Start()
 		}
 	}()
+
+	// TODO: refact it
+	go func() {
+		for conn := range s.notifyConnClose {
+			s.ConnMgr.Remove(conn)
+		}
+	}()
 }
 
 func (s *Server) Stop() {
 	fmt.Printf("[STOP] Zinx server, name: %s\n", s.Name)
 
 	s.ConnMgr.ClearConn()
+	close(s.notifyConnClose)
 }
 
 func (s *Server) Serve() {
 	s.Start()
-	select {}
+	select {} // TODO: graceful shutdown
 }
 
 func (s *Server) AddRouter(msgID uint32, handle ziface.HandleFunc) {
@@ -120,4 +132,8 @@ func (s *Server) CallOnConnStop(conn ziface.IConnection) {
 		fmt.Println("---> CallOnConnStop()")
 		s.onConnStop(conn)
 	}
+}
+
+func (s *Server) NotifyClose(c ziface.IConnection) {
+	s.notifyConnClose <- c
 }

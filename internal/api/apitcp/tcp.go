@@ -35,4 +35,6 @@ func (api *API) setupRouter(s ziface.IServer) {
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_CANCEL_MATCH), api.CancelMatch)
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_READY), api.Ready)
 	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_UNREADY), api.Unready)
+	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_UPLOAD_PLAYER_ATTR), api.UploadPlayerAttr)
+	s.AddRouter(uint32(pb.ReqType_REQ_TYPE_EXIT_GAME), api.ExitGame)
 }

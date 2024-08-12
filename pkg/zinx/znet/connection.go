@@ -16,9 +16,9 @@ type Connection struct {
 	TCPServer    ziface.IServer
 	Conn         *net.TCPConn
 	ConnID       uint64
-	isClosed     atomic.Bool
 	MsgHandler   ziface.IMsgHandle
 	msgChan      chan []byte
+	isClosed     atomic.Bool
 	ExitBuffChan chan struct{}
 
 	propertyLock sync.RWMutex
@@ -30,7 +30,6 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, mh z
 		TCPServer:    server,
 		Conn:         conn,
 		ConnID:       connID,
-		isClosed:     atomic.Bool{},
 		MsgHandler:   mh,
 		ExitBuffChan: make(chan struct{}, 1),
 		msgChan:      make(chan []byte, zutils.GlobalObject.MaxMsgChanLen),
@@ -58,14 +57,14 @@ func (c *Connection) Stop() {
 
 	// close socket connection
 	_ = c.Conn.Close()
+
+	// notify tcp server to remove connection
+	c.TCPServer.NotifyClose(c)
+
 	c.ExitBuffChan <- struct{}{}
-
-	// delete from connection manager
-	c.TCPServer.GetConnMgr().Remove(c)
-
 	// close all channels
 	close(c.ExitBuffChan)
-	close(c.msgChan)
+	close(c.msgChan) // TODO: check, if close msg chan then send msg in connection, would panic
 }
 
 func (c *Connection) GetTCPConnection() *net.TCPConn {
@@ -82,7 +81,7 @@ func (c *Connection) RemoteAddr() net.Addr {
 
 func (c *Connection) SendMsg(id uint32, data []byte) error {
 	if c.isClosed.Load() {
-		return fmt.Errorf("connection closed when send msg")
+		return nil
 	}
 
 	dp := NewDataPack()
@@ -116,18 +115,16 @@ func (c *Connection) RemoveProperty(key string) {
 }
 
 func (c *Connection) startReader() {
-	fmt.Println("[Reader Goroutine is running[")
+	fmt.Println("[Reader Goroutine is running]")
 	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit")
 	defer c.Stop()
 
+	dp := NewDataPack()
 	for {
-		dp := NewDataPack()
-
 		// read header
 		headData := make([]byte, dp.GetHeadLen())
 		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
 			fmt.Println("read msg head error ", err)
-			c.ExitBuffChan <- struct{}{}
 			return
 		}
 
@@ -135,7 +132,6 @@ func (c *Connection) startReader() {
 		msg, err := dp.Unpack(headData)
 		if err != nil {
 			fmt.Println("unpack error ", err)
-			c.ExitBuffChan <- struct{}{}
 			return
 		}
 
@@ -144,7 +140,6 @@ func (c *Connection) startReader() {
 		if msg.GetDataLen() > 0 {
 			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
 				fmt.Println("read msg data error ", err)
-				c.ExitBuffChan <- struct{}{}
 				return
 			}
 		}

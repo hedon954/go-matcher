@@ -10,6 +10,7 @@ type IServer interface {
 	SetOnConnStop(func(conn IConnection))
 	CallOnConnStart(conn IConnection)
 	CallOnConnStop(conn IConnection)
+	NotifyClose(conn IConnection)
 }
 
 type HandleFunc = func(request IRequest)
