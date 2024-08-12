@@ -3,12 +3,15 @@ package apihttp
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -21,6 +24,7 @@ import (
 
 func init() {
 	gin.SetMode(gin.ReleaseMode)
+	log.Logger = zerolog.New(io.Discard)
 }
 
 func TestAPI_StartMatch_StateNotMatching(t *testing.T) {
