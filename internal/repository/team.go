@@ -37,7 +37,11 @@ func (m *TeamMgr) CreateTeam(g entry.Group) (t entry.Team, err error) {
 	}
 
 	t.Base().AddGroup(g)
-	m.Add(t.Base().ID(), t)
+
+	// NOTE: don't add team to manager here.
+	// because it may be created in match process for temp,
+	// only add it after match success.
+	// m.Add(t.Base().ID(), t)
 	return t, nil
 }
 

@@ -10,7 +10,7 @@ type Glicko2Mock struct{}
 //nolint:all
 func (gc *Glicko2Mock) GetQueueArgs(_ constant.GameMode) *glicko2.QueueArgs {
 	return &glicko2.QueueArgs{
-		MatchTimeoutSec:              50,
+		MatchTimeoutSec:              0,
 		TeamPlayerLimit:              2,
 		RoomTeamLimit:                3,
 		NewerWithNewer:               false,

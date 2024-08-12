@@ -48,13 +48,16 @@ type Match interface {
 	Ready(ctx context.Context, uid string) error
 
 	// UnReady marks the player as unready
-	UnReady(ctx context.Context, uid string) error
+	Unready(ctx context.Context, uid string) error
 
 	// StartMatch starts to add the group to matching queue
 	StartMatch(ctx context.Context, captainUID string) error
 
 	// CancelMatch cancels the match and return `entry.GroupStateInvite` state
 	CancelMatch(ctx context.Context, uid string) error
+
+	// ExitGame exits the game (escape)
+	ExitGame(ctx context.Context, uid string, roomID int64) error
 
 	// UploadPlayerAttr uploads player attributes
 	UploadPlayerAttr(ctx context.Context, uid string, attrs *pto.UploadPlayerAttr) error

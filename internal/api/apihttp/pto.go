@@ -19,6 +19,11 @@ type ExitGroupReq struct {
 	GroupID int64  `json:"group_id" binding:"required"`
 }
 
+type ExitGameReq struct {
+	UID    string `json:"uid" binding:"required"`
+	RoomID int64  `json:"room_id" binding:"required"`
+}
+
 type KickPlayerReq struct {
 	CaptainUID string `json:"captain_uid" binding:"required"`
 	KickedUID  string `json:"kicked_uid" binding:"required"`
@@ -61,4 +66,9 @@ type SetRecentJoinGroupReq struct {
 type SetVoiceStateReq struct {
 	UID   string                 `json:"uid" binding:"required"`
 	State entry.PlayerVoiceState `json:"state" binding:"gte=0,lte=1"`
+}
+
+type UploadPlayerAttrReq struct {
+	UID string `json:"uid" binding:"required"`
+	pto.UploadPlayerAttr
 }

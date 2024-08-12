@@ -2,10 +2,11 @@ package matchimpl
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/google/uuid"
+
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/log"
 )
 
 func (impl *Impl) startMatch(ctx context.Context, g entry.Group) {
@@ -31,6 +32,6 @@ func (impl *Impl) startMatch(ctx context.Context, g entry.Group) {
 }
 
 func (impl *Impl) sendGroupToChannel(g entry.Group) {
-	fmt.Println("sendGroupToChannel: ", g)
+	log.Debug().Int64("group_id", g.ID()).Msg("send group to channel")
 	impl.groupChannel <- g
 }

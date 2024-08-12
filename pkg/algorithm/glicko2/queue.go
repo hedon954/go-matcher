@@ -260,7 +260,6 @@ func (q *Queue) buildNewTeams(groups []Group) []Group {
 		if team == nil {
 			break
 		}
-
 		for team.PlayerCount() < q.TeamPlayerLimit {
 			groups, found = q.findGroupForTeam(team, groups)
 			if !found {

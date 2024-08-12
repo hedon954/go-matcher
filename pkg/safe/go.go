@@ -68,6 +68,7 @@ func Call(f func(), panicCallback ...PanicCallback) {
 func Go(f func(), panicCallback ...PanicCallback) {
 	sg.Add(1)
 	go func() {
+		defer sg.Done()
 		defer func() {
 			if err := recover(); err != nil {
 				stack := debug.Stack()
@@ -79,7 +80,6 @@ func Go(f func(), panicCallback ...PanicCallback) {
 				}
 			}
 		}()
-		defer sg.Done()
 		f()
 	}()
 }

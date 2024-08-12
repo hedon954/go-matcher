@@ -40,6 +40,16 @@ definitions:
     - group_id
     - player_info
     type: object
+  apihttp.ExitGameReq:
+    properties:
+      room_id:
+        type: integer
+      uid:
+        type: string
+    required:
+    - room_id
+    - uid
+    type: object
   apihttp.InviteReq:
     properties:
       invitee_uid:
@@ -100,6 +110,33 @@ definitions:
         - $ref: '#/definitions/entry.PlayerVoiceState'
         maximum: 1
         minimum: 0
+      uid:
+        type: string
+    required:
+    - uid
+    type: object
+  apihttp.UploadPlayerAttrReq:
+    properties:
+      avatar:
+        type: string
+      extra:
+        description: |-
+          Extra is the extra information of a player needed by different game mode.
+          Here, if you want to do each game mode is independent,
+          you need to use 1+n interfaces (uploadCommonAttr +n * uploadxxxGameAttr),
+          the development efficiency is relatively low.
+
+          After weighing, it was decided to use a common interface for processing,
+          and then use Extra extension fields for different game modes,
+          in the specific game mode implementation,
+          need to parse and carry out the corresponding processing logic.
+        items:
+          type: integer
+        type: array
+      nickname:
+        type: string
+      star:
+        type: integer
       uid:
         type: string
     required:
@@ -405,6 +442,36 @@ paths:
       summary: enter a group
       tags:
       - match service
+  /match/exit_game:
+    post:
+      consumes:
+      - application/json
+      description: exit game
+      parameters:
+      - description: Request ID
+        in: header
+        name: x-request-id
+        type: string
+      - description: Exit Game Request Body
+        in: body
+        name: ExitGameReq
+        required: true
+        schema:
+          $ref: '#/definitions/apihttp.ExitGameReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Concrete Error Msg
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: exit game
+      tags:
+      - match service
   /match/exit_group/{uid}:
     post:
       consumes:
@@ -488,6 +555,35 @@ paths:
           schema:
             type: string
       summary: kick a player
+      tags:
+      - match service
+  /match/ready/{uid}:
+    post:
+      consumes:
+      - application/json
+      description: ready
+      parameters:
+      - description: Request ID
+        in: header
+        name: x-request-id
+        type: string
+      - description: player uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Concrete Error Msg
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: ready
       tags:
       - match service
   /match/refuse_invite:
@@ -637,6 +733,65 @@ paths:
           schema:
             type: string
       summary: start match
+      tags:
+      - match service
+  /match/unready/{uid}:
+    post:
+      consumes:
+      - application/json
+      description: unready
+      parameters:
+      - description: Request ID
+        in: header
+        name: x-request-id
+        type: string
+      - description: player uid
+        in: path
+        name: uid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Concrete Error Msg
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: unready
+      tags:
+      - match service
+  /match/upload_player_attr:
+    post:
+      consumes:
+      - application/json
+      description: upload player attr
+      parameters:
+      - description: Request ID
+        in: header
+        name: x-request-id
+        type: string
+      - description: Upload Player Attr Request Body
+        in: body
+        name: UploadPlayerAttrReq
+        required: true
+        schema:
+          $ref: '#/definitions/apihttp.UploadPlayerAttrReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Concrete Error Msg
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: upload player attr
       tags:
       - match service
 swagger: "2.0"

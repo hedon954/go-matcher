@@ -40,6 +40,9 @@ func (p *Player) SetAttr(attr *pto.UploadPlayerAttr) error {
 	if err := p.Base().SetAttr(attr); err != nil {
 		return err
 	}
+	if len(attr.Extra) == 0 {
+		return nil
+	}
 
 	attribute, err := typeconv.FromJson[Attribute](attr.Extra)
 	if err != nil {

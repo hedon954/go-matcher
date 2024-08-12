@@ -37,6 +37,10 @@ func (m *RoomMgr) CreateRoom(teamLimit int, t entry.Team) (r entry.Room, err err
 	}
 
 	r.Base().AddTeam(t)
-	m.Add(r.Base().ID(), r)
+
+	// NOTE: don't add room to manager here.
+	// because it may be created in match process for temp,
+	// only add it after match success.
+	// m.Add(r.Base().ID(), r)
 	return r, nil
 }

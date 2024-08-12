@@ -282,7 +282,7 @@ func (api *API) Ready(request ziface.IRequest) {
 func (api *API) Unready(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.UnreadyReq](request.GetData())
 
-	if err := api.ms.UnReady(context.Background(), param.Uid); err != nil {
+	if err := api.ms.Unready(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}

@@ -491,7 +491,7 @@ func (impl *Impl) Ready(ctx context.Context, uid string) error {
 	return nil
 }
 
-func (impl *Impl) UnReady(ctx context.Context, uid string) error {
+func (impl *Impl) Unready(ctx context.Context, uid string) error {
 	p, g, err := impl.getPlayerAndGroup(uid)
 	if err != nil {
 		return err
@@ -549,6 +549,40 @@ func (impl *Impl) CancelMatch(ctx context.Context, uid string) error {
 
 	impl.cancelMatch(ctx, uid, g)
 	return nil
+}
+
+func (impl *Impl) ExitGame(ctx context.Context, uid string, roomID int64) error {
+	p, g, err := impl.getPlayerAndGroup(uid)
+	if err != nil {
+		return err
+	}
+
+	r := impl.roomMgr.Get(roomID)
+	if r == nil {
+		return merr.ErrRoomNotExists
+	}
+
+	r.Base().Lock()
+	defer r.Base().Unlock()
+
+	exists := false
+	for _, t := range r.Base().GetTeams() {
+		t.Base().Lock()
+		groups := t.Base().GetGroups()
+		t.Base().Unlock()
+		for _, group := range groups {
+			if group.ID() == g.ID() {
+				exists = true
+				goto OUT
+			}
+		}
+	}
+OUT:
+	if !exists {
+		return merr.ErrPlayerNotInRoom
+	}
+
+	return impl.exitGame(ctx, p, g, r)
 }
 
 func (impl *Impl) SetVoiceState(ctx context.Context, uid string, state entry.PlayerVoiceState) error {
@@ -631,4 +665,13 @@ func (impl *Impl) getPlayerAndGroup(uid string) (entry.Player, entry.Group, erro
 		return nil, nil, merr.ErrGroupNotExists
 	}
 	return p, g, nil
+}
+
+func (impl *Impl) exitGame(ctx context.Context, p entry.Player, g entry.Group, r entry.Room) error {
+	if err := impl.exitGroup(ctx, p, g); err != nil {
+		return err
+	}
+	impl.playerMgr.Delete(p.UID())
+	r.Base().AddEscapePlayer(p.UID())
+	return nil
 }

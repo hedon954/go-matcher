@@ -41,3 +41,13 @@ func (m *Manager[K, T]) Exists(id K) bool {
 	_, ok := m.items[id]
 	return ok
 }
+
+func (m *Manager[K, T]) Range(f func(K, T) bool) {
+	m.RLock()
+	defer m.RUnlock()
+	for k, t := range m.items {
+		if !f(k, t) {
+			break
+		}
+	}
+}

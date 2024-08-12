@@ -11,6 +11,8 @@ var (
 	ErrOnlyCaptainCanDissolveGroup = errors.New("only captain can dissolve group")
 	ErrOnlyCaptainCanKickPlayer    = errors.New("only captain can kick player")
 	ErrPlayerNotExists             = errors.New("player not exists")
+	ErrRoomNotExists               = errors.New("room not exists")
+	ErrPlayerNotInRoom             = errors.New("player not in room")
 	ErrKickSelf                    = errors.New("cannot kick self")
 	ErrChangeSelfRole              = errors.New("cannot change self role")
 	ErrNotCaptain                  = errors.New("you not captain")
