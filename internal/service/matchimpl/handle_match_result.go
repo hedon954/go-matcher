@@ -2,6 +2,7 @@ package matchimpl
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hedon954/go-matcher/internal/entry"
 )
@@ -13,6 +14,14 @@ func (impl *Impl) waitForMatchResult() {
 }
 
 func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) error {
+	// add room to manager
+	impl.roomMgr.Add(r.ID(), r)
+	// add teams to managers
+	for _, t := range r.Base().GetTeams() {
+		fmt.Printf("add team %d to room: %d\n", t.ID(), r.ID())
+		impl.teamMgr.Add(t.ID(), t)
+	}
+
 	// ---------------------------
 	// some operations without AI
 	// ---------------------------

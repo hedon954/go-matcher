@@ -99,7 +99,8 @@ func createFullGroup(impl *Impl, t *testing.T) (entry.Player, entry.Group) {
 func createTempTeam(impl *Impl, g entry.Group, t *testing.T) entry.Team {
 	team, err := impl.teamMgr.CreateTeam(g)
 	assert.Nil(t, err)
-	assert.NotNil(t, impl.teamMgr.Get(team.ID()))
+	assert.Nil(t, impl.teamMgr.Get(team.ID()))
+	impl.teamMgr.Add(team.ID(), team) // we don't add team to manager in CreateTeam.
 	assert.Equal(t, 1, len(team.Base().GetGroups()))
 	return team
 }
@@ -108,7 +109,8 @@ func createTempRoom(uid string, impl *Impl, t *testing.T) (entry.Player, entry.G
 	p, g := createTempGroup(uid, impl, t)
 	room, err := impl.roomMgr.CreateRoom(1, createTempTeam(impl, g, t))
 	assert.Nil(t, err)
-	assert.NotNil(t, impl.roomMgr.Get(room.ID()))
+	assert.Nil(t, impl.roomMgr.Get(room.ID()))
+	impl.roomMgr.Add(room.ID(), room) // we don't add room to manager in CreateRoom.
 	assert.Equal(t, 1, len(room.Base().GetTeams()))
 	return p, g, room
 }

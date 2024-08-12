@@ -275,6 +275,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/match/exit_game": {
+            "post": {
+                "description": "exit game",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "match service"
+                ],
+                "summary": "exit game",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Request ID",
+                        "name": "x-request-id",
+                        "in": "header"
+                    },
+                    {
+                        "description": "Exit Game Request Body",
+                        "name": "ExitGameReq",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/apihttp.ExitGameReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Concrete Error Msg",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/match/exit_group/{uid}": {
             "post": {
                 "description": "exit a group based on the request",
@@ -747,7 +793,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/apihttp.UploadPlayerAttr"
+                            "$ref": "#/definitions/apihttp.UploadPlayerAttrReq"
                         }
                     }
                 ],
@@ -827,6 +873,21 @@ const docTemplate = `{
                 },
                 "player_info": {
                     "$ref": "#/definitions/pto.EnterGroup"
+                }
+            }
+        },
+        "apihttp.ExitGameReq": {
+            "type": "object",
+            "required": [
+                "room_id",
+                "uid"
+            ],
+            "properties": {
+                "room_id": {
+                    "type": "integer"
+                },
+                "uid": {
+                    "type": "string"
                 }
             }
         },
@@ -930,7 +991,7 @@ const docTemplate = `{
                 }
             }
         },
-        "apihttp.UploadPlayerAttr": {
+        "apihttp.UploadPlayerAttrReq": {
             "type": "object",
             "required": [
                 "uid"

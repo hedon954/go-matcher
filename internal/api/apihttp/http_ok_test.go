@@ -37,7 +37,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 		UIDBB = "bb"
 		UIDC  = "c"
 		UIDCC = "cc"
-		UIDD  = "D"
+		UIDD  = "d"
 
 		G1 int64 = 1
 		G2 int64 = 2
@@ -195,17 +195,34 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 28. start g5 to match, match success and create a new room
 	requestStartMatch(router, UIDD, t)
 
+	// TeamPlayerLimit: 2
+	// RoomTeamLimit:   3
+	// RoomPlayerCount = TeamPlayerLimit * RoomTeamLimit = 2 * 3 = 6
+	// 'a' -> g2 -> 1
+	// 'b' -> g3 -> 2
+	// 'c' -> g4 -> 2
+	// 'd' -> g5 -> 1
 	for i := 0; i <= 10; i++ {
 		if api.m.Glicko2Matcher.RoomCount.Load() == 1 {
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g2))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g3))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g4))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g5))
-			assert.NotNil(t, api.rm.Get(1))
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+	rooms := []entry.Room{}
+	api.rm.Range(func(_ int64, room entry.Room) bool {
+		rooms = append(rooms, room)
+		return true
+	})
+
+	// 29. 'd' exit game, 'g5' should be dissovled
+	requestExitGame(router, UIDD, rooms[0].ID(), t)
+	assert.Nil(t, api.pm.Get(UIDD))
+	assert.Nil(t, api.gm.Get(G5))
+	assert.Equal(t, entry.GroupStateDissolved, getGroupStateWithLock(g5))
 }
 
 func getGroupStateWithLock(g entry.Group) entry.GroupState {
@@ -218,6 +235,14 @@ func getPlayerOnlineStateWithLock(p entry.Player) entry.PlayerOnlineState {
 	p.Base().Lock()
 	defer p.Base().Unlock()
 	return p.Base().GetOnlineState()
+}
+
+func requestExitGame(router *gin.Engine, uid string, roomID int64, t *testing.T) {
+	req, _ := http.NewRequest("POST", "/match/exit_game", bytes.NewBuffer(exitGameParam(uid, roomID)))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+	assertRspOk(w, t)
 }
 
 func requestReady(router *gin.Engine, uid string, t *testing.T) {
@@ -279,6 +304,15 @@ func requestSetRecentJoinGroup(router *gin.Engine, uid string, allow bool, t *te
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assertRspOk(w, t)
+}
+
+func exitGameParam(uid string, id int64) []byte {
+	param := &ExitGameReq{
+		UID:    uid,
+		RoomID: id,
+	}
+	bs, _ := json.Marshal(param)
+	return bs
 }
 
 func createSetRecentJoinParam(uid string, allow bool) []byte {
@@ -470,7 +504,7 @@ func createGroupRsp(w *httptest.ResponseRecorder) *CreateGroupRsp {
 }
 
 func uploadPlayerAttrParam(uid string) []byte {
-	param := &UploadPlayerAttr{
+	param := &UploadPlayerAttrReq{
 		UID: uid,
 		UploadPlayerAttr: pto.UploadPlayerAttr{
 			Attribute: pto.Attribute{
@@ -484,7 +518,7 @@ func uploadPlayerAttrParam(uid string) []byte {
 }
 
 func uploadPlayerAttrParamInvalid(uid string) []byte {
-	param := &UploadPlayerAttr{
+	param := &UploadPlayerAttrReq{
 		UID: uid,
 		UploadPlayerAttr: pto.UploadPlayerAttr{
 			Attribute: pto.Attribute{

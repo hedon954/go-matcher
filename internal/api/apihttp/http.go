@@ -68,6 +68,7 @@ func (api *API) setupRouter() *gin.Engine {
 		mg.POST("/upload_player_attr", api.UploadPlayerAttr)
 		mg.POST("/ready/:uid", api.Ready)
 		mg.POST("/unready/:uid", api.Unready)
+		mg.POST("/exit_game", api.ExitGame)
 	}
 
 	docs.SwaggerInfo.BasePath = "/"
@@ -446,20 +447,20 @@ func (api *API) CancelMatch(c *gin.Context) {
 	response.GinSuccess(c, nil)
 }
 
-// UploadPlayerAttr godoc
+// UploadPlayerAttrReq godoc
 // @Summary upload player attr
 // @Description upload player attr
 // @Tags match service
 // @Accept json
 // @Produce json
 // @Param x-request-id header string false "Request ID"
-// @Param UploadPlayerAttrReq body UploadPlayerAttr true "Upload Player Attr Request Body"
+// @Param UploadPlayerAttrReq body UploadPlayerAttrReq true "Upload Player Attr Request Body"
 // @Success 200 {object} string "ok"
 // @Failure 400 {object} string "Bad Request"
 // @Failure 200 {object} string "Concrete Error Msg"
 // @Router /match/upload_player_attr [post]
 func (api *API) UploadPlayerAttr(c *gin.Context) {
-	var req UploadPlayerAttr
+	var req UploadPlayerAttrReq
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.GinParamError(c, err)
 		return
@@ -507,6 +508,31 @@ func (api *API) Ready(c *gin.Context) {
 func (api *API) Unready(c *gin.Context) {
 	uid := c.Param("uid")
 	if err := api.ms.Unready(c, uid); err != nil {
+		response.GinError(c, err)
+		return
+	}
+	response.GinSuccess(c, nil)
+}
+
+// ExitGame godoc
+// @Summary exit game
+// @Description exit game
+// @Tags match service
+// @Accept json
+// @Produce json
+// @Param x-request-id header string false "Request ID"
+// @Param ExitGameReq body ExitGameReq true "Exit Game Request Body"
+// @Success 200 {object} string "ok"
+// @Failure 400 {object} string "Bad Request"
+// @Failure 200 {object} string "Concrete Error Msg"
+// @Router /match/exit_game [post]
+func (api *API) ExitGame(c *gin.Context) {
+	var req ExitGameReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.GinParamError(c, err)
+		return
+	}
+	if err := api.ms.ExitGame(c, req.UID, req.RoomID); err != nil {
 		response.GinError(c, err)
 		return
 	}

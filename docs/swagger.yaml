@@ -40,6 +40,16 @@ definitions:
     - group_id
     - player_info
     type: object
+  apihttp.ExitGameReq:
+    properties:
+      room_id:
+        type: integer
+      uid:
+        type: string
+    required:
+    - room_id
+    - uid
+    type: object
   apihttp.InviteReq:
     properties:
       invitee_uid:
@@ -105,7 +115,7 @@ definitions:
     required:
     - uid
     type: object
-  apihttp.UploadPlayerAttr:
+  apihttp.UploadPlayerAttrReq:
     properties:
       avatar:
         type: string
@@ -432,6 +442,36 @@ paths:
       summary: enter a group
       tags:
       - match service
+  /match/exit_game:
+    post:
+      consumes:
+      - application/json
+      description: exit game
+      parameters:
+      - description: Request ID
+        in: header
+        name: x-request-id
+        type: string
+      - description: Exit Game Request Body
+        in: body
+        name: ExitGameReq
+        required: true
+        schema:
+          $ref: '#/definitions/apihttp.ExitGameReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Concrete Error Msg
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: exit game
+      tags:
+      - match service
   /match/exit_group/{uid}:
     post:
       consumes:
@@ -739,7 +779,7 @@ paths:
         name: UploadPlayerAttrReq
         required: true
         schema:
-          $ref: '#/definitions/apihttp.UploadPlayerAttr'
+          $ref: '#/definitions/apihttp.UploadPlayerAttrReq'
       produces:
       - application/json
       responses:
