@@ -1,6 +1,7 @@
 package znet
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"sync/atomic"
@@ -21,12 +22,16 @@ type Server struct {
 	notifyConnClose chan ziface.IConnection
 	onConnStart     func(conn ziface.IConnection)
 	onConnStop      func(conn ziface.IConnection)
+	cancelCtx       context.Context
+	cancelFunc      func()
 }
 
 func NewServer(conf string) ziface.IServer {
 	if conf != "" {
 		zutils.GlobalObject.Reload(conf)
 	}
+
+	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	s := &Server{
 		IPVersion:       "tcp4",
@@ -37,6 +42,8 @@ func NewServer(conf string) ziface.IServer {
 		notifyConnClose: make(chan ziface.IConnection, 1),
 		msgHandler:      NewMsgHandle(),
 		ConnMgr:         NewConnManager(),
+		cancelCtx:       ctx,
+		cancelFunc:      cancelFunc,
 	}
 	return s
 }
@@ -78,11 +85,10 @@ func (s *Server) Start() {
 			}
 
 			dealConn := NewConnection(s, conn, s.ConnIDGen.Add(1), s.msgHandler)
-			go dealConn.Start()
+			go dealConn.Start(s.cancelCtx)
 		}
 	}()
 
-	// TODO: refact it
 	go func() {
 		for conn := range s.notifyConnClose {
 			s.ConnMgr.Remove(conn)
@@ -92,11 +98,8 @@ func (s *Server) Start() {
 
 func (s *Server) Stop() {
 	fmt.Printf("[STOP] Zinx server, name: %s\n", s.Name)
-
 	s.ConnMgr.ClearConn()
-
-	time.Sleep(10 * time.Millisecond) // todo: refact it
-	close(s.notifyConnClose)
+	s.cancelFunc()
 }
 
 func (s *Server) Serve() {

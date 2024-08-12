@@ -1,11 +1,12 @@
 package ziface
 
 import (
+	"context"
 	"net"
 )
 
 type IConnection interface {
-	Start()
+	Start(ctx context.Context)
 	Stop()
 	GetTCPConnection() *net.TCPConn
 	GetConnID() uint64

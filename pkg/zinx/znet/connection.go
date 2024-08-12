@@ -1,6 +1,7 @@
 package znet
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -40,8 +41,8 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, mh z
 	return c
 }
 
-func (c *Connection) Start() {
-	go c.startReader()
+func (c *Connection) Start(ctx context.Context) {
+	go c.startReader(ctx)
 	go c.startWriter()
 
 	c.TCPServer.CallOnConnStart(c)
@@ -114,43 +115,48 @@ func (c *Connection) RemoveProperty(key string) {
 	delete(c.properties, key)
 }
 
-func (c *Connection) startReader() {
+func (c *Connection) startReader(ctx context.Context) {
 	fmt.Println("[Reader Goroutine is running]")
 	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit")
 	defer c.Stop()
 
 	dp := NewDataPack()
 	for {
-		// read header
-		headData := make([]byte, dp.GetHeadLen())
-		if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
-			fmt.Println("read msg head error ", err)
+		select {
+		case <-ctx.Done():
 			return
-		}
-
-		// unpack to get data length and msg id
-		msg, err := dp.Unpack(headData)
-		if err != nil {
-			fmt.Println("unpack error ", err)
-			return
-		}
-
-		// read body according to data len
-		data := make([]byte, msg.GetDataLen())
-		if msg.GetDataLen() > 0 {
-			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
-				fmt.Println("read msg data error ", err)
+		default:
+			// read header
+			headData := make([]byte, dp.GetHeadLen())
+			if _, err := io.ReadFull(c.GetTCPConnection(), headData); err != nil {
+				fmt.Println("read msg head error ", err)
 				return
 			}
-		}
-		msg.SetData(data)
 
-		// handle request
-		req := Request{conn: c, msg: msg}
-		if zutils.GlobalObject.WorkPoolSize > 0 {
-			c.MsgHandler.SendMsgToTaskQueue(&req)
-		} else {
-			safe.Go(func() { c.MsgHandler.DoMsgHandle(&req) })
+			// unpack to get data length and msg id
+			msg, err := dp.Unpack(headData)
+			if err != nil {
+				fmt.Println("unpack error ", err)
+				return
+			}
+
+			// read body according to data len
+			data := make([]byte, msg.GetDataLen())
+			if msg.GetDataLen() > 0 {
+				if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
+					fmt.Println("read msg data error ", err)
+					return
+				}
+			}
+			msg.SetData(data)
+
+			// handle request
+			req := Request{conn: c, msg: msg}
+			if zutils.GlobalObject.WorkPoolSize > 0 {
+				c.MsgHandler.SendMsgToTaskQueue(&req)
+			} else {
+				safe.Go(func() { c.MsgHandler.DoMsgHandle(&req) })
+			}
 		}
 	}
 }

@@ -45,13 +45,16 @@ func Test_Matcher(t *testing.T) {
 		time.Sleep(1 * time.Second)
 		ch <- struct{}{}
 	}()
+
 	for {
 		select {
 		case tr := <-roomChan:
 			now := time.Now().Unix()
 			rId := roomId.Add(1)
-			fmt.Printf("| Room[%d] Match successful, cast time %ds, hasAi: %t, team count: %d\n", rId,
-				now-tr.GetStartMatchTimeSec(), tr.HasAi(), len(tr.GetTeams()))
+			if rId%100 == 0 {
+				fmt.Printf("| Room[%d] Match successful, cast time %ds, hasAi: %t, team count: %d\n", rId,
+					now-tr.GetStartMatchTimeSec(), tr.HasAi(), len(tr.GetTeams()))
+			}
 		case err := <-errChan:
 			assert.Nil(t, err)
 		case <-ch:
