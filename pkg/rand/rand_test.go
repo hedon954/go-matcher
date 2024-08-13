@@ -32,3 +32,13 @@ func TestPermFrom1(t *testing.T) {
 	}
 	assert.True(t, diff)
 }
+
+func TestUUIDV7(t *testing.T) {
+	var pre string
+	var cur string
+	for i := 0; i < 100; i++ {
+		cur = UUIDV7()
+		assert.NotEqual(t, cur, pre)
+		pre = cur
+	}
+}
