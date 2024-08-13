@@ -12,7 +12,7 @@ type Team interface {
 }
 
 type TeamBase struct {
-	sync.RWMutex
+	lock          sync.RWMutex
 	id            int64 // id is the zutils unique team id.
 	TeamID        int   // TeamID is the unique team id in one room, start from 1.
 	IsAI          bool
@@ -58,4 +58,20 @@ func (t *TeamBase) AddGroup(g Group) {
 
 func (t *TeamBase) RemoveGroup(id int64) {
 	delete(t.groups, id)
+}
+
+func (t *TeamBase) Lock() {
+	t.lock.Lock()
+}
+
+func (t *TeamBase) Unlock() {
+	t.lock.Unlock()
+}
+
+func (t *TeamBase) RLock() {
+	t.lock.RLock()
+}
+
+func (t *TeamBase) RUnlock() {
+	t.lock.RUnlock()
 }

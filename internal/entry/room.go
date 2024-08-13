@@ -16,7 +16,7 @@ type Room interface {
 }
 
 type RoomBase struct {
-	sync.RWMutex
+	lock      sync.RWMutex
 	id        int64
 	teams     []Team
 	TeamLimit int
@@ -102,4 +102,20 @@ func (r *RoomBase) AddEscapePlayer(uid string) {
 
 func (r *RoomBase) GetEscapePlayers() []string {
 	return r.escapePlayer
+}
+
+func (r *RoomBase) Lock() {
+	r.lock.Lock()
+}
+
+func (r *RoomBase) Unlock() {
+	r.lock.Unlock()
+}
+
+func (r *RoomBase) RLock() {
+	r.lock.RLock()
+}
+
+func (r *RoomBase) RUnlock() {
+	r.lock.RUnlock()
 }

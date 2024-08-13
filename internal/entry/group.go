@@ -66,7 +66,7 @@ const (
 type GroupBase struct {
 	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine.
 	// Use it to help avoid deadlock.
-	*concurrent.ReentrantLock
+	lock *concurrent.ReentrantLock
 
 	// GroupID is the unique id of the group.
 	GroupID int64
@@ -138,7 +138,7 @@ func NewGroupBase(
 	groupID int64, playerLimit int, playerBase *PlayerBase,
 ) *GroupBase {
 	g := &GroupBase{
-		ReentrantLock:          new(concurrent.ReentrantLock),
+		lock:                   new(concurrent.ReentrantLock),
 		GroupID:                groupID,
 		state:                  GroupStateInvite,
 		GameMode:               playerBase.GameMode,
@@ -377,4 +377,12 @@ func (g *GroupBase) GetInviteExpireTimeStamp(uid string) int64 {
 }
 func (g *GroupBase) IsInviteExpired(uid string, nowUnix int64) bool {
 	return g.inviteRecords[uid] <= nowUnix
+}
+
+func (g *GroupBase) Lock() {
+	g.lock.Lock()
+}
+
+func (g *GroupBase) Unlock() {
+	g.lock.Unlock()
 }

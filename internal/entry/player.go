@@ -39,7 +39,7 @@ const (
 type PlayerBase struct {
 	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine
 	// Use it to help avoid deadlock.
-	*concurrent.ReentrantLock
+	lock    *concurrent.ReentrantLock
 	uid     string
 	IsAI    bool
 	GroupID int64
@@ -54,11 +54,11 @@ type PlayerBase struct {
 
 func NewPlayerBase(info *pto.PlayerInfo) *PlayerBase {
 	b := &PlayerBase{
-		ReentrantLock: new(concurrent.ReentrantLock),
-		uid:           info.UID,
-		onlineState:   PlayerOnlineStateOnline,
-		voiceState:    PlayerVoiceStateMute,
-		PlayerInfo:    *info,
+		lock:        new(concurrent.ReentrantLock),
+		uid:         info.UID,
+		onlineState: PlayerOnlineStateOnline,
+		voiceState:  PlayerVoiceStateMute,
+		PlayerInfo:  *info,
 	}
 
 	return b
@@ -127,4 +127,11 @@ func (p *PlayerBase) GetVoiceState() PlayerVoiceState {
 func (p *PlayerBase) SetAttr(attr *pto.UploadPlayerAttr) error {
 	p.Attribute = attr.Attribute
 	return nil
+}
+
+func (p *PlayerBase) Lock() {
+	p.lock.Lock()
+}
+func (p *PlayerBase) Unlock() {
+	p.lock.Unlock()
 }

@@ -37,6 +37,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [x] Glicko2
   - [ ] Gather
   - [ ] ELO
+- [ ] AI Generator
 
 
 
@@ -70,6 +71,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [ ] repository by redis
 - [ ] hot upgrade
 - [ ] horizontal expansion
+- [ ] AI Generator
 
 
 
@@ -88,6 +90,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] zinx（8.20-8.23）
 - [x] TCP api（8.26）
 - [ ] WebSocket api（8.27）
+- [ ] AI Generator
 
 
 

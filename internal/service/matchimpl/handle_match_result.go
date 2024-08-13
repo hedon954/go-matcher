@@ -13,9 +13,13 @@ func (impl *Impl) waitForMatchResult() {
 	}
 }
 
-func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) error {
+func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err error) {
 	// add room to manager
-	impl.roomMgr.Add(r.ID(), r)
+	defer func() {
+		if err == nil {
+			impl.roomMgr.Add(r.ID(), r)
+		}
+	}()
 	// add teams to managers
 	for _, t := range r.Base().GetTeams() {
 		fmt.Printf("add team %d to room: %d\n", t.ID(), r.ID())
@@ -32,7 +36,8 @@ func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) error {
 	// ----------------------------
 	// some operations may need AI
 	// ----------------------------
-	if err := impl.fillRoomInfo(r); err != nil {
+	err = impl.fillRoomInfo(r)
+	if err != nil {
 		return err
 	}
 	impl.pushService.PushMatchInfo(ctx, r.Base().UIDs(), r.GetMatchInfo())
