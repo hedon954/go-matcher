@@ -1,4 +1,4 @@
-name: build
+name: gen-plantuml
 
 on:
   push:

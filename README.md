@@ -92,7 +92,9 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [ ] WebSocket api（8.27）
 - [ ] AI Generator
 
+## Smoke flow
 
+![smoke flow](./assets/uml/smoke_flow.svg)
 
 
 ## Help
