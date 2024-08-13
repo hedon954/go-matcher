@@ -1,0 +1,26 @@
+name: reviewdog
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  reviewdog:
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest ]
+        go-version: [ '1.22' ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest

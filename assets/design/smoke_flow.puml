@@ -1,0 +1,46 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+entity MatchServer as Match #yellow
+actor ClientA  as ClientA #blue
+actor ClientB as ClientB #green
+entity GameServer as GameServer #orange
+
+group matching
+    ClientA -> Match: CreateGroup
+    Match --> ClientA: group_id
+
+    ClientA -> Match: Invite
+    Match --> ClientB: PushInvite
+
+    ClientB -> Match: AcceptInvite
+    ClientB -> Match: EnterGroup
+    Match --> ClientA: PushGroupInfo
+    Match --> ClientB: PushGroupInfo
+
+    ClientA -> Match: StartMatch
+    Match --> ClientA: PushStart
+    Match --> ClientB: PushStart
+
+    ClientA -> Match: UploadAttr
+    ClientB -> Match: UploadAttr
+
+    Match -> Match: AddGroupToQueue
+    Match -> Match: HandleMatchResult
+    Match --> ClientA: PushMatchInfo(room_id)
+    Match --> ClientB: PushMatchInfo(room_id)
+end
+
+group Gaming
+    ClientA -> GameServer: Bind
+    ClientB -> GameServer: Bind
+    ClientA -> GameServer: SendFrame
+    ClientB -> GameServer: SendFrame
+    GameServer --> ClientA: SyncFrames
+    GameServer --> ClientB: SyncFrames
+
+    GameServer -> Match: GameEnd
+    Match -> Match: HanldeGameResult
+    Match --> ClientA: PushGameReuslt
+    Match --> ClientB: PushGameReuslt
+end
+@enduml
