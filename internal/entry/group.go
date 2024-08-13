@@ -39,7 +39,7 @@ type Group interface {
 	// Maybe some game mode need to check if the group is full or not.
 	// Maybe some game mode need all players to be ready.
 	// If you have some special logics, please override this method.
-	CanStartMatch() bool
+	CanStartMatch() error
 }
 
 const (
@@ -341,8 +341,8 @@ func (g *GroupBase) GetGroupInfo() *pto.GroupInfo {
 	}
 }
 
-func (g *GroupBase) CanStartMatch() bool {
-	return true
+func (g *GroupBase) CanStartMatch() error {
+	return nil
 }
 
 func (g *GroupBase) SetAllowNearbyJoin(allow bool) {

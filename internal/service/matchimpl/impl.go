@@ -520,11 +520,12 @@ func (impl *Impl) StartMatch(ctx context.Context, captainUID string) error {
 	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
-
 	if g.GetCaptain() != p {
 		return merr.ErrNotCaptain
 	}
-
+	if err := g.CanStartMatch(); err != nil {
+		return err
+	}
 	g.Base().MatchStrategy = impl.MSConfig.GetMatchStrategy(g.Base().GameMode)
 	if !g.Base().IsMatchStrategySupported() {
 		return fmt.Errorf("unsupported match strategy: %v", g.Base().MatchStrategy)
@@ -639,18 +640,7 @@ func (impl *Impl) HandleMatchResult(r entry.Room) {
 }
 
 func (impl *Impl) HandleGameResult(result *pto.GameResult) error {
-	impl.result[result.RoomID] = result
-	impl.removeClearRoomTimer(result.RoomID)
-
-	log.Info().
-		Int64("room_id", result.RoomID).
-		Int("game_mode", int(result.GameMode)).
-		Int64("mode_version", result.ModeVersion).
-		Int("match_strategy", int(result.MatchStrategy)).
-		Any("player_meta_infos", result.PlayerMetaInfo).
-		Msg("handle game result")
-
-	// ... do something
+	impl.handleGameResult(result)
 	return nil
 }
 
@@ -665,13 +655,4 @@ func (impl *Impl) getPlayerAndGroup(uid string) (entry.Player, entry.Group, erro
 		return nil, nil, merr.ErrGroupNotExists
 	}
 	return p, g, nil
-}
-
-func (impl *Impl) exitGame(ctx context.Context, p entry.Player, g entry.Group, r entry.Room) error {
-	if err := impl.exitGroup(ctx, p, g); err != nil {
-		return err
-	}
-	impl.playerMgr.Delete(p.UID())
-	r.Base().AddEscapePlayer(p.UID())
-	return nil
 }

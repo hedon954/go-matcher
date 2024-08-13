@@ -8,5 +8,6 @@ import (
 
 func (impl *Impl) ready(ctx context.Context, p entry.Player, g entry.Group) {
 	delete(g.Base().UnReadyPlayer, p.UID())
+	p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInGroup)
 	impl.pushService.PushReady(ctx, g.Base().UIDs(), p.UID())
 }
