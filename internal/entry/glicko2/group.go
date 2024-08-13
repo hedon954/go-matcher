@@ -3,10 +3,11 @@ package glicko2
 import (
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
-	"github.com/rs/zerolog/log"
 
 	"github.com/spf13/cast"
 )

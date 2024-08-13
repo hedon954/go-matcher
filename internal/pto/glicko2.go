@@ -2,6 +2,6 @@ package pto
 
 type Glicko2Info struct {
 	MMR  float64 `json:"mmr"`
-	Star int     `json:"star"`
-	Rank int     `json:"rank"`
+	Star int64   `json:"star"`
+	Rank int64   `json:"rank"`
 }

@@ -22,6 +22,7 @@ func (impl *Impl) startMatch(ctx context.Context, g entry.Group) {
 	for _, p := range base.GetPlayers() {
 		p.Base().Lock()
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
+		p.Base().SetMatchStrategy(base.MatchStrategy)
 		p.Base().Unlock()
 	}
 	impl.pushService.PushPlayerOnlineState(ctx, uids, entry.PlayerOnlineStateInMatch)

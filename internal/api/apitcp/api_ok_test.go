@@ -49,15 +49,12 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	api.setupRouter(server)
 	defer server.Stop()
 	defer api.m.Stop()
-
 	conn := startClient()
-	defer func() {
-		time.Sleep(10 * time.Millisecond) // TODO: refact it
-		_ = conn.Close()
-	}()
+	defer func() { _ = conn.Close() }()
 
 	// 1. 'a' create a group 'g1'
-	rsp := requestCreateGroup(conn, UIDA, t)
+	rsp, errMsg := requestCreateGroup(conn, UIDA, t)
+	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(1), rsp.GroupId)
 	fmt.Println(rsp)
 	g1 := api.gm.Get(rsp.GroupId)
@@ -72,7 +69,8 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	assert.Nil(t, api.gm.Get(rsp.GroupId))
 
 	// 3. 'a' create a group again 'g2'
-	rsp = requestCreateGroup(conn, UIDA, t)
+	rsp, errMsg = requestCreateGroup(conn, UIDA, t)
+	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(2), rsp.GroupId)
 	g2 := api.gm.Get(rsp.GroupId)
 	assert.NotNil(t, g2)
@@ -160,7 +158,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	assert.Equal(t, 0, len(g2.Base().UnReadyPlayer))
 
 	// 20. 'a' upload player attr
-	requestUnloadPlayerAttr(conn, UIDA, t)
+	requestUnloadPlayerAttr(conn, UIDA, true, true, t)
 	assert.Equal(t, "hedon2", api.pm.Get(UIDA).Base().Attribute.Nickname)
 
 	// 21. 'a' start match 'g2'
@@ -170,7 +168,8 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	assert.Equal(t, entry.PlayerOnlineStateInMatch, ua.Base().GetOnlineStateWithLock())
 
 	// 22. 'a' cancel match 'g2'
-	requestCancelMatch(conn, UIDA, t)
+	_, errMsg = requestCancelMatch(conn, UIDA, t)
+	assert.Equal(t, "", errMsg)
 	time.Sleep(11 * time.Millisecond) // for at least get one round match
 	assert.Equal(t, entry.GroupStateInvite, g2.Base().GetStateWithLock())
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, ua.Base().GetOnlineStateWithLock())
@@ -229,14 +228,14 @@ func Test_TCP_ShouldWork(t *testing.T) {
 		return true
 	})
 
-	// 29. 'd' exit game, 'g5' should be dissovled
+	// 29. 'd' exit game, 'g5' should be dissolved
 	requestExitGame(conn, UIDD, rooms[0].ID(), t)
 	assert.Nil(t, api.pm.Get(UIDD))
 	assert.Nil(t, api.gm.Get(G5))
 	assert.Equal(t, entry.GroupStateDissolved, g5.Base().GetStateWithLock())
 }
 
-func requestExitGame(conn net.Conn, uid string, roomID int64, t *testing.T) {
+func requestExitGame(conn net.Conn, uid string, roomID int64, t *testing.T) string {
 	var req = &pb.ExitGameReq{
 		Uid:    uid,
 		RoomId: roomID,
@@ -247,15 +246,18 @@ func requestExitGame(conn net.Conn, uid string, roomID int64, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.ExitGameRsp)
+	rsp, em := readFromServer(conn, t)
+	_ = rsp.(*pb.ExitGameRsp)
+	return em
 }
 
 func requestCreateFullGroup(conn net.Conn, uid1, uid2 string, t *testing.T) {
-	rsp := requestCreateGroup(conn, uid1, t)
+	rsp, errMsg := requestCreateGroup(conn, uid1, t)
+	assert.Equal(t, "", errMsg)
 	requestEnterGroup(conn, uid2, rsp.GroupId, t)
 }
 
-func requestCancelMatch(conn net.Conn, uid string, t *testing.T) {
+func requestCancelMatch(conn net.Conn, uid string, t *testing.T) (*pb.CancelMatchRsp, string) {
 	var req = &pb.CancelMatchReq{
 		Uid: uid,
 	}
@@ -265,10 +267,14 @@ func requestCancelMatch(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.CancelMatchRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		return rsp.(*pb.CancelMatchRsp), ""
+	}
+	return nil, em
 }
 
-func requestStartMatch(conn net.Conn, uid string, t *testing.T) {
+func requestStartMatch(conn net.Conn, uid string, t *testing.T) string {
 	var req = &pb.StartMatchReq{
 		Uid: uid,
 	}
@@ -278,15 +284,26 @@ func requestStartMatch(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.StartMatchRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.StartMatchRsp)
+	}
+	return em
 }
 
-func requestUnloadPlayerAttr(conn net.Conn, uid string, t *testing.T) {
+func requestUnloadPlayerAttr(conn net.Conn, uid string, attr, goat bool, t *testing.T) string {
 	var req = &pb.UploadPlayerAttrReq{
 		Uid: uid,
-		Attr: &pb.UserAttribute{
+	}
+	if attr {
+		req.Attr = &pb.UserAttribute{
 			Nickname: "hedon2",
-		},
+		}
+	}
+	if goat {
+		req.Type = &pb.UploadPlayerAttrReq_GoatGameAttr{
+			GoatGameAttr: &pb.GoatGameAttribute{Mmr: 1.0},
+		}
 	}
 	bs, _ := proto.Marshal(req)
 	msg, err := dp.Pack(znet.NewMsgPackage(uint32(pb.ReqType_REQ_TYPE_UPLOAD_PLAYER_ATTR), bs))
@@ -294,10 +311,14 @@ func requestUnloadPlayerAttr(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.UploadPlayerAttrRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.UploadPlayerAttrRsp)
+	}
+	return em
 }
 
-func requestReady(conn net.Conn, uid string, t *testing.T) {
+func requestReady(conn net.Conn, uid string, t *testing.T) string {
 	var req = &pb.ReadyReq{
 		Uid: uid,
 	}
@@ -307,10 +328,14 @@ func requestReady(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.ReadyRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.ReadyRsp)
+	}
+	return em
 }
 
-func requestUnready(conn net.Conn, uid string, t *testing.T) {
+func requestUnready(conn net.Conn, uid string, t *testing.T) string {
 	var req = &pb.UnreadyReq{
 		Uid: uid,
 	}
@@ -320,10 +345,14 @@ func requestUnready(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.UnreadyRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.UnreadyRsp)
+	}
+	return em
 }
 
-func requestSetRecentJoinGroup(conn net.Conn, uid string, allow bool, t *testing.T) {
+func requestSetRecentJoinGroup(conn net.Conn, uid string, allow bool, t *testing.T) string {
 	var req = &pb.SetRecentJoinGroupReq{
 		Uid:   uid,
 		Allow: allow,
@@ -334,10 +363,14 @@ func requestSetRecentJoinGroup(conn net.Conn, uid string, allow bool, t *testing
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.SetRecentJoinGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.SetRecentJoinGroupRsp)
+	}
+	return em
 }
 
-func requestSetNearbyJoinGroup(conn net.Conn, uid string, allow bool, t *testing.T) {
+func requestSetNearbyJoinGroup(conn net.Conn, uid string, allow bool, t *testing.T) string {
 	var req = &pb.SetNearbyJoinGroupReq{
 		Uid:   uid,
 		Allow: allow,
@@ -348,10 +381,14 @@ func requestSetNearbyJoinGroup(conn net.Conn, uid string, allow bool, t *testing
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.SetNearbyJoinGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.SetNearbyJoinGroupRsp)
+	}
+	return em
 }
 
-func requestSetVoiceState(conn net.Conn, uid string, state entry.PlayerVoiceState, t *testing.T) {
+func requestSetVoiceState(conn net.Conn, uid string, state entry.PlayerVoiceState, t *testing.T) string {
 	var req = &pb.SetVoiceStateReq{
 		Uid:   uid,
 		State: pb.PlayerVoiceState(state),
@@ -362,10 +399,14 @@ func requestSetVoiceState(conn net.Conn, uid string, state entry.PlayerVoiceStat
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.SetVoiceStateRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.SetVoiceStateRsp)
+	}
+	return em
 }
 
-func requestKick(conn net.Conn, captain, kicked string, t *testing.T) {
+func requestKick(conn net.Conn, captain, kicked string, t *testing.T) string {
 	var req = &pb.KickPlayerReq{
 		CaptainUid: captain,
 		KickedUid:  kicked,
@@ -376,10 +417,14 @@ func requestKick(conn net.Conn, captain, kicked string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.KickPlayerRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.KickPlayerRsp)
+	}
+	return em
 }
 
-func requestExitGroup(conn net.Conn, uid string, t *testing.T) {
+func requestExitGroup(conn net.Conn, uid string, t *testing.T) string {
 	var req = &pb.ExitGroupReq{
 		Uid: uid,
 	}
@@ -389,10 +434,14 @@ func requestExitGroup(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.ExitGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.ExitGroupRsp)
+	}
+	return em
 }
 
-func requestChangeRole(conn net.Conn, captain, target string, role entry.GroupRole, t *testing.T) {
+func requestChangeRole(conn net.Conn, captain, target string, role entry.GroupRole, t *testing.T) string {
 	var req = &pb.ChangeRoleReq{
 		CaptainUid: captain,
 		TargetUid:  target,
@@ -404,10 +453,14 @@ func requestChangeRole(conn net.Conn, captain, target string, role entry.GroupRo
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.ChangeRoleRsp)
+	ret, em := readFromServer(conn, t)
+	if em == "" {
+		_ = ret.(*pb.ChangeRoleRsp)
+	}
+	return em
 }
 
-func requestAcceptInvite(conn net.Conn, inviter, invitee string, groupID int64, t *testing.T) {
+func requestAcceptInvite(conn net.Conn, inviter, invitee string, groupID int64, t *testing.T) string {
 	var req = &pb.AcceptInviteReq{
 		InviterUid:  inviter,
 		InviteeInfo: newPlayerInfo(invitee),
@@ -419,10 +472,14 @@ func requestAcceptInvite(conn net.Conn, inviter, invitee string, groupID int64, 
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.AcceptInviteRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.AcceptInviteRsp)
+	}
+	return em
 }
 
-func requestRefuseInvite(conn net.Conn, inviter, invitee string, groupID int64, t *testing.T) {
+func requestRefuseInvite(conn net.Conn, inviter, invitee string, groupID int64, t *testing.T) string {
 	var req = &pb.RefuseInviteReq{
 		InviterUid: inviter,
 		InviteeUid: invitee,
@@ -434,10 +491,14 @@ func requestRefuseInvite(conn net.Conn, inviter, invitee string, groupID int64, 
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.RefuseInviteRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.RefuseInviteRsp)
+	}
+	return em
 }
 
-func requestInvite(conn net.Conn, inviter, invitee string, t *testing.T) {
+func requestInvite(conn net.Conn, inviter, invitee string, t *testing.T) string {
 	var req = &pb.InviteReq{
 		InviterUid: inviter,
 		InviteeUid: invitee,
@@ -448,10 +509,14 @@ func requestInvite(conn net.Conn, inviter, invitee string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.InviteRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.InviteRsp)
+	}
+	return em
 }
 
-func requestDissolveGroup(conn net.Conn, uid string, t *testing.T) {
+func requestDissolveGroup(conn net.Conn, uid string, t *testing.T) string {
 	var req = &pb.DissolveGroupReq{
 		Uid: uid,
 	}
@@ -461,10 +526,14 @@ func requestDissolveGroup(conn net.Conn, uid string, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.DissolveGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.DissolveGroupRsp)
+	}
+	return em
 }
 
-func requestEnterGroup(conn net.Conn, uid string, groupID int64, t *testing.T) {
+func requestEnterGroup(conn net.Conn, uid string, groupID int64, t *testing.T) string {
 	var req = &pb.EnterGroupReq{
 		PlayerInfo: newPlayerInfo(uid),
 		Source:     pb.EnterGroupSource_ENTER_GROUP_SOURCE_INVITATION,
@@ -476,10 +545,14 @@ func requestEnterGroup(conn net.Conn, uid string, groupID int64, t *testing.T) {
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	_ = readFromServer(conn, t).(*pb.EnterGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		_ = rsp.(*pb.EnterGroupRsp)
+	}
+	return em
 }
 
-func requestCreateGroup(conn net.Conn, uid string, t *testing.T) *pb.CreateGroupRsp {
+func requestCreateGroup(conn net.Conn, uid string, t *testing.T) (*pb.CreateGroupRsp, string) {
 	var req = &pb.CreateGroupReq{PlayerInfo: newPlayerInfo(uid)}
 	bs, _ := proto.Marshal(req)
 	msg, err := dp.Pack(znet.NewMsgPackage(uint32(pb.ReqType_REQ_TYPE_CREATE_GROUP), bs))
@@ -487,7 +560,11 @@ func requestCreateGroup(conn net.Conn, uid string, t *testing.T) *pb.CreateGroup
 	_, err = conn.Write(msg)
 	assert.Nil(t, err)
 
-	return readFromServer(conn, t).(*pb.CreateGroupRsp)
+	rsp, em := readFromServer(conn, t)
+	if em == "" {
+		return rsp.(*pb.CreateGroupRsp), ""
+	}
+	return nil, em
 }
 
 func newPlayerInfo(uid string) *pb.PlayerInfo {
@@ -519,7 +596,7 @@ func startClient() net.Conn {
 	return conn
 }
 
-func readFromServer(conn net.Conn, t *testing.T) (res any) {
+func readFromServer(conn net.Conn, t *testing.T) (res any, errMsg string) {
 	headData := make([]byte, dp.GetHeadLen())
 	_, err := io.ReadFull(conn, headData)
 	if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -550,55 +627,55 @@ func readFromServer(conn net.Conn, t *testing.T) (res any) {
 }
 
 //nolint:gocyclo
-func resolveData(data []byte) any {
+func resolveData(data []byte) (any, string) {
 	var rsp = new(pb.CommonRsp)
 	err := proto.Unmarshal(data, rsp)
 	if err != nil {
 		fmt.Println("unmarshal error", err)
-		return ""
+		return nil, ""
 	}
 
 	if rsp.Code != pb.RspCode_RSP_CODE_SUCCESS {
-		return rsp.Message
+		return nil, rsp.Message
 	}
 	switch rsp.ReqType {
 	case pb.ReqType_REQ_TYPE_CREATE_GROUP:
-		return typeconv.MustFromProto[pb.CreateGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.CreateGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_ENTER_GROUP:
-		return typeconv.MustFromProto[pb.EnterGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.EnterGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_DISSOLVE_GROUP:
-		return typeconv.MustFromProto[pb.DissolveGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.DissolveGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_INVITE:
-		return typeconv.MustFromProto[pb.InviteRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.InviteRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_REFUSE_INVITE:
-		return typeconv.MustFromProto[pb.RefuseInviteRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.RefuseInviteRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_ACCEPT_INVITE:
-		return typeconv.MustFromProto[pb.AcceptInviteRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.AcceptInviteRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_CHANGE_ROLE:
-		return typeconv.MustFromProto[pb.ChangeRoleRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.ChangeRoleRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_EXIT_GROUP:
-		return typeconv.MustFromProto[pb.ExitGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.ExitGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_KICK_PLAYER:
-		return typeconv.MustFromProto[pb.KickPlayerRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.KickPlayerRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_SET_VOICE_STATE:
-		return typeconv.MustFromProto[pb.SetVoiceStateRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.SetVoiceStateRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_SET_NEARBY_JOIN_GROUP:
-		return typeconv.MustFromProto[pb.SetNearbyJoinGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.SetNearbyJoinGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_SET_RECENT_JOIN_GROUP:
-		return typeconv.MustFromProto[pb.SetRecentJoinGroupRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.SetRecentJoinGroupRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_UNREADY:
-		return typeconv.MustFromProto[pb.UnreadyRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.UnreadyRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_READY:
-		return typeconv.MustFromProto[pb.ReadyRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.ReadyRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_UPLOAD_PLAYER_ATTR:
-		return typeconv.MustFromProto[pb.UploadPlayerAttrRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.UploadPlayerAttrRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_START_MATCH:
-		return typeconv.MustFromProto[pb.StartMatchRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.StartMatchRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_CANCEL_MATCH:
-		return typeconv.MustFromProto[pb.CancelMatchRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.CancelMatchRsp](rsp.Data), ""
 	case pb.ReqType_REQ_TYPE_EXIT_GAME:
-		return typeconv.MustFromProto[pb.ExitGameRsp](rsp.Data)
+		return typeconv.MustFromProto[pb.ExitGameRsp](rsp.Data), ""
 	default:
-		return nil
+		return nil, "unknown req type: " + rsp.ReqType.String()
 	}
 }

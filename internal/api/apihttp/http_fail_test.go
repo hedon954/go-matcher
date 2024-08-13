@@ -27,7 +27,7 @@ func init() {
 	log.Logger = zerolog.New(io.Discard)
 }
 
-func TestAPI_StartMatch_StateNotMatching(t *testing.T) {
+func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
 	api := NewAPI(2, time.Second)
 	router := api.setupRouter()
 

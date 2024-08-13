@@ -400,8 +400,8 @@ func playerInfoFromPBToPTO(pInfo *pb.PlayerInfo) pto.PlayerInfo {
 		Rank:        pInfo.Rank,
 		Glicko2Info: &pto.Glicko2Info{
 			MMR:  pInfo.Glicko2Info.Mmr,
-			Star: int(pInfo.Glicko2Info.Star),
-			Rank: int(pInfo.Glicko2Info.Rank),
+			Star: pInfo.Glicko2Info.Star,
+			Rank: pInfo.Glicko2Info.Rank,
 		},
 	}
 }

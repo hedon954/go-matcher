@@ -8,10 +8,10 @@ import (
 type PlayerBaseGlicko2 struct {
 	*entry.PlayerBase
 	MMR            float64
-	Star           int
+	Star           int64
 	startMatchSec  int64
 	finishMatchSec int64
-	rank           int
+	rank           int64
 }
 
 func CreatePlayerBase(p *entry.PlayerBase, info *pto.Glicko2Info) *PlayerBaseGlicko2 {
@@ -35,7 +35,7 @@ func (p *PlayerBaseGlicko2) GetMMR() float64 {
 	return p.MMR
 }
 
-func (p *PlayerBaseGlicko2) GetStar() int {
+func (p *PlayerBaseGlicko2) GetStar() int64 {
 	return p.Star
 }
 
@@ -55,6 +55,6 @@ func (p *PlayerBaseGlicko2) SetFinishMatchTimeSec(t int64) {
 	p.finishMatchSec = t
 }
 
-func (p *PlayerBaseGlicko2) GetRank() int {
+func (p *PlayerBaseGlicko2) GetRank() int64 {
 	return p.rank
 }

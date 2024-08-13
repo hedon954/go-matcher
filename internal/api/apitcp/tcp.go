@@ -8,14 +8,14 @@ import (
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
-func SetupTCPServer(conf string) ziface.IServer {
+func SetupTCPServer(conf string) (*API, ziface.IServer) {
 	server := znet.NewServer(conf)
 
 	api := NewAPI(1, time.Second)
 	api.setupRouter(server)
 
 	go server.Serve()
-	return server
+	return api, server
 }
 
 func (api *API) setupRouter(s ziface.IServer) {

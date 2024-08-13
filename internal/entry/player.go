@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/concurrent"
@@ -39,10 +40,11 @@ const (
 type PlayerBase struct {
 	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine
 	// Use it to help avoid deadlock.
-	lock    *concurrent.ReentrantLock
-	uid     string
-	IsAI    bool
-	GroupID int64
+	lock          *concurrent.ReentrantLock
+	uid           string
+	IsAI          bool
+	GroupID       int64
+	matchStrategy constant.MatchStrategy
 
 	onlineState PlayerOnlineState
 	voiceState  PlayerVoiceState
@@ -127,6 +129,26 @@ func (p *PlayerBase) GetVoiceState() PlayerVoiceState {
 func (p *PlayerBase) SetAttr(attr *pto.UploadPlayerAttr) error {
 	p.Attribute = attr.Attribute
 	return nil
+}
+
+func (p *PlayerBase) GetMatchStrategy() constant.MatchStrategy {
+	return p.matchStrategy
+}
+
+func (p *PlayerBase) SetMatchStrategy(s constant.MatchStrategy) {
+	p.matchStrategy = s
+}
+
+func (p *PlayerBase) GetMatchStrategyWithLock() constant.MatchStrategy {
+	p.Lock()
+	defer p.Unlock()
+	return p.matchStrategy
+}
+
+func (p *PlayerBase) SetMatchStrategyWithLock(s constant.MatchStrategy) {
+	p.Lock()
+	defer p.Unlock()
+	p.matchStrategy = s
 }
 
 func (p *PlayerBase) Lock() {

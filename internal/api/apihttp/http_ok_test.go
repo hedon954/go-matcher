@@ -148,7 +148,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	requestReady(router, UIDA, t)
 	assert.Equal(t, 0, len(g2.Base().UnReadyPlayer))
 
-	// 20. 'a' upload player attr
+	// 20. 'a' upload player attr TODO: upload after start match
 	requestUnloadPlayerAttr(router, UIDA, t)
 	assert.Equal(t, "hedon2", api.pm.Get(UIDA).Base().Attribute.Nickname)
 

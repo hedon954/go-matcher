@@ -1,12 +1,16 @@
 package typeconv
 
 import (
+	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/proto"
 )
 
 func FromProto[T any](bs []byte) (*T, error) {
+	if len(bs) == 0 {
+		return nil, errors.New("protobuf data is empty")
+	}
 	var t T
 	msg, ok := any(&t).(proto.Message)
 	if !ok {

@@ -3,6 +3,7 @@ package matchimpl
 import (
 	"slices"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/internal/pto"
@@ -32,14 +33,15 @@ func (impl *Impl) handleGameResult(result *pto.GameResult) {
 	r.Base().Lock()
 	defer r.Base().Unlock()
 
-	impl.updateStateToSettle(r)
+	escapePlayers := r.Base().GetEscapePlayers()
+	impl.updateStateToSettle(r, escapePlayers)
+	impl.clearMatchStrategy(r, escapePlayers) // do not worry about performance, just make it readable
 
 	// ... do something to punish escape players
 	// ... do something to handle result
 }
 
-func (impl *Impl) updateStateToSettle(r entry.Room) {
-	escapePlayers := r.Base().GetEscapePlayers()
+func (impl *Impl) updateStateToSettle(r entry.Room, escapePlayers []string) {
 	for _, t := range r.Base().GetTeams() {
 		impl.updateTeamStateToSettle(t, escapePlayers)
 	}
@@ -62,5 +64,31 @@ func (impl *Impl) updateGroupStateToSettle(g entry.Group, escapePlayers []string
 			continue
 		}
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInSettle)
+		p.Base().SetMatchStrategyWithLock(constant.MatchStrategy(0))
+	}
+}
+
+func (impl *Impl) clearMatchStrategy(r entry.Room, escapePlayers []string) {
+	for _, t := range r.Base().GetTeams() {
+		impl.clearTeamMatchStrategy(t, escapePlayers)
+	}
+}
+
+func (impl *Impl) clearTeamMatchStrategy(team entry.Team, escapePlayers []string) {
+	team.Base().Lock()
+	defer team.Base().Unlock()
+	for _, g := range team.Base().GetGroups() {
+		impl.clearGroupMatchStrategy(g, escapePlayers)
+	}
+}
+
+func (impl *Impl) clearGroupMatchStrategy(g entry.Group, escapePlayers []string) {
+	g.Base().Lock()
+	defer g.Base().Unlock()
+	for _, p := range g.Base().GetPlayers() {
+		if slices.Index(escapePlayers, p.UID()) < 0 {
+			continue
+		}
+		p.Base().SetMatchStrategyWithLock(constant.MatchStrategy(0))
 	}
 }

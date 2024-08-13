@@ -3,8 +3,10 @@ package goat_game
 import (
 	"fmt"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/glicko2"
+	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
@@ -40,28 +42,23 @@ func (p *Player) SetAttr(attr *pto.UploadPlayerAttr) error {
 	if err := p.Base().SetAttr(attr); err != nil {
 		return err
 	}
-	if len(attr.Extra) == 0 {
-		return nil
+
+	if p.Base().GetMatchStrategy() == constant.MatchStrategyGlicko2 {
+		if err := p.setGlicko2Attr(attr.Extra); err != nil {
+			return err
+		}
 	}
 
-	attribute, err := typeconv.FromJson[Attribute](attr.Extra)
-	if err != nil {
-		return fmt.Errorf("invalid attribute: %w", err)
-	}
-
-	p.Glicko2Info.MMR = attribute.MMR
-	p.Glicko2Info.Rank = attribute.Rank
-	p.Glicko2Info.Star = attribute.Star
-
-	p.TotalPvpCount = attribute.TotalPvpCount
-	p.TodayPvpCount = attribute.TodayPvpCount
 	return nil
 }
 
-type Attribute struct {
-	MMR           float64 `json:"mmr"`
-	Star          int     `json:"star"`
-	Rank          int     `json:"rank"`
-	TotalPvpCount int64   `json:"total_pvp_count"`
-	TodayPvpCount int64   `json:"today_pvp_count"`
+func (p *Player) setGlicko2Attr(extra []byte) error {
+	attribute, err := typeconv.FromProto[pb.GoatGameAttribute](extra)
+	if err != nil {
+		return fmt.Errorf("invalid glicko2 attribute: %w", err)
+	}
+	p.Glicko2Info.MMR = attribute.Mmr
+	p.Glicko2Info.Rank = p.Rank
+	p.Glicko2Info.Star = p.Star
+	return nil
 }
