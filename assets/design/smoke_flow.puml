@@ -1,5 +1,6 @@
 @startuml
 'https://plantuml.com/sequence-diagram
+entity SettleServer as SettleServer
 entity MatchServer as Match #yellow
 actor ClientA  as ClientA #blue
 actor ClientB as ClientB #green
@@ -39,8 +40,18 @@ group Gaming
     GameServer --> ClientB: SyncFrames
 
     GameServer -> Match: GameEnd
-    Match -> Match: HanldeGameResult
-    Match --> ClientA: PushGameReuslt
-    Match --> ClientB: PushGameReuslt
+    Match -> SettleServer: HandleGameResult
+    SettleServer --> Match: result
+    Match --> ClientA: PushGameResult
+    Match --> ClientB: PushGameResult
+end
+
+group next_matching
+    ClientA -> Match: Ready
+    Match --> ClientB: Push`A`Ready
+    ClientB -> Match: Ready
+    Match --> ClientA: Push`B`Ready
+    ClientB -> Match: Unready
+    Match --> ClientA: Push`B`Unready
 end
 @enduml
