@@ -25,7 +25,7 @@ func init() {
 }
 
 func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -35,7 +35,7 @@ func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
 }
 
 func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateMatch, t)
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -45,7 +45,7 @@ func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
 }
 
 func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -55,7 +55,7 @@ func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
 }
 
 func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -65,7 +65,7 @@ func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
 }
 
 func TestAPI_UploadPlayerAttr_Glicko2AttrInvalid(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -76,7 +76,7 @@ func TestAPI_UploadPlayerAttr_Glicko2AttrInvalid(t *testing.T) {
 
 //nolint:dupl
 func TestAPI_Unready_StateNotInvite(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
 	defer func() { _ = client.Close() }()
@@ -88,364 +88,290 @@ func TestAPI_Unready_StateNotInvite(t *testing.T) {
 	assert.Equal(t, merr.ErrGroupInGame.Error(), errMsg)
 }
 
-//
-////nolint:dupl
-//func TestAPI_Ready_StateNotInvite(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	rsp := requestCreateGroup(router, "uid", t)
-//
-//	// in match can ready
-//	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
-//	req, _ := http.NewRequest("POST", "/match/ready/uid", http.NoBody)
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
-//
-//	// in game can not ready
-//	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
-//	w = httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	_ = requestCreateGroup(router, "uid", t)
-//
-//	req, _ := http.NewRequest("POST", "/match/set_voice_state",
-//		bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceState(100))))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_SetVoice_PlayerNotInGroup(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/set_voice_state",
-//		bytes.NewBuffer(createSetVoiceStateParam("uid", entry.PlayerVoiceStateUnmute)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrPlayerNotExists.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_SetVoice_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/set_voice_state",
-//		bytes.NewBuffer(createSetVoiceStateParam("", entry.PlayerVoiceState(10))))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/set_recent_join_group",
-//		bytes.NewBuffer(createSetRecentJoinParam("", true)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/set_recent_join_group",
-//		bytes.NewBuffer(createSetRecentJoinParam("uid2", true)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrPermissionDeny.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group",
-//		bytes.NewBuffer(createSetNearbyJoinParam("", true)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group",
-//		bytes.NewBuffer(createSetNearbyJoinParam("uid2", true)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrPermissionDeny.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/refuse_invite",
-//		bytes.NewBuffer(createRefuseInviteParam("uid1", "uid2", 0)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/accept_invite",
-//		bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 0)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/accept_invite",
-//		bytes.NewBuffer(createAcceptInviteParam("uid1", "uid2", 1)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupDissolved.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_Invite_PlayerNotExists(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/invite", bytes.NewBuffer(createInviteParam("uid1", "uid2")))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrPlayerNotExists.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_Invite_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/invite", bytes.NewBuffer(createInviteParam("uid1", "")))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_ChangeRole_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/change_role",
-//		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(0))))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/change_role",
-//		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRole(127))))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, "unsupported role: 127", assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/change_role",
-//		bytes.NewBuffer(createChangeRoleParam("uid2", "uid1", entry.GroupRoleCaptain)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrNotCaptain.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_KickPlayer_BadRequest(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//	req, _ := http.NewRequest("POST", "/match/kick_player", bytes.NewBuffer(createKickParam("uid1", "")))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/kick_player", bytes.NewBuffer(createKickParam("uid2", "uid1")))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrOnlyCaptainCanKickPlayer.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	g := requestCreateGroup(router, "uid1", t)
-//	requestEnterGroup(router, "uid2", g.GroupID, t)
-//
-//	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid2", http.NoBody)
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrOnlyCaptainCanDissolveGroup.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_ExitGroup_NotInGroup(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/exit_group/uid", http.NoBody)
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrPlayerNotExists.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_EnterGroup_BadRequest(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/enter_group", bytes.NewBuffer(createEnterGroupParam("a", 0)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_EnterGroup_GroupNotExists(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/enter_group", bytes.NewBuffer(createEnterGroupParam("a", 1)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupDissolved.Error(), assertRspNotOk(w, t))
-//}
-//
-//func TestAPI_CreateGroup_BadRequest(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/create_group", bytes.NewBuffer(createGroupParamBad("a", 0)))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusBadRequest, w.Code)
-//}
-//
-//func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/create_group",
-//		bytes.NewBuffer(createGroupParamBad("a", constant.GameMode(10010))))
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, "unsupported game mode: 10010", assertRspNotOk(w, t))
-//}
-//
-//func createGroupParamBad(uid string, mode constant.GameMode) []byte {
-//	param := &pto.CreateGroup{
-//		PlayerInfo: pto.PlayerInfo{
-//			UID:         uid,
-//			GameMode:    mode,
-//			ModeVersion: 1,
-//			Glicko2Info: &pto.Glicko2Info{},
-//		},
-//	}
-//	bs, _ := json.Marshal(param)
-//	return bs
-//}
-//
-//func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
-//	api := NewAPI(1, time.Second)
-//	router := api.setupRouter()
-//
-//	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid", http.NoBody)
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, http.StatusOK, w.Code)
-//	rsp := response.NewHTTPResponse(w.Body.Bytes())
-//	assert.Equal(t, http.StatusOK, rsp.Code)
-//	assert.Equal(t, merr.ErrPlayerNotExists.Error(), rsp.Message)
-//}
-//
-//func assertRspNotOk(w *httptest.ResponseRecorder, t *testing.T) string {
-//	assert.Equal(t, http.StatusOK, w.Code)
-//	rsp := response.NewHTTPResponse(w.Body.Bytes())
-//	assert.Equal(t, http.StatusOK, rsp.Code)
-//	return rsp.Message
-//}
+//nolint:dupl
+func TestAPI_Ready_StateNotInvite(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
 
-func initServerClientAndCreateGroup(uid string, state entry.GroupState, t *testing.T) (*API, ziface.IServer, net.Conn, int64) {
-	conf := *zconfig.DefaultConfig
-	conf.TCPPort = int(port.Add(1))
-	api, server := SetupTCPServer(&conf)
-	time.Sleep(3 * time.Millisecond)
-	client := startClient(conf.TCPPort)
+	// in match can not ready
+	errMsg := requestReady(client, "uid", t)
+	assert.Equal(t, merr.ErrGroupInMatch.Error(), errMsg)
+
+	// in game can not ready
+	api.gm.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
+	errMsg = requestReady(client, "uid", t)
+	assert.Equal(t, merr.ErrGroupInGame.Error(), errMsg)
+}
+
+func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestSetVoiceState(client, "uid", entry.PlayerVoiceState(100), t)
+	assert.Equal(t, "invalid voice state", errMsg)
+}
+
+func TestAPI_SetVoice_PlayerNotExists(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestSetVoiceState(client, "uid2", entry.PlayerVoiceStateMute, t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestSetRecentJoinGroup(client, "", true, t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestSetRecentJoinGroup(client, "uid2", true, t)
+	assert.Equal(t, merr.ErrPermissionDeny.Error(), errMsg)
+}
+
+func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestSetNearbyJoinGroup(client, "", true, t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestSetNearbyJoinGroup(client, "uid2", true, t)
+	assert.Equal(t, merr.ErrPermissionDeny.Error(), errMsg)
+}
+
+func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestRefuseInvite(client, "uid1", "uid2", 0, t)
+	assert.Equal(t, "lack of group id", errMsg)
+}
+
+func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestAcceptInvite(client, "uid1", "uid2", 0, t)
+	assert.Equal(t, "lack of group id", errMsg)
+}
+
+func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestAcceptInvite(client, "uid1", "uid2", 1000, t)
+	assert.Equal(t, merr.ErrGroupDissolved.Error(), errMsg)
+}
+
+func TestAPI_Invite_PlayerNotExists(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestInvite(client, "uid1", "uid2", t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_Invite_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestInvite(client, "uid", "", t)
+	assert.Equal(t, "lack of invitee uid", errMsg)
+}
+
+func TestAPI_ChangeRole_BadRequest(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestChangeRole(client, "uid2", "uid1", entry.GroupRole(0), t)
+	assert.Equal(t, "unsupported role: 0", errMsg)
+}
+
+func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestChangeRole(client, "uid2", "uid1", entry.GroupRole(127), t)
+	assert.Equal(t, "unsupported role: 127", errMsg)
+}
+
+func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestChangeRole(client, "uid2", "uid1", entry.GroupRoleCaptain, t)
+	assert.Equal(t, merr.ErrNotCaptain.Error(), errMsg)
+}
+
+func TestAPI_KickPlayer_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestKick(client, "uid1", "", t)
+	assert.Equal(t, "lack of kicked uid", errMsg)
+}
+
+func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestKick(client, "uid2", "uid1", t)
+	assert.Equal(t, merr.ErrOnlyCaptainCanKickPlayer.Error(), errMsg)
+}
+
+func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+	errMsg := requestEnterGroup(client, "uid2", groupID, t)
+	assert.Empty(t, errMsg)
+
+	errMsg = requestDissolveGroup(client, "uid2", t)
+	assert.Equal(t, merr.ErrOnlyCaptainCanDissolveGroup.Error(), errMsg)
+}
+
+func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	errMsg := requestDissolveGroup(client, "uid2", t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_ExitGroup_NotInGroup(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+	errMsg := requestExitGroup(client, "uid2", t)
+	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
+}
+
+func TestAPI_EnterGroup_BadRequest(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+	errMsg := requestEnterGroup(client, "uid2", 0, t)
+	assert.Equal(t, "lack of group id", errMsg)
+}
+
+func TestAPI_EnterGroup_GroupNotExists(t *testing.T) {
+	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+	errMsg := requestEnterGroup(client, "uid2", 100, t)
+	assert.Equal(t, merr.ErrGroupDissolved.Error(), errMsg)
+}
+
+func TestAPI_CreateGroup_BadRequest(t *testing.T) {
+	api, server, client := initServerClient(1)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	_, errMsg := requestCreateGroupWithMode(client, "uid1", 0, t)
+	assert.Equal(t, "lack of game mode", errMsg)
+
+	_, errMsg = requestCreateGroupWithModeAndModeVersion(client, "uid1", constant.GameModeGoatGame, 0, t)
+	assert.Equal(t, "lack of mode version", errMsg)
+}
+
+func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
+	api, server, client := initServerClient(1)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	_, errMsg := requestCreateGroupWithMode(client, "uid1", constant.GameMode(10000), t)
+	assert.Equal(t, "unsupported game mode: 10000", errMsg)
+}
+
+func initServerClientAndCreateGroup(uid string, groupPlayerLimit int, state entry.GroupState,
+	t *testing.T) (api *API, server ziface.IServer, client net.Conn, p int64) {
+	api, server, client = initServerClient(groupPlayerLimit)
 	rsp, errMsg := requestCreateGroup(client, uid, t)
 	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(1), rsp.GroupId)
 	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(state)
-	api.pm.Get("uid").Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
+	api.pm.Get(uid).Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
 	return api, server, client, rsp.GroupId
+}
+
+func initServerClient(groupPlayerLimit int) (*API, ziface.IServer, net.Conn) {
+	conf := *zconfig.DefaultConfig
+	conf.TCPPort = int(port.Add(1))
+	api, server := SetupTCPServer(groupPlayerLimit, &conf)
+	time.Sleep(3 * time.Millisecond)
+	client := startClient(conf.TCPPort)
+	return api, server, client
 }
 
 var port = atomic.Int64{}

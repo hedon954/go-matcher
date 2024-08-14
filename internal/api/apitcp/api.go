@@ -141,7 +141,10 @@ func (api *API) DissolveGroup(request ziface.IRequest) {
 
 func (api *API) KickPlayer(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.KickPlayerReq](request.GetData())
-
+	if param.KickedUid == "" {
+		api.responseParamError(request, errors.New("lack of kicked uid"))
+		return
+	}
 	if err := api.ms.KickPlayer(context.Background(), param.CaptainUid, param.KickedUid); err != nil {
 		api.responseError(request, err)
 		return
@@ -164,7 +167,10 @@ func (api *API) ChangeRole(request ziface.IRequest) {
 
 func (api *API) Invite(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.InviteReq](request.GetData())
-
+	if param.InviteeUid == "" {
+		api.responseParamError(request, errors.New("lack of invitee uid"))
+		return
+	}
 	if err := api.ms.Invite(context.Background(), param.InviterUid, param.InviteeUid); err != nil {
 		api.responseError(request, err)
 		return
@@ -410,6 +416,12 @@ func playerInfoFromPBToPTO(pInfo *pb.PlayerInfo) pto.PlayerInfo {
 func checkPlayerInfo(info *pb.PlayerInfo) error {
 	if info == nil {
 		return errors.New("lack of player info")
+	}
+	if info.GameMode == 0 {
+		return errors.New("lack of game mode")
+	}
+	if info.ModeVersion == 0 {
+		return errors.New("lack of mode version")
 	}
 	if info.Glicko2Info == nil {
 		return errors.New("lack of glicko2 info")

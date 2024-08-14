@@ -13,7 +13,7 @@ import (
 func main() {
 	defer cmd.StopSafe()
 	conf := zconfig.Load("cmd/tcp/zinx.yml")
-	_, server := apitcp.SetupTCPServer(conf)
+	_, server := apitcp.SetupTCPServer(1, conf)
 	defer server.Stop()
 
 	sigs := make(chan os.Signal, 1)

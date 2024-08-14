@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
@@ -554,7 +555,16 @@ func requestEnterGroup(conn net.Conn, uid string, groupID int64, t *testing.T) s
 }
 
 func requestCreateGroup(conn net.Conn, uid string, t *testing.T) (*pb.CreateGroupRsp, string) {
-	var req = &pb.CreateGroupReq{PlayerInfo: newPlayerInfo(uid)}
+	return requestCreateGroupWithMode(conn, uid, constant.GameModeGoatGame, t)
+}
+
+func requestCreateGroupWithMode(conn net.Conn, uid string, mode constant.GameMode, t *testing.T) (resp *pb.CreateGroupRsp, errMsg string) {
+	return requestCreateGroupWithModeAndModeVersion(conn, uid, mode, 1, t)
+}
+
+func requestCreateGroupWithModeAndModeVersion(conn net.Conn, uid string, mode constant.GameMode, modeVersion int64,
+	t *testing.T) (resp *pb.CreateGroupRsp, errMsg string) {
+	var req = &pb.CreateGroupReq{PlayerInfo: newPlayerInfoWithModeAndModeVersion(uid, mode, modeVersion)}
 	bs, _ := proto.Marshal(req)
 	msg, err := dp.Pack(znet.NewMsgPackage(uint32(pb.ReqType_REQ_TYPE_CREATE_GROUP), bs))
 	assert.Nil(t, err)
@@ -569,10 +579,18 @@ func requestCreateGroup(conn net.Conn, uid string, t *testing.T) (*pb.CreateGrou
 }
 
 func newPlayerInfo(uid string) *pb.PlayerInfo {
+	return newPlayerInfoWithMode(uid, constant.GameModeGoatGame)
+}
+
+func newPlayerInfoWithMode(uid string, mode constant.GameMode) *pb.PlayerInfo {
+	return newPlayerInfoWithModeAndModeVersion(uid, mode, 1)
+}
+
+func newPlayerInfoWithModeAndModeVersion(uid string, mode constant.GameMode, modeVersion int64) *pb.PlayerInfo {
 	return &pb.PlayerInfo{
 		Uid:         uid,
-		GameMode:    pb.GameMode_GAME_MODE_GOAT_GAME,
-		ModeVersion: 1,
+		GameMode:    pb.GameMode(mode),
+		ModeVersion: modeVersion,
 		Star:        0,
 		Rank:        0,
 		Glicko2Info: &pb.Glicko2Info{
@@ -583,7 +601,7 @@ func newPlayerInfo(uid string) *pb.PlayerInfo {
 	}
 }
 
-func startServer() (ziface.IServer, int) {
+func startServer() (server ziface.IServer, p int) {
 	conf := *zconfig.DefaultConfig
 	conf.TCPPort = int(port.Add(1))
 	s := znet.NewServer(&conf)

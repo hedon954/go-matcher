@@ -9,10 +9,10 @@ import (
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
-func SetupTCPServer(conf *zconfig.ZConfig) (*API, ziface.IServer) {
+func SetupTCPServer(groupPlayerLimit int, conf *zconfig.ZConfig) (*API, ziface.IServer) {
 	server := znet.NewServer(conf)
 
-	api := NewAPI(1, time.Second)
+	api := NewAPI(groupPlayerLimit, time.Second)
 	api.setupRouter(server)
 
 	go server.Serve()

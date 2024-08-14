@@ -112,7 +112,7 @@ func TestAPI_Ready_StateNotInvite(t *testing.T) {
 
 	rsp := requestCreateGroup(router, "uid", t)
 
-	// in match can ready
+	// in match can not ready
 	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
 	req, _ := http.NewRequest("POST", "/match/ready/uid", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
