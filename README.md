@@ -46,6 +46,17 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 ![go-matcher architecture](assets/img/architecture.png)
 
 
+## Smoke flow
+
+![smoke flow](./assets/uml/smoke_flow.svg)
+
+## State Machine
+
+![state machine](./assets/img/delay-timer.png)
+
+## Entry Design
+
+![entry design](./assets/img/entry.png)
 
 ## Todo
 
@@ -91,11 +102,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] TCP api（8.26）
 - [ ] WebSocket api（8.27）
 - [ ] AI Generator
-
-## Smoke flow
-
-![smoke flow](./assets/uml/smoke_flow.svg)
-
 
 ## Help
 
