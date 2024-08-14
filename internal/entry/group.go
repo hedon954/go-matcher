@@ -1,6 +1,7 @@
 package entry
 
 import (
+	"encoding/json"
 	"slices"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -40,6 +41,12 @@ type Group interface {
 	// Maybe some game mode need all players to be ready.
 	// If you have some special logics, please override this method.
 	CanStartMatch() error
+
+	// Json returns the json string of the group.
+	// You may need to lock when marshal it to avoid data race,
+	// even if in print log.
+	// TODO: any other great way?
+	Json() string
 }
 
 const (
@@ -385,4 +392,11 @@ func (g *GroupBase) Lock() {
 
 func (g *GroupBase) Unlock() {
 	g.lock.Unlock()
+}
+
+func (g *GroupBase) Json() string {
+	g.Lock()
+	defer g.Unlock()
+	bs, _ := json.Marshal(g)
+	return string(bs)
 }

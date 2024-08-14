@@ -33,6 +33,14 @@ func TestFromProto(t *testing.T) {
 		assert.Nil(t, data)
 	})
 
+	t.Run("invalid proto should fail", func(t *testing.T) {
+		// An even number of Xs is a success, and an odd number of Xs is a failure
+		// Hhhh, interesting 😄
+		data, err := FromProto[fixtures.Request]([]byte("xxxxx"))
+		assert.NotNil(t, err)
+		assert.Nil(t, data)
+	})
+
 	t.Run("basic type should failed", func(t *testing.T) {
 		data, err := FromProto[int64]([]byte("1"))
 		assert.NotNil(t, err)

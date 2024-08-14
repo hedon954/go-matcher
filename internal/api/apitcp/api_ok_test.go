@@ -16,6 +16,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 
@@ -41,15 +42,15 @@ const (
 	G5 int64 = 5
 )
 
-var dp = znet.NewDataPack()
+var dp = znet.NewDataPack(zconfig.DefaultConfig)
 
 func Test_TCP_ShouldWork(t *testing.T) {
 	api := NewAPI(2, time.Millisecond*10)
-	server := startServer()
+	server, port := startServer()
 	api.setupRouter(server)
 	defer server.Stop()
 	defer api.m.Stop()
-	conn := startClient()
+	conn := startClient(port)
 	defer func() { _ = conn.Close() }()
 
 	// 1. 'a' create a group 'g1'
@@ -582,14 +583,16 @@ func newPlayerInfo(uid string) *pb.PlayerInfo {
 	}
 }
 
-func startServer() ziface.IServer {
-	s := znet.NewServer("")
+func startServer() (ziface.IServer, int) {
+	conf := *zconfig.DefaultConfig
+	conf.TCPPort = int(port.Add(1))
+	s := znet.NewServer(&conf)
 	s.Start()
-	return s
+	return s, conf.TCPPort
 }
 
-func startClient() net.Conn {
-	conn, err := net.Dial("tcp", "127.0.0.1:7777")
+func startClient(port int) net.Conn {
+	conn, err := net.Dial("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		panic("client dial error: " + err.Error())
 	}

@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"fmt"
 
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
-	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 const (
@@ -15,10 +15,11 @@ const (
 )
 
 type DataPack struct {
+	config *zconfig.ZConfig
 }
 
-func NewDataPack() *DataPack {
-	return &DataPack{}
+func NewDataPack(c *zconfig.ZConfig) *DataPack {
+	return &DataPack{config: c}
 }
 
 func (dp *DataPack) GetHeadLen() uint32 {
@@ -55,8 +56,8 @@ func (dp *DataPack) Unpack(data []byte) (ziface.IMessage, error) {
 		return nil, fmt.Errorf("read msg id occurs error %w", err)
 	}
 
-	if zutils.GlobalObject.MaxPacketSize > 0 && msg.DataLen > zutils.GlobalObject.MaxPacketSize {
-		return nil, fmt.Errorf("too large msg data len %d, limit %d", msg.DataLen, zutils.GlobalObject.MaxPacketSize)
+	if dp.config.MaxPacketSize > 0 && msg.DataLen > dp.config.MaxPacketSize {
+		return nil, fmt.Errorf("too large msg data len %d, limit %d", msg.DataLen, dp.config.MaxPacketSize)
 	}
 
 	// ...here we do not read msg data

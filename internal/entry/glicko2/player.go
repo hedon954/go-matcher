@@ -35,8 +35,8 @@ func (p *PlayerBaseGlicko2) GetMMR() float64 {
 	return p.MMR
 }
 
-func (p *PlayerBaseGlicko2) GetStar() int64 {
-	return p.Star
+func (p *PlayerBaseGlicko2) GetStar() int {
+	return int(p.Star)
 }
 
 func (p *PlayerBaseGlicko2) GetStartMatchTimeSec() int64 {
@@ -55,6 +55,6 @@ func (p *PlayerBaseGlicko2) SetFinishMatchTimeSec(t int64) {
 	p.finishMatchSec = t
 }
 
-func (p *PlayerBaseGlicko2) GetRank() int64 {
-	return p.rank
+func (p *PlayerBaseGlicko2) GetRank() int {
+	return int(p.rank)
 }

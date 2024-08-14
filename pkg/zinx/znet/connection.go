@@ -10,7 +10,6 @@ import (
 
 	"github.com/hedon954/go-matcher/pkg/safe"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
-	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 type Connection struct {
@@ -33,7 +32,7 @@ func NewConnection(server ziface.IServer, conn *net.TCPConn, connID uint64, mh z
 		ConnID:       connID,
 		MsgHandler:   mh,
 		ExitBuffChan: make(chan struct{}, 1),
-		msgChan:      make(chan []byte, zutils.GlobalObject.MaxMsgChanLen),
+		msgChan:      make(chan []byte, server.Config().MaxMsgChanLen),
 		properties:   make(map[string]any),
 	}
 
@@ -85,7 +84,7 @@ func (c *Connection) SendMsg(id uint32, data []byte) error {
 		return nil
 	}
 
-	dp := NewDataPack()
+	dp := NewDataPack(c.TCPServer.Config())
 	msg, err := dp.Pack(NewMsgPackage(id, data))
 	if err != nil {
 		fmt.Printf("pack msg %d, error %v\n", id, err)
@@ -120,7 +119,7 @@ func (c *Connection) startReader(ctx context.Context) {
 	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit")
 	defer c.Stop()
 
-	dp := NewDataPack()
+	dp := NewDataPack(c.TCPServer.Config())
 	for {
 		select {
 		case <-ctx.Done():
@@ -152,7 +151,7 @@ func (c *Connection) startReader(ctx context.Context) {
 
 			// handle request
 			req := Request{conn: c, msg: msg}
-			if zutils.GlobalObject.WorkPoolSize > 0 {
+			if c.TCPServer.Config().WorkPoolSize > 0 {
 				c.MsgHandler.SendMsgToTaskQueue(&req)
 			} else {
 				safe.Go(func() { c.MsgHandler.DoMsgHandle(&req) })

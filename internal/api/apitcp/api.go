@@ -82,13 +82,14 @@ func (api *API) CreateGroup(request ziface.IRequest) {
 	}
 
 	group, err := api.ms.CreateGroup(context.Background(), param)
+	fmt.Println("------------------>", group, err)
 	if err != nil {
 		api.responseError(request, err)
 		return
 	}
 
 	api.responseSuccess(request, &pb.CreateGroupRsp{GroupId: group.ID()})
-	fmt.Println("data: ", data)
+	fmt.Println("------------------>", "data: ", data)
 }
 
 func (api *API) EnterGroup(request ziface.IRequest) {

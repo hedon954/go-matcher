@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
 func main() {
-	s := znet.NewServer("conf/zinx.yml")
+	conf := zconfig.Load("conf/zinx.yml")
+	s := znet.NewServer(conf)
 
 	s.SetOnConnStart(DoConnectionStart)
 	s.SetOnConnStop(DoConnectionStop)

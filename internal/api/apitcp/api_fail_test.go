@@ -2,7 +2,10 @@ package apitcp
 
 import (
 	"io"
+	"net"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
@@ -12,6 +15,8 @@ import (
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
+	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 )
 
 func init() {
@@ -20,106 +25,69 @@ func init() {
 }
 
 func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
-	api, server := SetupTCPServer("")
+	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
-	client := startClient()
 	defer func() { _ = client.Close() }()
 
-	rsp, errMsg := requestCreateGroup(client, "uid", t)
-	assert.Equal(t, "", errMsg)
-	assert.Equal(t, int64(1), rsp.GroupId)
-
-	_, errMsg = requestCancelMatch(client, "uid", t)
+	_, errMsg := requestCancelMatch(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInInvite.Error(), errMsg)
 }
 
 func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
-	api, server := SetupTCPServer("")
+	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateMatch, t)
 	defer server.Stop()
 	defer api.m.Stop()
-	client := startClient()
 	defer func() { _ = client.Close() }()
 
-	rsp, errMsg := requestCreateGroup(client, "uid", t)
-	assert.Equal(t, "", errMsg)
-	assert.Equal(t, int64(1), rsp.GroupId)
-	api.gm.Get(rsp.GroupId).Base().SetState(entry.GroupStateMatch)
-
-	errMsg = requestStartMatch(client, "uid", t)
+	errMsg := requestStartMatch(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), errMsg)
 }
 
 func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
-	api, server := SetupTCPServer("")
+	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
-	client := startClient()
 	defer func() { _ = client.Close() }()
 
-	rsp, errMsg := requestCreateGroup(client, "uid", t)
-	assert.Equal(t, "", errMsg)
-	assert.Equal(t, int64(1), rsp.GroupId)
-	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(entry.GroupStateMatch)
-
-	errMsg = requestUnloadPlayerAttr(client, "", true, true, t)
+	errMsg := requestUnloadPlayerAttr(client, "", true, true, t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
-	api, server := SetupTCPServer("")
+	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
-	client := startClient()
 	defer func() { _ = client.Close() }()
 
-	rsp, errMsg := requestCreateGroup(client, "uid", t)
-	assert.Equal(t, "", errMsg)
-	assert.Equal(t, int64(1), rsp.GroupId)
-	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(entry.GroupStateMatch)
-
-	errMsg = requestUnloadPlayerAttr(client, "uid", false, true, t)
+	errMsg := requestUnloadPlayerAttr(client, "uid", false, true, t)
 	assert.Equal(t, "lack of basic attr", errMsg)
 }
 
 func TestAPI_UploadPlayerAttr_Glicko2AttrInvalid(t *testing.T) {
-	api, server := SetupTCPServer("")
+	api, server, client, _ := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
 	defer server.Stop()
 	defer api.m.Stop()
-	client := startClient()
 	defer func() { _ = client.Close() }()
 
-	rsp, errMsg := requestCreateGroup(client, "uid", t)
-	assert.Equal(t, "", errMsg)
-	assert.Equal(t, int64(1), rsp.GroupId)
-	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(entry.GroupStateMatch)
-	api.pm.Get("uid").Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
-
-	errMsg = requestUnloadPlayerAttr(client, "uid", true, false, t)
+	errMsg := requestUnloadPlayerAttr(client, "uid", true, false, t)
 	assert.Equal(t, "invalid glicko2 attribute: protobuf data is empty", errMsg)
 }
 
-////nolint:dupl
-//func TestAPI_Unready_StateNotInvite(t *testing.T) {
-//	api := NewAPI(2, time.Second)
-//	router := api.setupRouter()
-//
-//	rsp := requestCreateGroup(router, "uid", t)
-//
-//	// in match can unready
-//	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
-//	req, _ := http.NewRequest("POST", "/match/unready/uid", http.NoBody)
-//	req.Header.Set("Content-Type", "application/json")
-//	w := httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
-//
-//	// in game can not unready
-//	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
-//	w = httptest.NewRecorder()
-//	router.ServeHTTP(w, req)
-//	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
-//}
+//nolint:dupl
+func TestAPI_Unready_StateNotInvite(t *testing.T) {
+	api, server, client, groupID := initServerClientAndCreateGroup("uid", entry.GroupStateInvite, t)
+	defer server.Stop()
+	defer api.m.Stop()
+	defer func() { _ = client.Close() }()
+
+	// in game can not unready
+	api.gm.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
+
+	errMsg := requestUnready(client, "uid", t)
+	assert.Equal(t, merr.ErrGroupInGame.Error(), errMsg)
+}
+
 //
 ////nolint:dupl
 //func TestAPI_Ready_StateNotInvite(t *testing.T) {
@@ -465,3 +433,23 @@ func TestAPI_UploadPlayerAttr_Glicko2AttrInvalid(t *testing.T) {
 //	assert.Equal(t, http.StatusOK, rsp.Code)
 //	return rsp.Message
 //}
+
+func initServerClientAndCreateGroup(uid string, state entry.GroupState, t *testing.T) (*API, ziface.IServer, net.Conn, int64) {
+	conf := *zconfig.DefaultConfig
+	conf.TCPPort = int(port.Add(1))
+	api, server := SetupTCPServer(&conf)
+	time.Sleep(3 * time.Millisecond)
+	client := startClient(conf.TCPPort)
+	rsp, errMsg := requestCreateGroup(client, uid, t)
+	assert.Equal(t, "", errMsg)
+	assert.Equal(t, int64(1), rsp.GroupId)
+	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(state)
+	api.pm.Get("uid").Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
+	return api, server, client, rsp.GroupId
+}
+
+var port = atomic.Int64{}
+
+func init() {
+	port.Store(9000)
+}

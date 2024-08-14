@@ -8,7 +8,6 @@ import (
 
 func (impl *Impl) cancelMatch(ctx context.Context, cancelUID string, g entry.Group) {
 	base := g.Base()
-
 	base.SetState(entry.GroupStateInvite)
 	base.MatchID = ""
 

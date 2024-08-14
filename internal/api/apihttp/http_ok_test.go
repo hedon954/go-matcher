@@ -202,23 +202,26 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 'b' -> g3 -> 2
 	// 'c' -> g4 -> 2
 	// 'd' -> g5 -> 1
+	success := false
 	for i := 0; i <= 10; i++ {
 		if api.m.Glicko2Matcher.RoomCount.Load() == 1 {
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g2))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g3))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g4))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g5))
+			success = true
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+	assert.True(t, success)
 	rooms := []entry.Room{}
 	api.rm.Range(func(_ int64, room entry.Room) bool {
 		rooms = append(rooms, room)
 		return true
 	})
 
-	// 29. 'd' exit game, 'g5' should be dissovled
+	// 29. 'd' exit game, 'g5' should be dissolved
 	requestExitGame(router, UIDD, rooms[0].ID(), t)
 	assert.Nil(t, api.pm.Get(UIDD))
 	assert.Nil(t, api.gm.Get(G5))
@@ -524,7 +527,7 @@ func uploadPlayerAttrParamInvalid(uid string) []byte {
 			Attribute: pto.Attribute{
 				Nickname: "hedon2",
 			},
-			Extra: []byte("xxxx"),
+			Extra: []byte("xxxxx"),
 		},
 	}
 	bs, _ := json.Marshal(param)

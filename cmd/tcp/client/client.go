@@ -9,6 +9,7 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 
 	"google.golang.org/protobuf/proto"
@@ -22,7 +23,7 @@ func main() {
 	}
 
 	for {
-		dp := znet.NewDataPack()
+		dp := znet.NewDataPack(zconfig.DefaultConfig)
 
 		sendCreateGroup(conn, dp)
 

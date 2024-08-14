@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// sg is a zutils instance of safeGo which holds the panic callbacks and a sync.WaitGroup.
+// sg is a zconfig instance of safeGo which holds the panic callbacks and a sync.WaitGroup.
 // Each program only has one instance of safeGo.
 var sg = safeGo{
 	goCallbacks:   make([]PanicCallback, 0),
@@ -32,13 +32,13 @@ func Callback(callbacks ...PanicCallback) {
 	sg.callCallbacks = append(sg.callCallbacks, callbacks...)
 }
 
-// GoCallBack appends the zutils callbacks for safe.Go,
+// GoCallBack appends the zconfig callbacks for safe.Go,
 // it should be used only in the main package.
 func GoCallBack(callbacks ...PanicCallback) {
 	sg.goCallbacks = append(sg.goCallbacks, callbacks...)
 }
 
-// CallCallBack appends the zutils callbacks for safe.Call,
+// CallCallBack appends the zconfig callbacks for safe.Call,
 // it should be used only in the main package.
 func CallCallBack(callbacks ...PanicCallback) {
 	sg.callCallbacks = append(sg.callCallbacks, callbacks...)

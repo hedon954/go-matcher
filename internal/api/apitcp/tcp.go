@@ -4,11 +4,12 @@ import (
 	"time"
 
 	"github.com/hedon954/go-matcher/internal/pb"
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
-func SetupTCPServer(conf string) (*API, ziface.IServer) {
+func SetupTCPServer(conf *zconfig.ZConfig) (*API, ziface.IServer) {
 	server := znet.NewServer(conf)
 
 	api := NewAPI(1, time.Second)

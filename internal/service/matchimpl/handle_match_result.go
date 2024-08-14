@@ -9,6 +9,7 @@ import (
 
 func (impl *Impl) waitForMatchResult() {
 	for r := range impl.roomChannel {
+		fmt.Println("new room: ", r.ID())
 		impl.HandleMatchResult(r)
 	}
 }

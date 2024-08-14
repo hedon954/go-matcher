@@ -7,12 +7,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
 func TestServer(t *testing.T) {
-	s := znet.NewServer("zinx.yml")
+	conf := zconfig.Load("zinx.yml")
+	s := znet.NewServer(conf)
 
 	s.SetOnConnStart(DoConnectionStart)
 	s.SetOnConnStop(DoConnectionStop)
@@ -68,7 +70,7 @@ func StartClient() {
 	i := 0
 
 	for i <= 10 {
-		dp := znet.NewDataPack()
+		dp := znet.NewDataPack(zconfig.DefaultConfig)
 
 		i++
 

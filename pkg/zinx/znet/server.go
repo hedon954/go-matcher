@@ -5,17 +5,13 @@ import (
 	"fmt"
 	"net"
 	"sync/atomic"
-	"time"
 
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
-	"github.com/hedon954/go-matcher/pkg/zinx/zutils"
 )
 
 type Server struct {
-	Name            string
-	IPVersion       string
-	IP              string
-	Port            int
+	config          *zconfig.ZConfig
 	ConnIDGen       atomic.Uint64 // TODO: use distributed unique id to support multiple servers
 	msgHandler      ziface.IMsgHandle
 	ConnMgr         ziface.IConnManager
@@ -26,21 +22,13 @@ type Server struct {
 	cancelFunc      func()
 }
 
-func NewServer(conf string) ziface.IServer {
-	if conf != "" {
-		zutils.GlobalObject.Reload(conf)
-	}
-
+func NewServer(conf *zconfig.ZConfig) ziface.IServer {
 	ctx, cancelFunc := context.WithCancel(context.Background())
-
 	s := &Server{
-		IPVersion:       "tcp4",
-		Name:            zutils.GlobalObject.Name,
-		IP:              zutils.GlobalObject.Host,
-		Port:            zutils.GlobalObject.TCPPort,
+		config:          conf,
 		ConnIDGen:       atomic.Uint64{},
 		notifyConnClose: make(chan ziface.IConnection, 1),
-		msgHandler:      NewMsgHandle(),
+		msgHandler:      NewMsgHandle(conf),
 		ConnMgr:         NewConnManager(),
 		cancelCtx:       ctx,
 		cancelFunc:      cancelFunc,
@@ -49,26 +37,25 @@ func NewServer(conf string) ziface.IServer {
 }
 
 func (s *Server) Start() {
-	fmt.Printf("[START] Server listener at IP: %s, Port: %d, is starting\n", s.IP, s.Port)
+	fmt.Printf("[START] Server listener at IP: %s, Port: %d, is starting\n", s.config.Host, s.config.TCPPort)
 	fmt.Printf("[Zinx] Version: %s, MaxConn: %d, WorkerPoolSize: %d, MaxWorkerTaskLen: %d\n",
-		zutils.GlobalObject.Version, zutils.GlobalObject.MaxConn,
-		zutils.GlobalObject.WorkPoolSize, zutils.GlobalObject.MaxWorkerTaskLen)
+		s.config.Version, s.config.MaxConn,
+		s.config.WorkPoolSize, s.config.MaxWorkerTaskLen)
 
-	addr, err := net.ResolveTCPAddr(s.IPVersion, fmt.Sprintf("%s:%d", s.IP, s.Port))
+	addr, err := net.ResolveTCPAddr(s.config.IPVersion, fmt.Sprintf("%s:%d", s.config.Host, s.config.TCPPort))
 	if err != nil {
 		fmt.Println("resolve tcp addr error: ", err)
 		return
 	}
 
-	listener, err := net.ListenTCP(s.IPVersion, addr)
+	listener, err := net.ListenTCP(s.config.IPVersion, addr)
 	if err != nil {
-		fmt.Println("listen", s.IPVersion, "error: ", err)
+		fmt.Println("listen", s.config.IPVersion, "error: ", err)
 		return
 	}
 
 	s.msgHandler.StarWorkerPool()
-	time.Sleep(time.Millisecond)
-	fmt.Printf("start Zinx server: %s successfully, now listening\n", s.Name)
+	fmt.Printf("start Zinx server: %s successfully, now listening\n", s.config.Name)
 
 	go func() {
 		for {
@@ -78,8 +65,8 @@ func (s *Server) Start() {
 				continue
 			}
 
-			if zutils.GlobalObject.MaxConn > 0 && s.ConnMgr.Len() > zutils.GlobalObject.MaxConn {
-				fmt.Println("too many connections, MaxConn = ", zutils.GlobalObject.MaxConn)
+			if s.config.MaxConn > 0 && s.ConnMgr.Len() > s.config.MaxConn {
+				fmt.Println("too many connections, MaxConn = ", s.config.MaxConn)
 				_ = conn.Close()
 				continue
 			}
@@ -97,7 +84,7 @@ func (s *Server) Start() {
 }
 
 func (s *Server) Stop() {
-	fmt.Printf("[STOP] Zinx server, name: %s\n", s.Name)
+	fmt.Printf("[STOP] Zinx server, name: %s\n", s.config.Name)
 	s.ConnMgr.ClearConn()
 	s.cancelFunc()
 }
@@ -141,4 +128,8 @@ func (s *Server) CallOnConnStop(conn ziface.IConnection) {
 
 func (s *Server) NotifyClose(c ziface.IConnection) {
 	s.notifyConnClose <- c
+}
+
+func (s *Server) Config() *zconfig.ZConfig {
+	return s.config
 }

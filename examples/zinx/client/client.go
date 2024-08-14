@@ -6,6 +6,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 )
 
@@ -22,7 +23,7 @@ func main() {
 	i := 0
 
 	for {
-		dp := znet.NewDataPack()
+		dp := znet.NewDataPack(zconfig.DefaultConfig)
 
 		i++
 

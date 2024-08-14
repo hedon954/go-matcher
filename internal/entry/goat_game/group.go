@@ -1,6 +1,8 @@
 package goat_game
 
 import (
+	"encoding/json"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
@@ -23,4 +25,11 @@ func CreateGroup(base *entry.GroupBase) entry.Group {
 func (g *Group) withMatchStrategy(base *entry.GroupBase) {
 	g.GroupBaseGlicko2 = glicko2.NewGroup(base)
 	// ... other match strategy initialization
+}
+
+func (g *Group) Json() string {
+	g.Lock()
+	defer g.Unlock()
+	bs, _ := json.Marshal(g)
+	return string(bs)
 }

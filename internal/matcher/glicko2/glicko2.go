@@ -6,12 +6,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
-	"github.com/rs/zerolog/log"
 )
 
 // Matcher is the glicko2 matcher.
@@ -206,9 +207,10 @@ func (m *Matcher) Match(g glicko2.Group) {
 			Msg("match by glicko2 error")
 		return
 	}
+	fmt.Println("add a group to glicko matcher: ", g.GetPlayers())
 	if err = matcher.AddGroups(g); err != nil {
 		log.Error().
-			Any("group", g).
+			Str("group_id", g.GetID()).
 			Err(err).
 			Msg("add group to glicko2 error")
 		return

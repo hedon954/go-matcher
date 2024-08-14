@@ -2,7 +2,7 @@
 'https://plantuml.com/sequence-diagram
 entity SettleServer as SettleServer
 entity MatchServer as Match #yellow
-actor ClientA  as ClientA #blue
+actor ClientA as ClientA #blue
 actor ClientB as ClientB #green
 entity GameServer as GameServer #orange
 

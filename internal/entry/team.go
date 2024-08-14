@@ -13,7 +13,7 @@ type Team interface {
 
 type TeamBase struct {
 	lock          sync.RWMutex
-	id            int64 // id is the zutils unique team id.
+	id            int64 // id is the zconfig unique team id.
 	TeamID        int   // TeamID is the unique team id in one room, start from 1.
 	IsAI          bool
 	groups        map[int64]Group

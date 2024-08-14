@@ -3,10 +3,11 @@ package matcher
 import (
 	"runtime/debug"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
-	"github.com/rs/zerolog/log"
 
 	glicko2Algo "github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
@@ -39,7 +40,7 @@ func (m *Matcher) handle(g entry.Group) {
 		if err := recover(); err != nil {
 			log.Error().
 				Any("err", err).
-				Any("group", g).
+				Str("group", g.Json()).
 				Str("stack", string(debug.Stack())).
 				Msg("handle group match error")
 		}
