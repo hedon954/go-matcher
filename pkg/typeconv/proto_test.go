@@ -36,9 +36,19 @@ func TestFromProto(t *testing.T) {
 	t.Run("invalid proto should fail", func(t *testing.T) {
 		// An even number of Xs is a success, and an odd number of Xs is a failure
 		// Hhhh, interesting 😄
+		// https://github.com/golang/protobuf/issues/1641
+		//
+		// x -> field 15 | type varint
+		// x -> 120
 		data, err := FromProto[fixtures.Request]([]byte("xxxxx"))
 		assert.NotNil(t, err)
 		assert.Nil(t, data)
+	})
+
+	t.Run("xxx1 should success, x1 would override xx", func(t *testing.T) {
+		data, err := FromProto[fixtures.TestMsg]([]byte("xxx1"))
+		assert.Nil(t, err)
+		assert.Equal(t, int32(49), data.Id)
 	})
 
 	t.Run("basic type should failed", func(t *testing.T) {
