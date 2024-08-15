@@ -64,16 +64,6 @@ func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
 	assert.Equal(t, "lack of basic attr", errMsg)
 }
 
-func TestAPI_UploadPlayerAttr_Glicko2AttrInvalid(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
-
-	errMsg := requestUnloadPlayerAttr(client, "uid", true, false, t)
-	assert.Equal(t, "invalid glicko2 attribute: protobuf data is empty", errMsg)
-}
-
 //nolint:dupl
 func TestAPI_Unready_StateNotInvite(t *testing.T) {
 	api, server, client, groupID := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)

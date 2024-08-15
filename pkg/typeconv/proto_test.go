@@ -10,10 +10,16 @@ import (
 )
 
 func TestFromProto(t *testing.T) {
-	t.Run("empty bytes should failed", func(t *testing.T) {
+	t.Run("nil slice should success", func(t *testing.T) {
+		data, err := FromProto[fixtures.Request](nil)
+		assert.Nil(t, err)
+		assert.NotNil(t, data)
+	})
+
+	t.Run("empty bytes should success", func(t *testing.T) {
 		data, err := FromProto[fixtures.Request]([]byte{})
-		assert.Equal(t, "protobuf data is empty", err.Error())
-		assert.Nil(t, data)
+		assert.Nil(t, err)
+		assert.NotNil(t, data)
 	})
 
 	t.Run("proto struct should work", func(t *testing.T) {
