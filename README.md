@@ -65,10 +65,8 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] KCP
   - [ ] WebSocket
   - [ ] gRPC
-- [ ] static config
-  - [ ] json
-  - [ ] yaml
-  - [ ] toml
+- [x] static config
+  - [x] yaml
 - [ ] dynamic config
   - [ ] nacos
   - [ ] etcd
@@ -92,7 +90,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] HandleGameResult（8.9）
 - [x] Ready & Unready（8.9）
 - [ ] Push Service by gRPC（8.12）
-- [ ] Static Config（8.13）
+- [x] Static Config（8.13）
 - [ ] Dynamic Config by nacos（8.13）
 - [ ] repository by redis（8.14）
 - [ ] entry encode & decode（8.14）
