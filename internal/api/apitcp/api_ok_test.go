@@ -217,16 +217,20 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	// 'b' -> g3 -> 2
 	// 'c' -> g4 -> 2
 	// 'd' -> g5 -> 1
+	success := false
 	for i := 0; i <= 10; i++ {
 		if api.M.Glicko2Matcher.RoomCount.Load() == 1 {
 			assert.Equal(t, entry.GroupStateGame, g2.Base().GetStateWithLock())
 			assert.Equal(t, entry.GroupStateGame, g3.Base().GetStateWithLock())
 			assert.Equal(t, entry.GroupStateGame, g4.Base().GetStateWithLock())
 			assert.Equal(t, entry.GroupStateGame, g5.Base().GetStateWithLock())
+			success = true
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
 	}
+	assert.True(t, success)
+
 	rooms := []entry.Room{}
 	api.RM.Range(func(_ int64, room entry.Room) bool {
 		rooms = append(rooms, room)

@@ -18,6 +18,7 @@ func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err erro
 	// add room to manager
 	defer func() {
 		if err == nil {
+			fmt.Println("add room to manager: ", r.ID())
 			impl.roomMgr.Add(r.ID(), r)
 		}
 	}()

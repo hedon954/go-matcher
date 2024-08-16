@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	defaultHost             = "0.0.0.0"
 	defaultTCPPort          = 7777
 	defaultIPVersion        = "tcp4"
 	defaultMaxPacketSize    = 12000
@@ -31,7 +32,7 @@ type ZConfig struct {
 }
 
 var DefaultConfig = &ZConfig{
-	Host:             "0.0.0.0",
+	Host:             defaultHost,
 	Name:             "ZinxServerApp",
 	Version:          "v1.0",
 	TCPPort:          defaultTCPPort,
@@ -59,7 +60,7 @@ func Load(conf string) *ZConfig {
 	}
 
 	if c.Host == "" {
-		c.Host = "0.0.0.0"
+		c.Host = defaultHost
 	}
 	if c.Name == "" {
 		c.Name = "ZinxServerApp"

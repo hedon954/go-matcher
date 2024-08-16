@@ -320,7 +320,7 @@ func init() {
 func newConf(groupPlayerLimit int) *config.Config {
 	return &config.Config{
 		GroupPlayerLimit: groupPlayerLimit,
-		MatchIntervalMs:  10,
+		MatchIntervalMs:  1,
 		Glicko2: &glicko2.QueueArgs{
 			MatchTimeoutSec: 300,
 			TeamPlayerLimit: groupPlayerLimit,
