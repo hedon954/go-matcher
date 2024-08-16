@@ -76,24 +76,22 @@ func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 }
 
 func NewDefault(
-	groupPlayerLimit int,
-	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
-	teamMgr *repository.TeamMgr, roomMgr *repository.RoomMgr,
+	groupPlayerLimit int, mgrs *repository.Mgrs,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
-	delayTimer timer.Operator[int64],
+	delayTimer timer.Operator[int64], delayConfig config.DelayTimer,
 	options ...Option,
 ) *Impl {
 	impl := &Impl{
-		playerMgr:          playerMgr,
-		groupMgr:           groupMgr,
-		teamMgr:            teamMgr,
-		roomMgr:            roomMgr,
+		playerMgr:          mgrs.PlayerMgr,
+		groupMgr:           mgrs.GroupMgr,
+		teamMgr:            mgrs.TeamMgr,
+		roomMgr:            mgrs.RoomMgr,
 		groupPlayerLimit:   groupPlayerLimit,
 		nowFunc:            time.Now().Unix,
 		groupChannel:       groupChannel,
 		roomChannel:        roomChannel,
-		delayTimer:         delayTimer,                          // TODO: change
-		DelayConfig:        new(mock.DelayTimerMock),            // TODO: change
+		delayTimer:         delayTimer,
+		DelayConfig:        delayConfig,
 		MSConfig:           new(mock.MatchStrategyMock),         // TODO: change
 		pushService:        new(servicemock.PushMock),           // TODO: change
 		gameServerDispatch: new(servicemock.GameServerDispatch), // TODO: change

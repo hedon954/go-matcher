@@ -7,11 +7,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -19,6 +14,11 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/response"
 
+	internalapi "github.com/hedon954/go-matcher/internal/api"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,7 +28,10 @@ func init() {
 }
 
 func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	_ = requestCreateGroup(router, "uid", t)
@@ -41,11 +44,14 @@ func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
 }
 
 func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid", t)
-	api.gm.Get(g.GroupID).Base().SetState(entry.GroupStateMatch)
+	api.GM.Get(g.GroupID).Base().SetState(entry.GroupStateMatch)
 
 	req, _ := http.NewRequest("POST", "/match/start_match/uid", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
@@ -55,12 +61,15 @@ func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
 }
 
 func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	rsp := requestCreateGroup(router, "uid", t)
 
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
 	req, _ := http.NewRequest("POST", "/match/upload_player_attr", bytes.NewBuffer(uploadPlayerAttrParam("")))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -69,13 +78,16 @@ func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
 }
 
 func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	rsp := requestCreateGroup(router, "uid", t)
 
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
-	api.pm.Get("uid").Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	api.PM.Get("uid").Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
 	req, _ := http.NewRequest("POST", "/match/upload_player_attr", bytes.NewBuffer(uploadPlayerAttrParamInvalid("uid")))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -85,13 +97,16 @@ func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
 
 //nolint:dupl
 func TestAPI_Unready_StateNotInvite(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	rsp := requestCreateGroup(router, "uid", t)
 
 	// in match can unready
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
 	req, _ := http.NewRequest("POST", "/match/unready/uid", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -99,7 +114,7 @@ func TestAPI_Unready_StateNotInvite(t *testing.T) {
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
 
 	// in game can not unready
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
@@ -107,13 +122,16 @@ func TestAPI_Unready_StateNotInvite(t *testing.T) {
 
 //nolint:dupl
 func TestAPI_Ready_StateNotInvite(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	rsp := requestCreateGroup(router, "uid", t)
 
 	// in match can not ready
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateMatch)
 	req, _ := http.NewRequest("POST", "/match/ready/uid", http.NoBody)
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
@@ -121,14 +139,17 @@ func TestAPI_Ready_StateNotInvite(t *testing.T) {
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), assertRspNotOk(w, t))
 
 	// in game can not ready
-	api.gm.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
+	api.GM.Get(rsp.GroupID).Base().SetStateWithLock(entry.GroupStateGame)
 	w = httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 	assert.Equal(t, merr.ErrGroupInGame.Error(), assertRspNotOk(w, t))
 }
 
 func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	_ = requestCreateGroup(router, "uid", t)
@@ -142,7 +163,10 @@ func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
 }
 
 func TestAPI_SetVoice_PlayerNotInGroup(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/set_voice_state",
@@ -154,7 +178,10 @@ func TestAPI_SetVoice_PlayerNotInGroup(t *testing.T) {
 }
 
 func TestAPI_SetVoice_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/set_voice_state",
@@ -166,7 +193,10 @@ func TestAPI_SetVoice_BadRequest(t *testing.T) {
 }
 
 func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/set_recent_join_group",
@@ -178,7 +208,10 @@ func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
 }
 
 func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -193,7 +226,10 @@ func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/set_nearby_join_group",
@@ -205,7 +241,10 @@ func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
 }
 
 func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -220,7 +259,10 @@ func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/refuse_invite",
@@ -232,7 +274,10 @@ func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
 }
 
 func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/accept_invite",
@@ -244,7 +289,10 @@ func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
 }
 
 func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/accept_invite",
@@ -256,7 +304,10 @@ func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
 }
 
 func TestAPI_Invite_PlayerNotExists(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/invite", bytes.NewBuffer(createInviteParam("uid1", "uid2")))
@@ -267,7 +318,10 @@ func TestAPI_Invite_PlayerNotExists(t *testing.T) {
 }
 
 func TestAPI_Invite_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/invite", bytes.NewBuffer(createInviteParam("uid1", "")))
@@ -278,7 +332,10 @@ func TestAPI_Invite_BadRequest(t *testing.T) {
 }
 
 func TestAPI_ChangeRole_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -293,7 +350,10 @@ func TestAPI_ChangeRole_BadRequest(t *testing.T) {
 }
 
 func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -308,7 +368,10 @@ func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
 }
 
 func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -323,7 +386,10 @@ func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_KickPlayer_BadRequest(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 	req, _ := http.NewRequest("POST", "/match/kick_player", bytes.NewBuffer(createKickParam("uid1", "")))
 	req.Header.Set("Content-Type", "application/json")
@@ -333,7 +399,10 @@ func TestAPI_KickPlayer_BadRequest(t *testing.T) {
 }
 
 func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -347,7 +416,10 @@ func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
-	api := NewAPI(2, time.Second)
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	g := requestCreateGroup(router, "uid1", t)
@@ -361,7 +433,10 @@ func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_ExitGroup_NotInGroup(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/exit_group/uid", http.NoBody)
@@ -372,7 +447,10 @@ func TestAPI_ExitGroup_NotInGroup(t *testing.T) {
 }
 
 func TestAPI_EnterGroup_BadRequest(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/enter_group", bytes.NewBuffer(createEnterGroupParam("a", 0)))
@@ -383,7 +461,10 @@ func TestAPI_EnterGroup_BadRequest(t *testing.T) {
 }
 
 func TestAPI_EnterGroup_GroupNotExists(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/enter_group", bytes.NewBuffer(createEnterGroupParam("a", 1)))
@@ -394,7 +475,10 @@ func TestAPI_EnterGroup_GroupNotExists(t *testing.T) {
 }
 
 func TestAPI_CreateGroup_BadRequest(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/create_group", bytes.NewBuffer(createGroupParamBad("a", 0)))
@@ -405,7 +489,10 @@ func TestAPI_CreateGroup_BadRequest(t *testing.T) {
 }
 
 func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/create_group",
@@ -430,7 +517,10 @@ func createGroupParamBad(uid string, mode constant.GameMode) []byte {
 }
 
 func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
-	api := NewAPI(1, time.Second)
+	inner, shutdown := internalapi.Start(newConf(1))
+	defer shutdown()
+
+	api := API{inner}
 	router := api.setupRouter()
 
 	req, _ := http.NewRequest("POST", "/match/dissolve_group/uid", http.NoBody)

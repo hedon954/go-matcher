@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
+	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
@@ -34,11 +35,13 @@ var ctx = context.Background()
 func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	gc := make(chan entry.Group, 1024)
 	rc := make(chan entry.Room, 1024)
-	pm := repository.NewPlayerMgr()
-	gm := repository.NewGroupMgr(0)
-	tm := repository.NewTeamMgr(0)
-	rm := repository.NewRoomMgr(0)
-	return NewDefault(playerLimit, pm, gm, tm, rm, gc, rc, mock.NewTimer(), opts...)
+	return NewDefault(playerLimit, &repository.Mgrs{
+		PlayerMgr: repository.NewPlayerMgr(),
+		GroupMgr:  repository.NewGroupMgr(0),
+		TeamMgr:   repository.NewTeamMgr(0),
+		RoomMgr:   repository.NewRoomMgr(0)},
+		gc, rc, mock.NewTimer(), new(mock2.DelayTimerMock), opts...,
+	)
 }
 
 func newCreateGroupParam(uid string) *pto.CreateGroup {

@@ -21,6 +21,8 @@ import (
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
 
+	internalapi "github.com/hedon954/go-matcher/internal/api"
+
 	"google.golang.org/protobuf/proto"
 )
 
@@ -46,12 +48,13 @@ const (
 var dp = znet.NewDataPack(zconfig.DefaultConfig)
 
 func Test_TCP_ShouldWork(t *testing.T) {
-	api := NewAPI(2, time.Millisecond*10)
-	server, port := startServer()
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
+	api := &API{inner}
+	server, p := startServer()
 	api.setupRouter(server)
 	defer server.Stop()
-	defer api.m.Stop()
-	conn := startClient(port)
+	conn := startClient(p)
 	defer func() { _ = conn.Close() }()
 
 	// 1. 'a' create a group 'g1'
@@ -59,7 +62,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(1), rsp.GroupId)
 	fmt.Println(rsp)
-	g1 := api.gm.Get(rsp.GroupId)
+	g1 := api.GM.Get(rsp.GroupId)
 	assert.NotNil(t, g1)
 	assert.Equal(t, 1, len(g1.Base().GetPlayers()))
 	assert.Equal(t, G1, g1.ID())
@@ -68,17 +71,17 @@ func Test_TCP_ShouldWork(t *testing.T) {
 
 	// 2. 'a' dissolve group 'g1'
 	requestDissolveGroup(conn, UIDA, t)
-	assert.Nil(t, api.gm.Get(rsp.GroupId))
+	assert.Nil(t, api.GM.Get(rsp.GroupId))
 
 	// 3. 'a' create a group again 'g2'
 	rsp, errMsg = requestCreateGroup(conn, UIDA, t)
 	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(2), rsp.GroupId)
-	g2 := api.gm.Get(rsp.GroupId)
+	g2 := api.GM.Get(rsp.GroupId)
 	assert.NotNil(t, g2)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
 	assert.Equal(t, G2, g2.ID())
-	ua := api.pm.Get(UIDA)
+	ua := api.PM.Get(UIDA)
 	assert.NotNil(t, ua)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, ua.Base().GetOnlineStateWithLock())
 
@@ -101,7 +104,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	// 8. 'b' enter group
 	requestEnterGroup(conn, UIDB, g2.ID(), t)
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
-	ub := api.pm.Get(UIDB)
+	ub := api.PM.Get(UIDB)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, ub.Base().GetOnlineStateWithLock())
 	assert.Equal(t, g2.ID(), ub.Base().GroupID)
 
@@ -115,7 +118,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	requestExitGroup(conn, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
 	assert.Equal(t, ua, g2.GetCaptain())
-	assert.Nil(t, api.pm.Get(UIDB))
+	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 11. 'a' invite friend 'b'
 	requestInvite(conn, UIDA, UIDB, t)
@@ -128,14 +131,14 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	// 13. 'b' enter group
 	requestEnterGroup(conn, UIDB, g2.ID(), t)
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
-	ub = api.pm.Get(UIDB)
+	ub = api.PM.Get(UIDB)
 	assert.NotNil(t, ub)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, ub.Base().GetOnlineStateWithLock())
 
 	// 14. 'a' kick player 'b'
 	requestKick(conn, UIDA, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
-	assert.Nil(t, api.pm.Get(UIDB))
+	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 15. 'a' set voice state
 	requestSetVoiceState(conn, UIDA, entry.PlayerVoiceStateUnmute, t)
@@ -161,7 +164,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 
 	// 20. 'a' upload player attr
 	requestUnloadPlayerAttr(conn, UIDA, true, true, t)
-	assert.Equal(t, "hedon2", api.pm.Get(UIDA).Base().Attribute.Nickname)
+	assert.Equal(t, "hedon2", api.PM.Get(UIDA).Base().Attribute.Nickname)
 
 	// 21. 'a' start match 'g2'
 	requestStartMatch(conn, UIDA, t)
@@ -183,17 +186,17 @@ func Test_TCP_ShouldWork(t *testing.T) {
 
 	// 24. 'b' create a full group 'g3'
 	requestCreateFullGroup(conn, UIDB, UIDBB, t)
-	g3 := api.gm.Get(G3)
+	g3 := api.GM.Get(G3)
 	assert.Equal(t, 2, len(g3.Base().GetPlayers()))
 
 	// 25. 'c' create a full group 'g4'
 	requestCreateFullGroup(conn, UIDC, UIDCC, t)
-	g4 := api.gm.Get(G4)
+	g4 := api.GM.Get(G4)
 	assert.Equal(t, 2, len(g4.Base().GetPlayers()))
 
 	// 26. 'd' create group 'g5'
 	requestCreateGroup(conn, UIDD, t)
-	g5 := api.gm.Get(G5)
+	g5 := api.GM.Get(G5)
 	assert.Equal(t, 1, len(g5.Base().GetPlayers()))
 
 	// 27, start g3, g4 to match
@@ -215,7 +218,7 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	// 'c' -> g4 -> 2
 	// 'd' -> g5 -> 1
 	for i := 0; i <= 10; i++ {
-		if api.m.Glicko2Matcher.RoomCount.Load() == 1 {
+		if api.M.Glicko2Matcher.RoomCount.Load() == 1 {
 			assert.Equal(t, entry.GroupStateGame, g2.Base().GetStateWithLock())
 			assert.Equal(t, entry.GroupStateGame, g3.Base().GetStateWithLock())
 			assert.Equal(t, entry.GroupStateGame, g4.Base().GetStateWithLock())
@@ -225,15 +228,15 @@ func Test_TCP_ShouldWork(t *testing.T) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	rooms := []entry.Room{}
-	api.rm.Range(func(_ int64, room entry.Room) bool {
+	api.RM.Range(func(_ int64, room entry.Room) bool {
 		rooms = append(rooms, room)
 		return true
 	})
 
 	// 29. 'd' exit game, 'g5' should be dissolved
 	requestExitGame(conn, UIDD, rooms[0].ID(), t)
-	assert.Nil(t, api.pm.Get(UIDD))
-	assert.Nil(t, api.gm.Get(G5))
+	assert.Nil(t, api.PM.Get(UIDD))
+	assert.Nil(t, api.GM.Get(G5))
 	assert.Equal(t, entry.GroupStateDissolved, g5.Base().GetStateWithLock())
 }
 
@@ -605,7 +608,7 @@ func startServer() (server ziface.IServer, p int) {
 	conf := *zconfig.DefaultConfig
 	conf.TCPPort = int(port.Add(1))
 	s := znet.NewServer(&conf)
-	s.Start()
+	go s.Start()
 	return s, conf.TCPPort
 }
 

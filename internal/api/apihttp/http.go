@@ -8,18 +8,12 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/hedon954/go-matcher/docs"
-	"github.com/hedon954/go-matcher/internal/config/mock"
-	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/matcher"
-	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
+	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/middleware"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/internal/repository"
-	"github.com/hedon954/go-matcher/internal/service"
-	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/response"
 
-	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
+	internalapi "github.com/hedon954/go-matcher/internal/api"
 
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -32,9 +26,12 @@ import (
 // @host      :5050
 // @BasePath  /
 
-func SetupHTTPServer() {
-	api := NewAPI(1, time.Second)
-	r := api.setupRouter()
+func SetupHTTPServer(path string) {
+	api, shutdown := internalapi.Start(config.Load(path))
+	defer shutdown()
+
+	server := API{api}
+	r := server.setupRouter()
 	srv := &http.Server{
 		Addr:              ":5050",
 		Handler:           r.Handler(),
@@ -77,45 +74,7 @@ func (api *API) setupRouter() *gin.Engine {
 }
 
 type API struct {
-	ms service.Match
-	m  *matcher.Matcher
-	pm *repository.PlayerMgr
-	gm *repository.GroupMgr
-	tm *repository.TeamMgr
-	rm *repository.RoomMgr
-}
-
-func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
-	var (
-		groupChannel = make(chan entry.Group, 1024)
-		roomChannel  = make(chan entry.Room, 1024)
-	)
-
-	var (
-		playerMgr = repository.NewPlayerMgr()
-		groupMgr  = repository.NewGroupMgr(0)
-		teamMgr   = repository.NewTeamMgr(0)
-		roomMgr   = repository.NewRoomMgr(0)
-		configer  = &glicko2.Configer{
-			Glicko2: new(mock.Glicko2Mock), // TODO: change
-		}
-		glicko2Matcher = glicko2.New(roomChannel, configer, matchInterval, playerMgr, groupMgr, teamMgr, roomMgr)
-	)
-
-	delayTimer := timermock.NewTimer() // TODO: get from param
-
-	api := &API{
-		pm: playerMgr,
-		gm: groupMgr,
-		tm: teamMgr,
-		rm: roomMgr,
-		m:  matcher.New(groupChannel, glicko2Matcher),
-		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, roomMgr, groupChannel, roomChannel, delayTimer),
-	}
-
-	go delayTimer.Start()
-	go api.m.Start()
-	return api
+	*internalapi.API
 }
 
 // CreateGroup godoc
@@ -135,7 +94,7 @@ func (api *API) CreateGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	g, err := api.ms.CreateGroup(c, &req)
+	g, err := api.MS.CreateGroup(c, &req)
 	if err != nil {
 		response.GinError(c, err)
 		return
@@ -161,7 +120,7 @@ func (api *API) EnterGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.EnterGroup(c, &req.PlayerInfo, req.GroupID); err != nil {
+	if err := api.MS.EnterGroup(c, &req.PlayerInfo, req.GroupID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -181,7 +140,7 @@ func (api *API) EnterGroup(c *gin.Context) {
 // @Router /match/exit_group/{uid} [post]
 func (api *API) ExitGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.ExitGroup(c, uid); err != nil {
+	if err := api.MS.ExitGroup(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -201,7 +160,7 @@ func (api *API) ExitGroup(c *gin.Context) {
 // @Router /match/dissolve_group/{uid} [post]
 func (api *API) DissolveGroup(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.DissolveGroup(c, uid); err != nil {
+	if err := api.MS.DissolveGroup(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -226,7 +185,7 @@ func (api *API) KickPlayer(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.KickPlayer(c, req.CaptainUID, req.KickedUID); err != nil {
+	if err := api.MS.KickPlayer(c, req.CaptainUID, req.KickedUID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -251,7 +210,7 @@ func (api *API) ChangeRole(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.ChangeRole(c, req.CaptainUID, req.TargetUID, req.Role); err != nil {
+	if err := api.MS.ChangeRole(c, req.CaptainUID, req.TargetUID, req.Role); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -276,7 +235,7 @@ func (api *API) Invite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.Invite(c, req.InviterUID, req.InviteeUID); err != nil {
+	if err := api.MS.Invite(c, req.InviterUID, req.InviteeUID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -301,7 +260,7 @@ func (api *API) AcceptInvite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.AcceptInvite(c, req.InviterUID, req.InviteeInfo, req.GroupID); err != nil {
+	if err := api.MS.AcceptInvite(c, req.InviterUID, req.InviteeInfo, req.GroupID); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -326,7 +285,7 @@ func (api *API) RefuseInvite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	api.ms.RefuseInvite(c, req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg)
+	api.MS.RefuseInvite(c, req.InviterUID, req.InviteeUID, req.GroupID, req.RefuseMsg)
 	response.GinSuccess(c, nil)
 }
 
@@ -348,7 +307,7 @@ func (api *API) SetNearbyJoinGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetNearbyJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
+	if err := api.MS.SetNearbyJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -373,7 +332,7 @@ func (api *API) SetRecentJoinGroup(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetRecentJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
+	if err := api.MS.SetRecentJoinGroup(c, req.CaptainUID, req.Allow); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -398,7 +357,7 @@ func (api *API) SetVoiceState(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.SetVoiceState(c, req.UID, req.State); err != nil {
+	if err := api.MS.SetVoiceState(c, req.UID, req.State); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -419,7 +378,7 @@ func (api *API) SetVoiceState(c *gin.Context) {
 // @Router /match/start_match/{uid} [post]
 func (api *API) StartMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.StartMatch(c, uid); err != nil {
+	if err := api.MS.StartMatch(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -440,7 +399,7 @@ func (api *API) StartMatch(c *gin.Context) {
 // @Router /match/cancel_match/{uid} [post]
 func (api *API) CancelMatch(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.CancelMatch(c, uid); err != nil {
+	if err := api.MS.CancelMatch(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -465,7 +424,7 @@ func (api *API) UploadPlayerAttr(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.UploadPlayerAttr(c, req.UID, &req.UploadPlayerAttr); err != nil {
+	if err := api.MS.UploadPlayerAttr(c, req.UID, &req.UploadPlayerAttr); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -486,7 +445,7 @@ func (api *API) UploadPlayerAttr(c *gin.Context) {
 // @Router /match/ready/{uid} [post]
 func (api *API) Ready(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.Ready(c, uid); err != nil {
+	if err := api.MS.Ready(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -507,7 +466,7 @@ func (api *API) Ready(c *gin.Context) {
 // @Router /match/unready/{uid} [post]
 func (api *API) Unready(c *gin.Context) {
 	uid := c.Param("uid")
-	if err := api.ms.Unready(c, uid); err != nil {
+	if err := api.MS.Unready(c, uid); err != nil {
 		response.GinError(c, err)
 		return
 	}
@@ -532,7 +491,7 @@ func (api *API) ExitGame(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.ms.ExitGame(c, req.UID, req.RoomID); err != nil {
+	if err := api.MS.ExitGame(c, req.UID, req.RoomID); err != nil {
 		response.GinError(c, err)
 		return
 	}

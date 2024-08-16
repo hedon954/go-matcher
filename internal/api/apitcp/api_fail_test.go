@@ -12,11 +12,12 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
+	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
-	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 )
 
 func init() {
@@ -25,40 +26,32 @@ func init() {
 }
 
 func TestAPI_CancelMatch_StateNotMatching(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	_, errMsg := requestCancelMatch(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInInvite.Error(), errMsg)
 }
 
 func TestAPI_StartMatch_StateNotInvite(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
+	defer shutdown()
 
 	errMsg := requestStartMatch(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), errMsg)
 }
 
 func TestAPI_UploadPlayerAttr_LackOfUID(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestUnloadPlayerAttr(client, "", true, true, t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestUnloadPlayerAttr(client, "uid", false, true, t)
 	assert.Equal(t, "lack of basic attr", errMsg)
@@ -66,13 +59,11 @@ func TestAPI_UploadPlayerAttr_AttrInvalid(t *testing.T) {
 
 //nolint:dupl
 func TestAPI_Unready_StateNotInvite(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	api, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
+	defer shutdown()
 
 	// in game can not unready
-	api.gm.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
+	api.GM.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
 
 	errMsg := requestUnready(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInGame.Error(), errMsg)
@@ -80,56 +71,46 @@ func TestAPI_Unready_StateNotInvite(t *testing.T) {
 
 //nolint:dupl
 func TestAPI_Ready_StateNotInvite(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	api, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateMatch, t)
+	defer shutdown()
 
 	// in match can not ready
 	errMsg := requestReady(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInMatch.Error(), errMsg)
 
 	// in game can not ready
-	api.gm.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
+	api.GM.Get(groupID).Base().SetStateWithLock(entry.GroupStateGame)
 	errMsg = requestReady(client, "uid", t)
 	assert.Equal(t, merr.ErrGroupInGame.Error(), errMsg)
 }
 
 func TestAPI_SetVoice_WrongVoiceState(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestSetVoiceState(client, "uid", entry.PlayerVoiceState(100), t)
 	assert.Equal(t, "invalid voice state", errMsg)
 }
 
 func TestAPI_SetVoice_PlayerNotExists(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestSetVoiceState(client, "uid2", entry.PlayerVoiceStateMute, t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_SetRecentJoinGroup_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestSetRecentJoinGroup(client, "", true, t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
@@ -139,20 +120,16 @@ func TestAPI_SetRecentJoinGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_SetNearbyJoinGroup_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 1, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestSetNearbyJoinGroup(client, "", true, t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
@@ -162,60 +139,48 @@ func TestAPI_SetNearbyJoinGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_RefuseInvite_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestRefuseInvite(client, "uid1", "uid2", 0, t)
 	assert.Equal(t, "lack of group id", errMsg)
 }
 
 func TestAPI_AcceptInvite_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestAcceptInvite(client, "uid1", "uid2", 0, t)
 	assert.Equal(t, "lack of group id", errMsg)
 }
 
 func TestAPI_AcceptInvite_GroupDissolved(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestAcceptInvite(client, "uid1", "uid2", 1000, t)
 	assert.Equal(t, merr.ErrGroupDissolved.Error(), errMsg)
 }
 
 func TestAPI_Invite_PlayerNotExists(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestInvite(client, "uid1", "uid2", t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_Invite_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestInvite(client, "uid", "", t)
 	assert.Equal(t, "lack of invitee uid", errMsg)
 }
 
 func TestAPI_ChangeRole_BadRequest(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
@@ -225,10 +190,8 @@ func TestAPI_ChangeRole_BadRequest(t *testing.T) {
 }
 
 func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
@@ -238,10 +201,8 @@ func TestAPI_ChangeRole_RoleNotExists(t *testing.T) {
 }
 
 func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
@@ -251,20 +212,16 @@ func TestAPI_ChangeRole_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_KickPlayer_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestKick(client, "uid1", "", t)
 	assert.Equal(t, "lack of kicked uid", errMsg)
 }
 
 func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
 
@@ -273,10 +230,8 @@ func TestAPI_KickPlayer_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
-	api, server, client, groupID := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, groupID, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 	errMsg := requestEnterGroup(client, "uid2", groupID, t)
 	assert.Empty(t, errMsg)
 
@@ -285,47 +240,37 @@ func TestAPI_DissolveGroup_NotCaptain(t *testing.T) {
 }
 
 func TestAPI_DissolveGroup_PlayerNotExists(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 
 	errMsg := requestDissolveGroup(client, "uid2", t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_ExitGroup_NotInGroup(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 	errMsg := requestExitGroup(client, "uid2", t)
 	assert.Equal(t, merr.ErrPlayerNotExists.Error(), errMsg)
 }
 
 func TestAPI_EnterGroup_BadRequest(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 	errMsg := requestEnterGroup(client, "uid2", 0, t)
 	assert.Equal(t, "lack of group id", errMsg)
 }
 
 func TestAPI_EnterGroup_GroupNotExists(t *testing.T) {
-	api, server, client, _ := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, _, shutdown := initServerClientAndCreateGroup("uid1", 2, entry.GroupStateInvite, t)
+	defer shutdown()
 	errMsg := requestEnterGroup(client, "uid2", 100, t)
 	assert.Equal(t, merr.ErrGroupDissolved.Error(), errMsg)
 }
 
 func TestAPI_CreateGroup_BadRequest(t *testing.T) {
-	api, server, client := initServerClient(1)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, shutdown := initServerClient(1)
+	defer shutdown()
 
 	_, errMsg := requestCreateGroupWithMode(client, "uid1", 0, t)
 	assert.Equal(t, "lack of game mode", errMsg)
@@ -335,37 +280,58 @@ func TestAPI_CreateGroup_BadRequest(t *testing.T) {
 }
 
 func TestAPI_CreateGroup_UnsupportedMode(t *testing.T) {
-	api, server, client := initServerClient(1)
-	defer server.Stop()
-	defer api.m.Stop()
-	defer func() { _ = client.Close() }()
+	_, client, shutdown := initServerClient(1)
+	defer shutdown()
 
 	_, errMsg := requestCreateGroupWithMode(client, "uid1", constant.GameMode(10000), t)
 	assert.Equal(t, "unsupported game mode: 10000", errMsg)
 }
 
 func initServerClientAndCreateGroup(uid string, groupPlayerLimit int, state entry.GroupState,
-	t *testing.T) (api *API, server ziface.IServer, client net.Conn, p int64) {
-	api, server, client = initServerClient(groupPlayerLimit)
+	t *testing.T) (api *API, client net.Conn, p int64, shutdown func()) {
+	api, client, shutdown = initServerClient(groupPlayerLimit)
 	rsp, errMsg := requestCreateGroup(client, uid, t)
 	assert.Equal(t, "", errMsg)
 	assert.Equal(t, int64(1), rsp.GroupId)
-	api.gm.Get(rsp.GroupId).Base().SetStateWithLock(state)
-	api.pm.Get(uid).Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
-	return api, server, client, rsp.GroupId
+	api.GM.Get(rsp.GroupId).Base().SetStateWithLock(state)
+	api.PM.Get(uid).Base().SetMatchStrategyWithLock(constant.MatchStrategyGlicko2)
+	return api, client, rsp.GroupId, shutdown
 }
 
-func initServerClient(groupPlayerLimit int) (*API, ziface.IServer, net.Conn) {
+func initServerClient(groupPlayerLimit int) (*API, net.Conn, func()) {
 	conf := *zconfig.DefaultConfig
 	conf.TCPPort = int(port.Add(1))
-	api, server := SetupTCPServer(groupPlayerLimit, &conf)
+	api, server, shutdown := SetupTCPServer(newConf(groupPlayerLimit), &conf)
 	time.Sleep(3 * time.Millisecond)
 	client := startClient(conf.TCPPort)
-	return api, server, client
+	return api, client, func() {
+		shutdown()
+		_ = client.Close()
+		server.Stop()
+	}
 }
 
 var port = atomic.Int64{}
 
 func init() {
 	port.Store(9000)
+}
+
+func newConf(groupPlayerLimit int) *config.Config {
+	return &config.Config{
+		GroupPlayerLimit: groupPlayerLimit,
+		MatchIntervalMs:  10,
+		Glicko2: &glicko2.QueueArgs{
+			MatchTimeoutSec: 300,
+			TeamPlayerLimit: groupPlayerLimit,
+			RoomTeamLimit:   3,
+		},
+		DelayTimerType: config.DelayTimerTypeNative,
+		DelayTimerConfig: &config.DelayTimerConfig{
+			InviteTimeoutMs:    300000,
+			MatchTimeoutMs:     60000,
+			WaitAttrTimeoutMs:  1,
+			ClearRoomTimeoutMs: 1800000,
+		},
+	}
 }

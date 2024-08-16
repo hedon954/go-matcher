@@ -7,5 +7,5 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
-	apihttp.SetupHTTPServer()
+	apihttp.SetupHTTPServer("conf.yml")
 }

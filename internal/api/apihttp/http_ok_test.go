@@ -9,15 +9,19 @@ import (
 	"testing"
 	"time"
 
+	"github.com/hedon954/go-matcher/internal/config"
+	"github.com/hedon954/go-matcher/internal/constant"
+	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/pto"
+	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
+	"github.com/hedon954/go-matcher/pkg/response"
+
+	internalapi "github.com/hedon954/go-matcher/internal/api"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/hedon954/go-matcher/internal/constant"
-	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/pkg/response"
 )
 
 func init() {
@@ -26,9 +30,10 @@ func init() {
 }
 
 func Test_HTTP_ShouldWork(t *testing.T) {
-	api := NewAPI(2, time.Millisecond*10)
-	defer api.m.Stop()
+	inner, shutdown := internalapi.Start(newConf(2))
+	defer shutdown()
 
+	api := API{inner}
 	router := api.setupRouter()
 
 	const (
@@ -49,7 +54,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 1. 'a' create a group 'g1'
 	rsp := requestCreateGroup(router, UIDA, t)
 	assert.Equal(t, int64(1), rsp.GroupID)
-	g1 := api.gm.Get(rsp.GroupID)
+	g1 := api.GM.Get(rsp.GroupID)
 	assert.NotNil(t, g1)
 	assert.Equal(t, 1, len(g1.Base().GetPlayers()))
 	assert.Equal(t, G1, g1.ID())
@@ -58,16 +63,16 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 
 	// 2. 'a' dissolve group 'g1'
 	requestDissolveGroup(router, UIDA, t)
-	assert.Nil(t, api.gm.Get(rsp.GroupID))
+	assert.Nil(t, api.GM.Get(rsp.GroupID))
 
 	// 3. 'a' create a group again 'g2'
 	rsp = requestCreateGroup(router, UIDA, t)
 	assert.Equal(t, int64(2), rsp.GroupID)
-	g2 := api.gm.Get(rsp.GroupID)
+	g2 := api.GM.Get(rsp.GroupID)
 	assert.NotNil(t, g2)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
 	assert.Equal(t, G2, g2.ID())
-	ua := api.pm.Get(UIDA)
+	ua := api.PM.Get(UIDA)
 	assert.NotNil(t, ua)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, getPlayerOnlineStateWithLock(ua))
 
@@ -90,7 +95,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 8. 'b' enter group
 	requestEnterGroup(router, UIDB, g2.ID(), t)
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
-	ub := api.pm.Get(UIDB)
+	ub := api.PM.Get(UIDB)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, getPlayerOnlineStateWithLock(ub))
 	assert.Equal(t, g2.ID(), ub.Base().GroupID)
 
@@ -104,7 +109,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	requestExitGroup(router, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
 	assert.Equal(t, ua, g2.GetCaptain())
-	assert.Nil(t, api.pm.Get(UIDB))
+	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 11. 'a' invite friend 'b'
 	requestInvite(router, UIDA, UIDB, t)
@@ -117,14 +122,14 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 13. 'b' enter group
 	requestEnterGroup(router, UIDB, g2.ID(), t)
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
-	ub = api.pm.Get(UIDB)
+	ub = api.PM.Get(UIDB)
 	assert.NotNil(t, ub)
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, getPlayerOnlineStateWithLock(ub))
 
 	// 14. 'a' kick player 'b'
 	requestKick(router, UIDA, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
-	assert.Nil(t, api.pm.Get(UIDB))
+	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 15. 'a' set voice state
 	requestSetVoiceState(router, UIDA, entry.PlayerVoiceStateUnmute, t)
@@ -150,7 +155,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 
 	// 20. 'a' upload player attr TODO: upload after start match
 	requestUnloadPlayerAttr(router, UIDA, t)
-	assert.Equal(t, "hedon2", api.pm.Get(UIDA).Base().Attribute.Nickname)
+	assert.Equal(t, "hedon2", api.PM.Get(UIDA).Base().Attribute.Nickname)
 
 	// 21. 'a' start match 'g2'
 	requestStartMatch(router, UIDA, t)
@@ -171,17 +176,17 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 
 	// 24. 'b' create a full group 'g3'
 	requestCreateFullGroup(router, UIDB, UIDBB, t)
-	g3 := api.gm.Get(G3)
+	g3 := api.GM.Get(G3)
 	assert.Equal(t, 2, len(g3.Base().GetPlayers()))
 
 	// 25. 'c' create a full group 'g4'
 	requestCreateFullGroup(router, UIDC, UIDCC, t)
-	g4 := api.gm.Get(G4)
+	g4 := api.GM.Get(G4)
 	assert.Equal(t, 2, len(g4.Base().GetPlayers()))
 
 	// 26. 'd' create group 'g5'
 	requestCreateGroup(router, UIDD, t)
-	g5 := api.gm.Get(G5)
+	g5 := api.GM.Get(G5)
 	assert.Equal(t, 1, len(g5.Base().GetPlayers()))
 
 	// 27, start g3, g4 to match
@@ -204,7 +209,7 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	// 'd' -> g5 -> 1
 	success := false
 	for i := 0; i <= 10; i++ {
-		if api.m.Glicko2Matcher.RoomCount.Load() == 1 {
+		if api.M.Glicko2Matcher.RoomCount.Load() == 1 {
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g2))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g3))
 			assert.Equal(t, entry.GroupStateGame, getGroupStateWithLock(g4))
@@ -216,15 +221,15 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	}
 	assert.True(t, success)
 	rooms := []entry.Room{}
-	api.rm.Range(func(_ int64, room entry.Room) bool {
+	api.RM.Range(func(_ int64, room entry.Room) bool {
 		rooms = append(rooms, room)
 		return true
 	})
 
 	// 29. 'd' exit game, 'g5' should be dissolved
 	requestExitGame(router, UIDD, rooms[0].ID(), t)
-	assert.Nil(t, api.pm.Get(UIDD))
-	assert.Nil(t, api.gm.Get(G5))
+	assert.Nil(t, api.PM.Get(UIDD))
+	assert.Nil(t, api.GM.Get(G5))
 	assert.Equal(t, entry.GroupStateDissolved, getGroupStateWithLock(g5))
 }
 
@@ -555,5 +560,24 @@ func playerInfo(uid string) pto.PlayerInfo {
 		GameMode:    constant.GameModeGoatGame,
 		ModeVersion: 1,
 		Glicko2Info: &pto.Glicko2Info{},
+	}
+}
+
+func newConf(groupPlayerLimit int) *config.Config {
+	return &config.Config{
+		GroupPlayerLimit: groupPlayerLimit,
+		MatchIntervalMs:  10,
+		Glicko2: &glicko2.QueueArgs{
+			MatchTimeoutSec: 300,
+			TeamPlayerLimit: groupPlayerLimit,
+			RoomTeamLimit:   3,
+		},
+		DelayTimerType: config.DelayTimerTypeNative,
+		DelayTimerConfig: &config.DelayTimerConfig{
+			InviteTimeoutMs:    300000,
+			MatchTimeoutMs:     60000,
+			WaitAttrTimeoutMs:  1,
+			ClearRoomTimeoutMs: 1800000,
+		},
 	}
 }

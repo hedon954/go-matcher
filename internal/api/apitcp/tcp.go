@@ -1,22 +1,26 @@
 package apitcp
 
 import (
-	"time"
-
+	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
+
+	internalapi "github.com/hedon954/go-matcher/internal/api"
 )
 
-func SetupTCPServer(groupPlayerLimit int, conf *zconfig.ZConfig) (*API, ziface.IServer) {
-	server := znet.NewServer(conf)
+func SetupTCPServer(conf *config.Config, zConf *zconfig.ZConfig) (*API, ziface.IServer, func()) {
+	zServer := znet.NewServer(zConf)
+	api, shutdown := internalapi.Start(conf)
 
-	api := NewAPI(groupPlayerLimit, time.Second)
-	api.setupRouter(server)
-
-	go server.Serve()
-	return api, server
+	server := &API{api}
+	server.setupRouter(zServer)
+	go zServer.Serve()
+	return server, zServer, func() {
+		shutdown()
+		zServer.Stop()
+	}
 }
 
 func (api *API) setupRouter(s ziface.IServer) {

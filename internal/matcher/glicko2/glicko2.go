@@ -19,7 +19,7 @@ import (
 type Matcher struct {
 	mLock sync.RWMutex
 
-	configer *Configer
+	configer config.Glicko2
 
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
@@ -49,10 +49,6 @@ type Matcher struct {
 	matchInterval time.Duration
 }
 
-type Configer struct {
-	Glicko2 config.Glicko2
-}
-
 // Funcs is the funcs needed for glicko2 matcher.
 type Funcs struct {
 	ArgsFunc          func() *glicko2.QueueArgs
@@ -64,9 +60,8 @@ type Funcs struct {
 // New returns the new glicko2 matcher, and start it.
 func New(
 	roomChannelToService chan entry.Room,
-	configer *Configer, matchInterval time.Duration,
-	playerMgr *repository.PlayerMgr, groupMgr *repository.GroupMgr,
-	teamMgr *repository.TeamMgr, roomMgr *repository.RoomMgr,
+	configer config.Glicko2, matchInterval time.Duration,
+	mgrs *repository.Mgrs,
 ) *Matcher {
 	m := &Matcher{
 		matchers:             make(map[string]*glicko2.Matcher, 8),
@@ -74,10 +69,10 @@ func New(
 		roomChan:             make(chan glicko2.Room),
 		roomChannelToService: roomChannelToService,
 		gameModes:            make(map[constant.GameMode]*Funcs, 16),
-		playerMgr:            playerMgr,
-		groupMgr:             groupMgr,
-		teamMgr:              teamMgr,
-		roomMgr:              roomMgr,
+		playerMgr:            mgrs.PlayerMgr,
+		groupMgr:             mgrs.GroupMgr,
+		teamMgr:              mgrs.TeamMgr,
+		roomMgr:              mgrs.RoomMgr,
 		configer:             configer,
 		matchInterval:        matchInterval,
 	}
@@ -87,7 +82,6 @@ func New(
 
 	// start to handle match result
 	go m.handleMatchResult()
-
 	return m
 }
 

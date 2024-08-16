@@ -7,3 +7,7 @@ main
 
 # binary files
 match-http
+
+# config file
+**conf.yml
+**conf.yaml

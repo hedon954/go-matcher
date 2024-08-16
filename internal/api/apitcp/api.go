@@ -4,67 +4,21 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
-	"github.com/hedon954/go-matcher/internal/config/mock"
+	"github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/log"
-	"github.com/hedon954/go-matcher/internal/matcher"
-	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
 	"github.com/hedon954/go-matcher/internal/pb"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/internal/repository"
-	"github.com/hedon954/go-matcher/internal/service"
-	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
-
-	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
 
 	"google.golang.org/protobuf/proto"
 )
 
 type API struct {
-	ms service.Match
-	m  *matcher.Matcher
-	pm *repository.PlayerMgr
-	gm *repository.GroupMgr
-	tm *repository.TeamMgr
-	rm *repository.RoomMgr
-}
-
-func NewAPI(groupPlayerLimit int, matchInterval time.Duration) *API {
-	var (
-		groupChannel = make(chan entry.Group, 1024)
-		roomChannel  = make(chan entry.Room, 1024)
-	)
-
-	var (
-		playerMgr = repository.NewPlayerMgr()
-		groupMgr  = repository.NewGroupMgr(0)
-		teamMgr   = repository.NewTeamMgr(0)
-		roomMgr   = repository.NewRoomMgr(0)
-		configer  = &glicko2.Configer{
-			Glicko2: new(mock.Glicko2Mock), // TODO: change
-		}
-		glicko2Matcher = glicko2.New(roomChannel, configer, matchInterval, playerMgr, groupMgr, teamMgr, roomMgr)
-	)
-
-	delayTimer := timermock.NewTimer() // TODO: get from param
-
-	api := &API{
-		pm: playerMgr,
-		gm: groupMgr,
-		tm: teamMgr,
-		rm: roomMgr,
-		m:  matcher.New(groupChannel, glicko2Matcher),
-		ms: matchimpl.NewDefault(groupPlayerLimit, playerMgr, groupMgr, teamMgr, roomMgr, groupChannel, roomChannel, delayTimer),
-	}
-
-	go delayTimer.Start()
-	go api.m.Start()
-	return api
+	*api.API
 }
 
 // TODO: generate a reqType -> msgStruct map
@@ -81,7 +35,7 @@ func (api *API) CreateGroup(request ziface.IRequest) {
 		PlayerInfo: playerInfoFromPBToPTO(data.PlayerInfo),
 	}
 
-	group, err := api.ms.CreateGroup(context.Background(), param)
+	group, err := api.MS.CreateGroup(context.Background(), param)
 	fmt.Println("------------------>", group, err)
 	if err != nil {
 		api.responseError(request, err)
@@ -109,7 +63,7 @@ func (api *API) EnterGroup(request ziface.IRequest) {
 		Source:     pto.EnterGroupSourceType(data.Source),
 	}
 
-	if err := api.ms.EnterGroup(context.Background(), param, data.GroupId); err != nil {
+	if err := api.MS.EnterGroup(context.Background(), param, data.GroupId); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -120,7 +74,7 @@ func (api *API) EnterGroup(request ziface.IRequest) {
 func (api *API) ExitGroup(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.ExitGroupReq](request.GetData())
 
-	if err := api.ms.ExitGroup(context.Background(), param.Uid); err != nil {
+	if err := api.MS.ExitGroup(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -131,7 +85,7 @@ func (api *API) ExitGroup(request ziface.IRequest) {
 func (api *API) DissolveGroup(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.DissolveGroupReq](request.GetData())
 
-	if err := api.ms.DissolveGroup(context.Background(), param.Uid); err != nil {
+	if err := api.MS.DissolveGroup(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -145,7 +99,7 @@ func (api *API) KickPlayer(request ziface.IRequest) {
 		api.responseParamError(request, errors.New("lack of kicked uid"))
 		return
 	}
-	if err := api.ms.KickPlayer(context.Background(), param.CaptainUid, param.KickedUid); err != nil {
+	if err := api.MS.KickPlayer(context.Background(), param.CaptainUid, param.KickedUid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -156,7 +110,7 @@ func (api *API) KickPlayer(request ziface.IRequest) {
 func (api *API) ChangeRole(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.ChangeRoleReq](request.GetData())
 
-	if err := api.ms.ChangeRole(context.Background(),
+	if err := api.MS.ChangeRole(context.Background(),
 		param.CaptainUid, param.TargetUid, entry.GroupRole(param.Role)); err != nil {
 		api.responseError(request, err)
 		return
@@ -171,7 +125,7 @@ func (api *API) Invite(request ziface.IRequest) {
 		api.responseParamError(request, errors.New("lack of invitee uid"))
 		return
 	}
-	if err := api.ms.Invite(context.Background(), param.InviterUid, param.InviteeUid); err != nil {
+	if err := api.MS.Invite(context.Background(), param.InviterUid, param.InviteeUid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -193,7 +147,7 @@ func (api *API) AcceptInvite(request ziface.IRequest) {
 
 	inviteInfo := playerInfoFromPBToPTO(param.InviteeInfo)
 
-	if err := api.ms.AcceptInvite(context.Background(), param.InviterUid, &inviteInfo, param.GroupId); err != nil {
+	if err := api.MS.AcceptInvite(context.Background(), param.InviterUid, &inviteInfo, param.GroupId); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -209,7 +163,7 @@ func (api *API) RefuseInvite(request ziface.IRequest) {
 		return
 	}
 
-	api.ms.RefuseInvite(context.Background(), param.InviterUid, param.InviteeUid, param.GroupId, param.RefuseMsg)
+	api.MS.RefuseInvite(context.Background(), param.InviterUid, param.InviteeUid, param.GroupId, param.RefuseMsg)
 
 	api.responseSuccess(request, &pb.RefuseInviteRsp{})
 }
@@ -217,7 +171,7 @@ func (api *API) RefuseInvite(request ziface.IRequest) {
 func (api *API) SetNearbyJoinGroup(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.SetNearbyJoinGroupReq](request.GetData())
 
-	if err := api.ms.SetNearbyJoinGroup(context.Background(), param.Uid, param.Allow); err != nil {
+	if err := api.MS.SetNearbyJoinGroup(context.Background(), param.Uid, param.Allow); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -228,7 +182,7 @@ func (api *API) SetNearbyJoinGroup(request ziface.IRequest) {
 func (api *API) SetRecentJoinGroup(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.SetRecentJoinGroupReq](request.GetData())
 
-	if err := api.ms.SetRecentJoinGroup(context.Background(), param.Uid, param.Allow); err != nil {
+	if err := api.MS.SetRecentJoinGroup(context.Background(), param.Uid, param.Allow); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -245,7 +199,7 @@ func (api *API) SetVoiceState(request ziface.IRequest) {
 		return
 	}
 
-	if err := api.ms.SetVoiceState(context.Background(), param.Uid, state); err != nil {
+	if err := api.MS.SetVoiceState(context.Background(), param.Uid, state); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -256,7 +210,7 @@ func (api *API) SetVoiceState(request ziface.IRequest) {
 func (api *API) StartMatch(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.StartMatchReq](request.GetData())
 
-	if err := api.ms.StartMatch(context.Background(), param.Uid); err != nil {
+	if err := api.MS.StartMatch(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -267,7 +221,7 @@ func (api *API) StartMatch(request ziface.IRequest) {
 func (api *API) CancelMatch(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.CancelMatchReq](request.GetData())
 
-	if err := api.ms.CancelMatch(context.Background(), param.Uid); err != nil {
+	if err := api.MS.CancelMatch(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -278,7 +232,7 @@ func (api *API) CancelMatch(request ziface.IRequest) {
 func (api *API) Ready(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.ReadyReq](request.GetData())
 
-	if err := api.ms.Ready(context.Background(), param.Uid); err != nil {
+	if err := api.MS.Ready(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -289,7 +243,7 @@ func (api *API) Ready(request ziface.IRequest) {
 func (api *API) Unready(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.UnreadyReq](request.GetData())
 
-	if err := api.ms.Unready(context.Background(), param.Uid); err != nil {
+	if err := api.MS.Unready(context.Background(), param.Uid); err != nil {
 		api.responseError(request, err)
 		return
 	}
@@ -309,7 +263,7 @@ func (api *API) UploadPlayerAttr(request ziface.IRequest) {
 		extra, _ = proto.Marshal(param.GetGoatGameAttr())
 	}
 
-	if err := api.ms.UploadPlayerAttr(context.Background(), param.Uid, &pto.UploadPlayerAttr{
+	if err := api.MS.UploadPlayerAttr(context.Background(), param.Uid, &pto.UploadPlayerAttr{
 		Attribute: pto.Attribute{
 			Nickname: param.Attr.Nickname,
 			Avatar:   param.Attr.Avatar,
@@ -331,7 +285,7 @@ func (api *API) ExitGame(request ziface.IRequest) {
 		return
 	}
 
-	if err := api.ms.ExitGame(context.Background(), param.Uid, param.RoomId); err != nil {
+	if err := api.MS.ExitGame(context.Background(), param.Uid, param.RoomId); err != nil {
 		api.responseError(request, err)
 		return
 	}

@@ -7,14 +7,17 @@ import (
 
 	"github.com/hedon954/go-matcher/cmd"
 	"github.com/hedon954/go-matcher/internal/api/apitcp"
+	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 )
 
 func main() {
 	defer cmd.StopSafe()
-	conf := zconfig.Load("cmd/tcp/zinx.yml")
-	_, server := apitcp.SetupTCPServer(1, conf)
-	defer server.Stop()
+	_, _, shutdown := apitcp.SetupTCPServer(
+		config.Load("cmd/tcp/conf.yml"),
+		zconfig.Load("cmd/tcp/zinx.yml"),
+	)
+	defer shutdown()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
