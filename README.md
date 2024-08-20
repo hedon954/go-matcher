@@ -147,3 +147,18 @@ docker run -d --name jaeger \
   -p 4318:4318 \
   jaegertracing/all-in-one:latest
 ```
+
+### Start Nacos
+
+run by docker compose:
+
+```bash
+git clone https://github.com/nacos-group/nacos-docker.git \
+cd nacos-docker \
+docker-compose -f example/standalone-mysql-8.yaml up
+```
+
+open nacos website:
+```bash
+open http://localhost:8848/nacos/index.html
+```

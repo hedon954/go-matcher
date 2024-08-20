@@ -1,10 +1,7 @@
 package config
 
 import (
-	"os"
 	"time"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
@@ -17,6 +14,12 @@ const (
 	DelayTimerTypeNative DelayTimerType = "native"
 )
 
+// Loader loads the config.
+type Loader interface {
+	Load() (*Config, error)
+}
+
+// Config defines the global config.
 type Config struct {
 	GroupPlayerLimit int                `yaml:"group_player_limit"`
 	MatchIntervalMs  int64              `yaml:"match_interval_ms"`
@@ -24,20 +27,6 @@ type Config struct {
 	AsynqRedis       *Redis             `yaml:"asynq_redis"`
 	DelayTimerType   DelayTimerType     `yaml:"delay_timer_type"`
 	DelayTimerConfig *DelayTimerConfig  `yaml:"delay_timer_config"`
-}
-
-// Load loads the config from file.
-func Load(path string) *Config {
-	bs, err := os.ReadFile(path)
-	if err != nil {
-		panic("read config file error: " + err.Error())
-	}
-	c := &Config{}
-	err = yaml.Unmarshal(bs, c)
-	if err != nil {
-		panic("unmarshal config error: " + err.Error())
-	}
-	return c
 }
 
 func (c *Config) GetQueueArgs(_ constant.GameMode) *glicko2.QueueArgs {

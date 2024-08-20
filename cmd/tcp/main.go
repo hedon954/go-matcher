@@ -13,9 +13,12 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
+	conf, err := config.NewFileLoader("cmd/tcp/conf.yml").Load()
+	if err != nil {
+		panic(err)
+	}
 	_, _, shutdown := apitcp.SetupTCPServer(
-		config.Load("cmd/tcp/conf.yml"),
-		zconfig.Load("cmd/tcp/zinx.yml"),
+		conf, zconfig.Load("cmd/tcp/zinx.yml"),
 	)
 	defer shutdown()
 
