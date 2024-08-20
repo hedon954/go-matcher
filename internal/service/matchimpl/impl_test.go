@@ -12,13 +12,13 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
-	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
-	"github.com/hedon954/go-matcher/pkg/timer/mock"
+	"github.com/hedon954/go-matcher/pkg/timer/native"
 )
 
 func init() {
@@ -40,7 +40,7 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 		GroupMgr:  repository.NewGroupMgr(0),
 		TeamMgr:   repository.NewTeamMgr(0),
 		RoomMgr:   repository.NewRoomMgr(0)},
-		gc, rc, mock.NewTimer(), new(mock2.DelayTimerMock), opts...,
+		gc, rc, native.NewTimer(), new(mock.DelayTimerMock), opts...,
 	)
 }
 

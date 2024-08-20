@@ -314,7 +314,7 @@ func initServerClient(groupPlayerLimit int) (*API, net.Conn, func()) {
 var port = atomic.Int64{}
 
 func init() {
-	port.Store(9000)
+	port.Store(20000)
 }
 
 func newConf(groupPlayerLimit int) *config.Config {

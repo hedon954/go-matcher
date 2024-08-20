@@ -1,4 +1,4 @@
-package mock
+package native
 
 import (
 	"errors"
@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMockTimer(t *testing.T) {
+func TestNativeTimer(t *testing.T) {
 	const opType1 ptimer.OpType = "1"
 	const opType2 ptimer.OpType = "2"
 	const opType3 ptimer.OpType = "3"
