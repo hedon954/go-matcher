@@ -13,9 +13,15 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
+	mc := config.NewFileLoader[config.ServerConfig]("cmd/server_conf_tmp.yml")
 	_, _, shutdown := apitcp.SetupTCPServer(
-		config.NewFileLoader[config.ServerConfig]("cmd/server_conf_tmp.yml"),
-		config.NewFileLoader[config.MatchConfig]("cmd/match_conf_tmp.yml"),
+		mc,
+		config.NewNacosLoader(
+			mc.Get().NacosNamespaceID,
+			"GO-MATCHER",
+			"match_config",
+			mc.Get().NacosServers,
+		),
 		zconfig.Load("cmd/zinx_conf_tmp.yml"),
 	)
 	defer shutdown()

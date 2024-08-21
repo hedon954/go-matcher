@@ -2,6 +2,7 @@ package mock
 
 import (
 	"github.com/hedon954/go-matcher/internal/config"
+	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
@@ -25,11 +26,13 @@ func NewMatchConfigerMock(c *config.MatchConfig) *MatchConfigerMock {
 	if c.MatchIntervalMs == 0 {
 		c.MatchIntervalMs = 1
 	}
-	if c.Glicko2 == nil {
-		c.Glicko2 = &glicko2.QueueArgs{
-			MatchTimeoutSec: MatchTimeoutSec,
-			TeamPlayerLimit: c.GroupPlayerLimit,
-			RoomTeamLimit:   2, //nolint:mnd
+	if len(c.Glicko2) == 0 {
+		c.Glicko2 = map[constant.GameMode]*glicko2.QueueArgs{
+			constant.GameModeGoatGame: {
+				MatchTimeoutSec: MatchTimeoutSec,
+				TeamPlayerLimit: c.GroupPlayerLimit,
+				RoomTeamLimit:   2, //nolint:mnd
+			},
 		}
 	}
 	if c.DelayTimerType == "" {

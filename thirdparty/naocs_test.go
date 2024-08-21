@@ -4,29 +4,71 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/nacos-group/nacos-sdk-go/v2/clients/config_client"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
+var (
+	namespaceID string
+	host        = "127.0.0.1"
+	port        = uint64(8848)
+	dataID      = "test-nacos-data-id"
+	group       = "test-nacos-group"
+	expected    = nacosConfig{
+		Name:      "hedon",
+		Addr:      "home",
+		IsMarried: true,
+		Age:       18,
+		Extra: struct {
+			Company string `json:"company"`
+			Salary  int    `json:"salary"`
+		}{
+			Company: "nacos",
+			Salary:  10000,
+		},
+	}
+)
+
+type nacosConfig struct {
+	Name      string `yaml:"name"`
+	Addr      string `yaml:"addr"`
+	IsMarried bool   `yaml:"is_married"`
+	Age       int    `yaml:"age"`
+	Extra     struct {
+		Company string `json:"company"`
+		Salary  int    `json:"salary"`
+	} `yaml:"extra"`
+}
+
+func TestMain(m *testing.M) {
+	namespaceID = PrepareNacosConfig(host, dataID, group, port, expected)
+	m.Run()
+	ClearNacosConfig(namespaceID, host, port)
+}
+
 func TestNewNacosClient(t *testing.T) {
-	client, err := NewNacosClient("7d638262-9e51-4822-9333-c3bcca838b7d")
+	client, err := NewNacosConfigClient(namespaceID, []constant.ServerConfig{
+		{
+			IpAddr:      host,
+			Port:        port,
+			ContextPath: "/nacos",
+			Scheme:      "http",
+		},
+	})
 	assert.Nil(t, err)
 	c, err := client.GetConfig(vo.ConfigParam{
-		DataId: "basic_config",
-		Group:  "DEFAULT_GROUP",
+		DataId: dataID,
+		Group:  group,
 		OnChange: func(namespace, group, dataId, data string) {
 			fmt.Printf("group:%s  dataId:%s  data:%s\n", group, dataId, data)
 		},
 	})
 	assert.Nil(t, err)
-	fmt.Println(c)
-}
 
-func prepareNacosConfig(client config_client.IConfigClient) {
-
-}
-
-func clearNacosConfig(client config_client.IConfigClient) {
-
+	var c1 nacosConfig
+	err = yaml.Unmarshal([]byte(c), &c1)
+	assert.Nil(t, err)
+	assert.Equal(t, expected, c1)
 }
