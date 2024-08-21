@@ -13,4 +13,4 @@ match-http
 **conf.yaml
 
 # nacos logs and caches
-nacos/
+.nacos_tmp/

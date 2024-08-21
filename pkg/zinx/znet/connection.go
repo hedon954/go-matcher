@@ -115,7 +115,6 @@ func (c *Connection) RemoveProperty(key string) {
 }
 
 func (c *Connection) startReader(ctx context.Context) {
-	fmt.Println("[Reader Goroutine is running]")
 	defer fmt.Println(c.RemoteAddr().String(), " conn reader exit")
 	defer c.Stop()
 
@@ -161,7 +160,6 @@ func (c *Connection) startReader(ctx context.Context) {
 }
 
 func (c *Connection) startWriter() {
-	fmt.Println("[Writer Goroutine is running]")
 	defer fmt.Println(c.RemoteAddr().String(), " conn writer exit")
 	for {
 		select {

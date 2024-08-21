@@ -22,8 +22,8 @@ var (
 		IsMarried: true,
 		Age:       18,
 		Extra: struct {
-			Company string `json:"company"`
-			Salary  int    `json:"salary"`
+			Company string `yaml:"company"`
+			Salary  int    `yaml:"salary"`
 		}{
 			Company: "nacos",
 			Salary:  10000,
@@ -37,8 +37,8 @@ type nacosConfig struct {
 	IsMarried bool   `yaml:"is_married"`
 	Age       int    `yaml:"age"`
 	Extra     struct {
-		Company string `json:"company"`
-		Salary  int    `json:"salary"`
+		Company string `yaml:"company"`
+		Salary  int    `yaml:"salary"`
 	} `yaml:"extra"`
 }
 

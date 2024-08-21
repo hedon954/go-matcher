@@ -26,8 +26,8 @@ func newClientConfig(namespaceID string) *constant.ClientConfig {
 	return &constant.ClientConfig{
 		NamespaceId:         namespaceID,
 		NotLoadCacheAtStart: true,
-		LogDir:              "./nacos/log",
-		CacheDir:            "./nacos/cache",
+		LogDir:              "./.nacos_tmp/log",
+		CacheDir:            "./.nacos_tmp/cache",
 		LogLevel:            "debug",
 	}
 }
@@ -52,7 +52,7 @@ func PrepareNacosConfig(addr, dataID, group string, port uint64, config any) (na
 
 	// create config
 	bs, _ := yaml.Marshal(config)
-	rsp, err = http.PostForm("http://localhost:8848/nacos/v1/cs/configs", map[string][]string{
+	rsp, err = http.PostForm(fmt.Sprintf("http://%s:%d/nacos/v1/cs/configs", addr, port), map[string][]string{
 		"tenant":  {namespaceID},
 		"dataId":  {dataID},
 		"group":   {group},

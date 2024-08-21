@@ -60,7 +60,6 @@ func DoConnectionStop(conn ziface.IConnection) {
 }
 
 func StartClient() {
-	fmt.Println("Client Test ...start")
 	conn, err := net.Dial("tcp", "127.0.0.1:7777")
 	if err != nil {
 		fmt.Println("client start err, exit!")
@@ -106,7 +105,6 @@ func StartClient() {
 				fmt.Println("read msg data error", err)
 				return
 			}
-			fmt.Println("-----> Receive Server Msg: ID=", msg.GetMsgID(), ", len=", msg.GetDataLen(), ", data=", string(msg.GetData()))
 		}
 
 		time.Sleep(1 * time.Millisecond)
