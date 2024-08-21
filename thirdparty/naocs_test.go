@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	host     = "127.0.0.1"
+	host     = "0.0.0.0"
 	port     = uint64(8848)
 	dataID   = "test-nacos-data-id"
 	group    = "test-nacos-group"

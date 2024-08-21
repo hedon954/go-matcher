@@ -3,6 +3,7 @@ package thirdparty
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 
@@ -49,9 +50,11 @@ func PrepareNacosConfig(addr, dataID, group string, port uint64, config any) (na
 	if rsp.StatusCode != http.StatusOK {
 		panic(fmt.Errorf("create nacos namespace error: %d, msg: %s", rsp.StatusCode, rsp.Status))
 	}
+	bs, _ := io.ReadAll(rsp.Body)
+	fmt.Println("create nacos namespace: ", string(bs))
 
 	// create config
-	bs, _ := yaml.Marshal(config)
+	bs, _ = yaml.Marshal(config)
 	rsp, err = http.PostForm(fmt.Sprintf("http://%s:%d/nacos/v1/cs/configs", addr, port), map[string][]string{
 		"tenant":  {namespaceID},
 		"dataId":  {dataID},
@@ -66,6 +69,8 @@ func PrepareNacosConfig(addr, dataID, group string, port uint64, config any) (na
 	if rsp.StatusCode != http.StatusOK {
 		panic(fmt.Errorf("create nacos config error: %d, msg: %s", rsp.StatusCode, rsp.Status))
 	}
+	bs, _ = io.ReadAll(rsp.Body)
+	fmt.Println("create nacos config: ", string(bs))
 	return namespaceID
 }
 
