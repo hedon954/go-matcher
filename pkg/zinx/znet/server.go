@@ -96,8 +96,6 @@ func (s *Server) Serve() {
 
 func (s *Server) AddRouter(msgID uint32, handle ziface.HandleFunc) {
 	s.msgHandler.AddRouter(msgID, handle)
-
-	fmt.Printf("Add Router[%d] successfully!\n", msgID)
 }
 
 func (s *Server) GetConnMgr() ziface.IConnManager {
@@ -114,14 +112,12 @@ func (s *Server) SetOnConnStop(f func(conn ziface.IConnection)) {
 
 func (s *Server) CallOnConnStart(conn ziface.IConnection) {
 	if s.onConnStart != nil {
-		fmt.Println("---> CallOnConnStart()")
 		s.onConnStart(conn)
 	}
 }
 
 func (s *Server) CallOnConnStop(conn ziface.IConnection) {
 	if s.onConnStop != nil {
-		fmt.Println("---> CallOnConnStop()")
 		s.onConnStop(conn)
 	}
 }

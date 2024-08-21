@@ -613,6 +613,7 @@ func startServer() (server ziface.IServer, p int) {
 	conf.TCPPort = int(port.Add(1))
 	s := znet.NewServer(&conf)
 	go s.Start()
+	time.Sleep(3 * time.Millisecond) // wait for server to start
 	return s, conf.TCPPort
 }
 

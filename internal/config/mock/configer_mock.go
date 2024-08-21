@@ -29,7 +29,7 @@ func NewConfigerMock(c *config.Config) *ConfigerMock {
 		c.Glicko2 = &glicko2.QueueArgs{
 			MatchTimeoutSec: MatchTimeoutSec,
 			TeamPlayerLimit: c.GroupPlayerLimit,
-			RoomTeamLimit:   1,
+			RoomTeamLimit:   2, //nolint:mnd
 		}
 	}
 	if c.DelayTimerType == "" {

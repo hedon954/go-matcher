@@ -48,14 +48,10 @@ func (mh *MsgHandle) StarWorkerPool() {
 
 func (mh *MsgHandle) SendMsgToTaskQueue(request ziface.IRequest) {
 	workerID := request.GetConnection().GetConnID() % uint64(mh.config.WorkPoolSize)
-
-	fmt.Printf("Add ConnID = %d, request MsgID = %d to WorkerID = %d\n", request.GetConnection().GetConnID(), request.GetMsgID(), workerID)
-
 	mh.TaskQueue[workerID] <- request
 }
 
 func (mh *MsgHandle) startOneWorker(workerID int, taskQueue chan ziface.IRequest) {
-	fmt.Println("[WORKER] worker ID = ", workerID, " is started")
 	for request := range taskQueue {
 		mh.DoMsgHandle(request)
 	}
