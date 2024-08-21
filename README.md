@@ -30,13 +30,15 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [x] native timer
   - [x] asynq timer
   - [ ] redis timer
-
 - [x] GameMode
   - [x] GoatGame
 - [ ] MatchStrategy
   - [x] Glicko2
   - [ ] Gather
   - [ ] ELO
+- [x] Config
+  - [x] File Loader
+  - [x] Nacos Dynamic Loader
 - [ ] AI Generator
 
 
@@ -68,7 +70,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] static config
   - [x] yaml
 - [ ] dynamic config
-  - [ ] nacos
+  - [x] nacos
   - [ ] etcd
   - [ ] apollo
   - [ ] consul
@@ -91,7 +93,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [x] Ready & Unready（8.9）
 - [ ] Push Service by gRPC（8.12）
 - [x] Static Config（8.13）
-- [ ] Dynamic Config by nacos（8.13）
+- [x] Dynamic Config by nacos（8.13）
 - [ ] repository by redis（8.14）
 - [ ] entry encode & decode（8.14）
 - [ ] zerolog logger & tracer & open telemetry（8.15-8.16）
