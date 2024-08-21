@@ -5,6 +5,7 @@ asynq_redis:
 nacos_servers:
   - addr: 127.0.0.1
     port: 8848
+    grpc_port: 9848
     context_path: /nacos
     schema: http
 nacos_namespace_id: 7d638262-9e51-4822-9333-c3bcca838b7d

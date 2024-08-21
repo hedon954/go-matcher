@@ -20,6 +20,7 @@ type RedisOpt struct {
 type NacosServerConfig struct {
 	Addr        string `yaml:"addr"`
 	Port        uint64 `yaml:"port"`
+	GRPCPort    uint64 `yaml:"grpc_port"`
 	ContextPath string `yaml:"context_path"`
 	Schema      string `yaml:"schema"`
 }
@@ -40,6 +41,7 @@ func ToNacosServerConfigs(scs []*NacosServerConfig) []constant.ServerConfig {
 			ContextPath: contextPath,
 			IpAddr:      scs[i].Addr,
 			Port:        scs[i].Port,
+			GrpcPort:    scs[i].GRPCPort,
 		}
 	}
 	return serverConfigs

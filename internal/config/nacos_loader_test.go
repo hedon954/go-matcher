@@ -12,15 +12,16 @@ import (
 )
 
 var (
-	namespaceID   string
 	group         = "GO-MATCHER"
 	dataID        = "match_config"
 	addr          = "127.0.0.1"
 	port          = uint64(8848)
+	grpcPort      = uint64(9848)
 	serverConfigs = []*NacosServerConfig{
 		{
 			Addr:        addr,
 			Port:        port,
+			GRPCPort:    grpcPort,
 			ContextPath: "/nacos",
 			Schema:      "http",
 		},
@@ -47,13 +48,9 @@ var (
 	}
 )
 
-func TestMain(m *testing.M) {
-	namespaceID = thirdparty.PrepareNacosConfig(addr, dataID, group, port, defaultMC)
-	m.Run()
-	thirdparty.ClearNacosConfig(namespaceID, addr, port)
-}
-
 func Test_NacosLoader_MatchConfig(t *testing.T) {
+	namespaceID := thirdparty.PrepareNacosConfig(addr, dataID, group, port, defaultMC)
+	defer thirdparty.ClearNacosConfig(namespaceID, addr, port)
 	loader := NewNacosLoader(namespaceID, group, dataID, serverConfigs)
 	got := loader.Get()
 	if !reflect.DeepEqual(defaultMC, got) {

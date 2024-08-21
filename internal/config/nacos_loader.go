@@ -59,6 +59,12 @@ func (nl *NacosLoader) loadMatchConfig() {
 }
 
 func (nl *NacosLoader) updateMatchConfig(namespace, group, dataID, data string) {
+	log.Info().
+		Str("namespace", namespace).
+		Str("group", group).
+		Str("data_id", dataID).
+		Msg("nacos config update")
+
 	mc := &MatchConfig{}
 	if err := yaml.Unmarshal([]byte(data), mc); err != nil {
 		log.Error().

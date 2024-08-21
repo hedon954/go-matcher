@@ -51,6 +51,7 @@ func Test_FileLoader_ServerConfig(t *testing.T) {
 			{
 				Addr:        "127.0.0.1",
 				Port:        8848,
+				GRPCPort:    9848,
 				ContextPath: "/nacos",
 				Schema:      "http",
 			},

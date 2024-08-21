@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	host     = "0.0.0.0"
+	host     = "127.0.0.1"
 	port     = uint64(8848)
+	grpcPort = uint64(9848)
 	dataID   = "test-nacos-data-id"
 	group    = "test-nacos-group"
 	expected = nacosConfig{
@@ -49,6 +50,7 @@ func TestNewNacosClient(t *testing.T) {
 		{
 			IpAddr:      host,
 			Port:        port,
+			GrpcPort:    grpcPort,
 			ContextPath: "/nacos",
 			Scheme:      "http",
 		},
