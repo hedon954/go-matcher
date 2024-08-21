@@ -13,13 +13,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hedon954/go-matcher/internal/config"
-	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
-	"github.com/hedon954/go-matcher/pkg/timer/mock"
+	"github.com/hedon954/go-matcher/pkg/timer/native"
 )
 
 func init() {
@@ -37,7 +37,7 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	gc := make(chan entry.Group, 1024)
 	rc := make(chan entry.Room, 1024)
 
-	configer := mock2.NewConfigerMock(&config.Config{
+	configer := mock.NewConfigerMock(&config.Config{
 		GroupPlayerLimit: playerLimit,
 		DelayTimerConfig: &config.DelayTimerConfig{
 			InviteTimeoutMs:    inviteTimeoutMs,
@@ -52,7 +52,7 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 		GroupMgr:  repository.NewGroupMgr(0),
 		TeamMgr:   repository.NewTeamMgr(0),
 		RoomMgr:   repository.NewRoomMgr(0)},
-		gc, rc, mock.NewTimer(), opts...,
+		gc, rc, native.NewTimer(), opts...,
 	)
 }
 

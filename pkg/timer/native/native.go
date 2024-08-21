@@ -1,4 +1,4 @@
-package mock
+package native
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ func (t *Timer) Add(opType timer.OpType, id int64, delay time.Duration) error {
 		return fmt.Errorf("unsupported op type: %s", opType)
 	}
 	tt := time.AfterFunc(delay, func() {
-		t.Remove(opType, id)
+		_ = t.Remove(opType, id)
 		handler(id)
 	})
 	t.saveTimer(opType, id, tt, delay)

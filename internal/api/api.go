@@ -13,7 +13,7 @@ import (
 	"github.com/hedon954/go-matcher/pkg/timer"
 
 	timerasynq "github.com/hedon954/go-matcher/pkg/timer/asynq"
-	timermock "github.com/hedon954/go-matcher/pkg/timer/mock"
+	timernative "github.com/hedon954/go-matcher/pkg/timer/native"
 
 	"github.com/hibiken/asynq"
 )
@@ -80,7 +80,7 @@ func NewDelayTime(conf *config.Config) (timer.Operator[int64], error) {
 			DB:       conf.AsynqRedis.DB,
 		}), nil
 	case config.DelayTimerTypeNative:
-		return timermock.NewTimer(), nil
+		return timernative.NewTimer(), nil
 	default:
 		return nil, fmt.Errorf("unsupported delay timer type: %s", conf.DelayTimerType)
 	}
