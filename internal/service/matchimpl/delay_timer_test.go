@@ -4,32 +4,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hedon954/go-matcher/internal/config"
-	"github.com/hedon954/go-matcher/internal/config/mock"
-	"github.com/hedon954/go-matcher/internal/constant"
-	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/stretchr/testify/assert"
-)
 
-type delayConfiger struct{}
+	"github.com/hedon954/go-matcher/internal/config/mock"
+	"github.com/hedon954/go-matcher/internal/entry"
+)
 
 const (
-	inviteTimeoutMs   = 5
-	matchTimeoutMs    = 1
-	waitAttrTimeoutMs = 1
+	inviteTimeoutMs    = 5
+	matchTimeoutMs     = 1
+	waitAttrTimeoutMs  = 1
+	clearRoomTimeoutMs = 1
 )
 
-func (d *delayConfiger) GetConfig(mode constant.GameMode) config.DelayTimerConfig {
-	return config.DelayTimerConfig{
-		InviteTimeoutMs:   inviteTimeoutMs,
-		MatchTimeoutMs:    matchTimeoutMs,
-		WaitAttrTimeoutMs: waitAttrTimeoutMs,
-	}
-}
-
-func TestImpl_inviteTimeoutHandler_shouldwork(t *testing.T) {
+func TestImpl_inviteTimeoutHandler_shouldWork(t *testing.T) {
 	impl := defaultImpl(1,
-		WithDelayConfiger(new(delayConfiger)),
 		WithMatchStrategyConfiger(new(mock.MatchStrategyMock)),
 	)
 
@@ -40,8 +29,8 @@ func TestImpl_inviteTimeoutHandler_shouldwork(t *testing.T) {
 	assert.Equal(t, entry.GroupStateDissolved, g.Base().GetStateWithLock())
 }
 
-func TestImpl_matchTimeoutHandler_shouldwork(t *testing.T) {
-	impl := defaultImpl(2, WithDelayConfiger(new(delayConfiger)))
+func TestImpl_matchTimeoutHandler_shouldWork(t *testing.T) {
+	impl := defaultImpl(2)
 
 	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
@@ -53,8 +42,8 @@ func TestImpl_matchTimeoutHandler_shouldwork(t *testing.T) {
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 }
 
-func TestImpl_waitAttrTimeoutHandler_shouldwork(t *testing.T) {
-	impl := defaultImpl(1, WithDelayConfiger(new(delayConfiger)))
+func TestImpl_waitAttrTimeoutHandler_shouldWork(t *testing.T) {
+	impl := defaultImpl(1)
 	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
 	err = impl.StartMatch(ctx, g.GetCaptain().UID())

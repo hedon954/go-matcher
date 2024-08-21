@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/hedon954/go-matcher/internal/config"
+	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
@@ -317,21 +318,13 @@ func init() {
 	port.Store(20000)
 }
 
-func newConf(groupPlayerLimit int) *config.Config {
-	return &config.Config{
+func newConf(groupPlayerLimit int) config.Configer {
+	return mock.NewConfigerMock(&config.Config{
 		GroupPlayerLimit: groupPlayerLimit,
-		MatchIntervalMs:  1,
 		Glicko2: &glicko2.QueueArgs{
 			MatchTimeoutSec: 300,
 			TeamPlayerLimit: groupPlayerLimit,
 			RoomTeamLimit:   3,
 		},
-		DelayTimerType: config.DelayTimerTypeNative,
-		DelayTimerConfig: &config.DelayTimerConfig{
-			InviteTimeoutMs:    300000,
-			MatchTimeoutMs:     60000,
-			WaitAttrTimeoutMs:  1,
-			ClearRoomTimeoutMs: 1800000,
-		},
-	}
+	})
 }

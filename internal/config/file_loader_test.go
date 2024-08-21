@@ -4,11 +4,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
-func TestLoad(t *testing.T) {
-	conf := Load("../../fixtures/conf_test.yml")
+func Test_load(t *testing.T) {
+	conf, err := load("../../fixtures/conf_test.yml")
+	assert.Nil(t, err)
 	reflect.DeepEqual(&Config{
 		GroupPlayerLimit: 2,
 		MatchIntervalMs:  1000,

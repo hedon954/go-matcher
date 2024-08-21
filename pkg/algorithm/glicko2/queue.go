@@ -54,29 +54,40 @@ type Queue struct {
 }
 
 type QueueArgs struct {
-	MatchTimeoutSec int64 `json:"match_timeout_sec"` // Match timeout duration
+	MatchTimeoutSec int64 `json:"match_timeout_sec" yaml:"match_timeout_sec"` // Match timeout duration
 
-	TeamPlayerLimit int `json:"team_player_limit"` // Team player limit
-	RoomTeamLimit   int `json:"room_team_limit"`   // Room team limit
-	MinPlayerCount  int `json:"min_player_count"`  // TODO: Minimum number of players to start
+	TeamPlayerLimit int `json:"team_player_limit" yaml:"team_player_limit"` // Team player limit
+	RoomTeamLimit   int `json:"room_team_limit" yaml:"room_team_limit"`     // Room team limit
 
-	NewerWithNewer bool `json:"newer_with_newer"` // Whether beginners can only match with beginners
+	// Whether beginners can only match with beginners
+	NewerWithNewer bool `json:"newer_with_newer" yaml:"newer_with_newer"`
 
-	UnfriendlyTeamMMRVarianceMin int `json:"unfriendly_team_mmr_variance_min"` // Minimum MMR variance for unfriendly teams
-	MaliciousTeamMMRVarianceMin  int `json:"malicious_team_mmr_variance_min"`  // Minimum MMR variance for malicious teams
+	// Minimum MMR variance for unfriendly teams
+	UnfriendlyTeamMMRVarianceMin int `json:"unfriendly_team_mmr_variance_min" yaml:"unfriendly_team_mmr_variance_min"`
 
-	NormalTeamWaitTimeSec     int64 `json:"normal_team_wait_time_sec"`     // Matching duration for normal teams in exclusive queue
-	UnfriendlyTeamWaitTimeSec int64 `json:"unfriendly_team_wait_time_sec"` // Matching duration for unfriendly teams in exclusive queue
-	MaliciousTeamWaitTimeSec  int64 `json:"malicious_team_wait_time_sec"`  // Matching duration for malicious teams in exclusive queue
+	// Minimum MMR variance for malicious teams
+	MaliciousTeamMMRVarianceMin int `json:"malicious_team_mmr_variance_min" yaml:"malicious_team_mmr_variance_min"`
 
-	MatchRanges []MatchRange `json:"match_ranges"` // Match range strategies
+	// Matching duration for normal teams in exclusive queue
+	NormalTeamWaitTimeSec int64 `json:"normal_team_wait_time_sec" yaml:"normal_team_wait_time_sec"`
+	// Matching duration for unfriendly teams in exclusive queue
+	UnfriendlyTeamWaitTimeSec int64 `json:"unfriendly_team_wait_time_sec" yaml:"unfriendly_team_wait_time_sec"`
+	// Matching duration for malicious teams in exclusive queue
+	MaliciousTeamWaitTimeSec int64 `json:"malicious_team_wait_time_sec" yaml:"malicious_team_wait_time_sec"`
+
+	// Match range strategies
+	MatchRanges []MatchRange `json:"match_ranges" yaml:"match_ranges"`
 }
 
 type MatchRange struct {
-	MaxMatchSec   int64 `json:"max_match_sec"`   // Maximum match duration in seconds (exclusive)
-	MMRGapPercent int   `json:"mmr_gap_percent"` // Allowed MMR difference percentage (0-100) (inclusive), 0 means no restriction
-	CanJoinTeam   bool  `json:"can_join_team"`   // Whether to join full teams
-	StarGap       int   `json:"star_gap"`        // Allowed rank difference (inclusive), 0 means no restriction
+	// Maximum match duration in seconds (exclusive)
+	MaxMatchSec int64 `json:"max_match_sec" yaml:"max_match_sec"`
+	// Allowed MMR difference percentage (0-100) (inclusive), 0 means no restriction
+	MMRGapPercent int `json:"mmr_gap_percent" yaml:"mmr_gap_percent"`
+	// Whether to join full teams
+	CanJoinTeam bool `json:"can_join_team" yaml:"can_join_team"`
+	// Allowed rank difference (inclusive), 0 means no restriction
+	StarGap int `json:"star_gap" yaml:"star_gap"`
 }
 
 var defaultMatchRange = MatchRange{

@@ -14,7 +14,7 @@ import (
 func main() {
 	defer cmd.StopSafe()
 	_, _, shutdown := apitcp.SetupTCPServer(
-		config.Load("cmd/tcp/conf.yml"),
+		config.NewFileLoader("cmd/tcp/conf.yml"),
 		zconfig.Load("cmd/tcp/zinx.yml"),
 	)
 	defer shutdown()

@@ -3,10 +3,11 @@ package matchimpl
 import (
 	"context"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/timer"
-	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -83,7 +84,7 @@ func (impl *Impl) clearRoomTimeoutHandler(roomID int64) {
 
 func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {
 	err := impl.delayTimer.Add(TimerOpTypeGroupInvite, groupID,
-		impl.DelayConfig.GetConfig(mode).InviteTimeout())
+		impl.Configer.Get().DelayTimerConfig.InviteTimeout())
 	if err != nil {
 		log.Error().
 			Int64("group_id", groupID).
@@ -99,7 +100,7 @@ func (impl *Impl) removeInviteTimer(groupID int64) {
 
 func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
 	err := impl.delayTimer.Add(TimerOpTypeGroupMatch, groupID,
-		impl.DelayConfig.GetConfig(mode).MatchTimeout())
+		impl.Configer.Get().DelayTimerConfig.MatchTimeout())
 	if err != nil {
 		log.Error().
 			Int64("group_id", groupID).
@@ -115,7 +116,7 @@ func (impl *Impl) removeCancelMatchTimer(groupID int64) {
 
 func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
 	err := impl.delayTimer.Add(TimerOpTypeGroupWaitAttr, groupID,
-		impl.DelayConfig.GetConfig(mode).WaitAttrTimeout())
+		impl.Configer.Get().DelayTimerConfig.WaitAttrTimeout())
 	if err != nil {
 		log.Error().
 			Int64("group_id", groupID).
@@ -131,7 +132,7 @@ func (impl *Impl) removeWaitAttrTimer(groupID int64) {
 
 func (impl *Impl) addClearRoomTimer(roomID int64, mode constant.GameMode) {
 	err := impl.delayTimer.Add(TimeOpTypeClearRoom, roomID,
-		impl.DelayConfig.GetConfig(mode).ClearRoomTimeout())
+		impl.Configer.Get().DelayTimerConfig.ClearRoomTimeout())
 	if err != nil {
 		log.Error().
 			Int64("room_id", roomID).
