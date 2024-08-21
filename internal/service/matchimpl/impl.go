@@ -33,16 +33,15 @@ import (
 type Impl struct {
 	delayTimer timer.Operator[int64]
 
-	DelayConfig config.DelayTimer
-	MSConfig    config.MatchStrategy
+	Configer config.Configer
+	MSConfig config.MatchStrategy
 
 	playerMgr *repository.PlayerMgr
 	groupMgr  *repository.GroupMgr
 	teamMgr   *repository.TeamMgr
 	roomMgr   *repository.RoomMgr
 
-	groupPlayerLimit int
-	nowFunc          func() int64
+	nowFunc func() int64
 
 	// groupChannel used to send a group to match system.
 	// TODO: if match system is down, we should stop the server.
@@ -63,12 +62,6 @@ func WithNowFunc(f func() int64) Option {
 	}
 }
 
-func WithDelayConfiger(t config.DelayTimer) Option {
-	return func(impl *Impl) {
-		impl.DelayConfig = t
-	}
-}
-
 func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 	return func(impl *Impl) {
 		impl.MSConfig = c
@@ -76,22 +69,20 @@ func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 }
 
 func NewDefault(
-	groupPlayerLimit int, mgrs *repository.Mgrs,
+	configer config.Configer, mgrs *repository.Mgrs,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
-	delayTimer timer.Operator[int64], delayConfig config.DelayTimer,
-	options ...Option,
+	delayTimer timer.Operator[int64], options ...Option,
 ) *Impl {
 	impl := &Impl{
+		Configer:           configer,
 		playerMgr:          mgrs.PlayerMgr,
 		groupMgr:           mgrs.GroupMgr,
 		teamMgr:            mgrs.TeamMgr,
 		roomMgr:            mgrs.RoomMgr,
-		groupPlayerLimit:   groupPlayerLimit,
 		nowFunc:            time.Now().Unix,
 		groupChannel:       groupChannel,
 		roomChannel:        roomChannel,
 		delayTimer:         delayTimer,
-		DelayConfig:        delayConfig,
 		MSConfig:           new(mock.MatchStrategyMock),         // TODO: change
 		pushService:        new(servicemock.PushMock),           // TODO: change
 		gameServerDispatch: new(servicemock.GameServerDispatch), // TODO: change

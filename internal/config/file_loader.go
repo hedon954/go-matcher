@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -10,14 +11,32 @@ import (
 // FileLoader loads the config from file.
 type FileLoader struct {
 	path string
+
+	sync.RWMutex
+	config *Config
 }
 
 func NewFileLoader(path string) *FileLoader {
-	return &FileLoader{path: path}
+	fl := &FileLoader{path: path}
+	fl.load()
+	return fl
 }
 
-func (fl *FileLoader) Load() (*Config, error) {
-	return load(fl.path)
+func (fl *FileLoader) Get() *Config {
+	fl.RLock()
+	defer fl.RUnlock()
+	return fl.config
+}
+
+func (fl *FileLoader) load() {
+	config, err := load(fl.path)
+	if err != nil {
+		panic(err)
+	}
+
+	fl.Lock()
+	defer fl.Unlock()
+	fl.config = config
 }
 
 // load loads the config from file.

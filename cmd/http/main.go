@@ -8,9 +8,6 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
-	conf, err := config.NewFileLoader("conf.yml").Load()
-	if err != nil {
-		panic(err)
-	}
-	apihttp.SetupHTTPServer(conf)
+	configer := config.NewFileLoader("conf.yml")
+	apihttp.SetupHTTPServer(configer)
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/hedon954/go-matcher/internal/config"
 	mock2 "github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -35,12 +36,23 @@ var ctx = context.Background()
 func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	gc := make(chan entry.Group, 1024)
 	rc := make(chan entry.Room, 1024)
-	return NewDefault(playerLimit, &repository.Mgrs{
+
+	configer := mock2.NewConfigerMock(&config.Config{
+		GroupPlayerLimit: playerLimit,
+		DelayTimerConfig: &config.DelayTimerConfig{
+			InviteTimeoutMs:    inviteTimeoutMs,
+			MatchTimeoutMs:     matchTimeoutMs,
+			WaitAttrTimeoutMs:  waitAttrTimeoutMs,
+			ClearRoomTimeoutMs: clearRoomTimeoutMs,
+		},
+	})
+
+	return NewDefault(configer, &repository.Mgrs{
 		PlayerMgr: repository.NewPlayerMgr(),
 		GroupMgr:  repository.NewGroupMgr(0),
 		TeamMgr:   repository.NewTeamMgr(0),
 		RoomMgr:   repository.NewRoomMgr(0)},
-		gc, rc, mock.NewTimer(), new(mock2.DelayTimerMock), opts...,
+		gc, rc, mock.NewTimer(), opts...,
 	)
 }
 
@@ -541,7 +553,7 @@ func TestImpl_KickPlayer(t *testing.T) {
 	err = impl.KickPlayer(ctx, UID, UID+"2")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().GetPlayers()))
-	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
+	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineStateWithLock())
 	assert.Equal(t, UID, g.GetCaptain().UID())
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 }

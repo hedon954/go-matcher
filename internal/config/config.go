@@ -14,9 +14,9 @@ const (
 	DelayTimerTypeNative DelayTimerType = "native"
 )
 
-// Loader loads the config.
-type Loader interface {
-	Load() (*Config, error)
+// Configer provides a way to get the config.
+type Configer interface {
+	Get() *Config
 }
 
 // Config defines the global config.

@@ -2,13 +2,13 @@ package config
 
 import (
 	"time"
-
-	"github.com/hedon954/go-matcher/internal/constant"
 )
 
-type DelayTimer interface {
-	GetConfig(mode constant.GameMode) DelayTimerConfig
-}
+// TODO: support different delay timer type for different game mode
+// type GameModeConfig interface {
+//    GetDelayTimerConfig() DelayTimerConfig
+//    GetMatchStrategy() MatchStrategy
+// }
 
 // DelayTimerConfig defines the delay timer config.
 type DelayTimerConfig struct {

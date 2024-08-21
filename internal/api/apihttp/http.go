@@ -26,8 +26,8 @@ import (
 // @host      :5050
 // @BasePath  /
 
-func SetupHTTPServer(conf *config.Config) {
-	api, shutdown := internalapi.Start(conf)
+func SetupHTTPServer(configer config.Configer) {
+	api, shutdown := internalapi.Start(configer)
 	defer shutdown()
 
 	server := API{api}

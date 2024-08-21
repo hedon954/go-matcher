@@ -28,12 +28,14 @@ type API struct {
 }
 
 // Start initializes the api components and starts them.
-func Start(conf *config.Config) (api *API, shutdown func()) {
+func Start(configer config.Configer) (api *API, shutdown func()) {
 	var (
 		groupChannel = make(chan entry.Group, 1024)
 		roomChannel  = make(chan entry.Room, 1024)
 		mgrs         = NewEntryManagers()
 	)
+
+	conf := configer.Get()
 
 	// init delay timer
 	dt, err := NewDelayTime(conf)
@@ -42,7 +44,7 @@ func Start(conf *config.Config) (api *API, shutdown func()) {
 	}
 
 	// init api
-	api = NewAPI(conf, groupChannel, roomChannel, dt, NewGlicko2Matcher(roomChannel, conf, mgrs), mgrs)
+	api = NewAPI(configer, groupChannel, roomChannel, dt, NewGlicko2Matcher(roomChannel, conf, mgrs), mgrs)
 
 	// start delay timer and match service
 	go dt.Start()
@@ -54,17 +56,17 @@ func Start(conf *config.Config) (api *API, shutdown func()) {
 	}
 }
 
-func NewAPI(conf *config.Config,
+func NewAPI(configer config.Configer,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
 	dt timer.Operator[int64], gm *glicko2.Matcher, mgrs *repository.Mgrs) *API {
+
 	api := &API{
 		PM: mgrs.PlayerMgr,
 		GM: mgrs.GroupMgr,
 		TM: mgrs.TeamMgr,
 		RM: mgrs.RoomMgr,
 		M:  matcher.New(groupChannel, gm),
-		MS: matchimpl.NewDefault(conf.GroupPlayerLimit,
-			mgrs, groupChannel, roomChannel, dt, conf),
+		MS: matchimpl.NewDefault(configer, mgrs, groupChannel, roomChannel, dt),
 	}
 	return api
 }

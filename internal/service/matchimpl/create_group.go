@@ -20,7 +20,7 @@ func (impl *Impl) getPlayer(param *pto.PlayerInfo) (entry.Player, error) {
 // createGroup creates group, and adds the player to it,
 // current play would be the captain of the group.
 func (impl *Impl) createGroup(p entry.Player) (entry.Group, error) {
-	g, err := impl.groupMgr.CreateGroup(impl.groupPlayerLimit, p)
+	g, err := impl.groupMgr.CreateGroup(impl.Configer.Get().GroupPlayerLimit, p)
 	if err != nil {
 		return nil, err
 	}
