@@ -11,12 +11,11 @@ import (
 )
 
 var (
-	namespaceID string
-	host        = "127.0.0.1"
-	port        = uint64(8848)
-	dataID      = "test-nacos-data-id"
-	group       = "test-nacos-group"
-	expected    = nacosConfig{
+	host     = "127.0.0.1"
+	port     = uint64(8848)
+	dataID   = "test-nacos-data-id"
+	group    = "test-nacos-group"
+	expected = nacosConfig{
 		Name:      "hedon",
 		Addr:      "home",
 		IsMarried: true,
@@ -42,13 +41,10 @@ type nacosConfig struct {
 	} `yaml:"extra"`
 }
 
-func TestMain(m *testing.M) {
-	namespaceID = PrepareNacosConfig(host, dataID, group, port, expected)
-	m.Run()
-	ClearNacosConfig(namespaceID, host, port)
-}
-
 func TestNewNacosClient(t *testing.T) {
+	namespaceID := PrepareNacosConfig(host, dataID, group, port, expected)
+	defer ClearNacosConfig(namespaceID, host, port)
+
 	client, err := NewNacosConfigClient(namespaceID, []constant.ServerConfig{
 		{
 			IpAddr:      host,

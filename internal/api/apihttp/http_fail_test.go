@@ -24,6 +24,7 @@ import (
 
 func init() {
 	gin.SetMode(gin.ReleaseMode)
+	gin.DefaultWriter = io.Discard
 	log.Logger = zerolog.New(io.Discard)
 }
 
