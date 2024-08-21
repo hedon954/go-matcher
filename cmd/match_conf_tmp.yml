@@ -4,10 +4,6 @@ glicko2:
   match_timeout_sec: 300
   team_player_limit: 2
   room_team_limit: 2
-asynq_redis:
-  addr: 127.0.0.1:6379
-  password:
-  db: 0
 delay_timer_type: native # asynq, native
 delay_timer_config:
   invite_timeout_ms: 300000

@@ -564,8 +564,8 @@ func playerInfo(uid string) pto.PlayerInfo {
 	}
 }
 
-func newConf(groupPlayerLimit int) config.Configer {
-	return mock.NewConfigerMock(&config.Config{
+func newConf(groupPlayerLimit int) (sc config.Configer[config.ServerConfig], mc config.Configer[config.MatchConfig]) {
+	return mock.NewServerConfigerMock(), mock.NewMatchConfigerMock(&config.MatchConfig{
 		GroupPlayerLimit: groupPlayerLimit,
 		Glicko2: &glicko2.QueueArgs{
 			MatchTimeoutSec: 300,

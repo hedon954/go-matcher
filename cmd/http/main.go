@@ -8,6 +8,7 @@ import (
 
 func main() {
 	defer cmd.StopSafe()
-	configer := config.NewFileLoader("conf.yml")
-	apihttp.SetupHTTPServer(configer)
+	sc := config.NewFileLoader[config.ServerConfig]("cmd/server_conf_tmp.yml")
+	mc := config.NewFileLoader[config.MatchConfig]("cmd/match_conf_tmp.yml")
+	apihttp.SetupHTTPServer(sc, mc)
 }

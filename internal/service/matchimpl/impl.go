@@ -33,7 +33,7 @@ import (
 type Impl struct {
 	delayTimer timer.Operator[int64]
 
-	Configer config.Configer
+	Configer config.Configer[config.MatchConfig]
 	MSConfig config.MatchStrategy
 
 	playerMgr *repository.PlayerMgr
@@ -69,7 +69,7 @@ func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 }
 
 func NewDefault(
-	configer config.Configer, mgrs *repository.Mgrs,
+	configer config.Configer[config.MatchConfig], mgrs *repository.Mgrs,
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
 	delayTimer timer.Operator[int64], options ...Option,
 ) *Impl {

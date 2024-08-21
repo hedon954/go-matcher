@@ -1,0 +1,9 @@
+asynq_redis:
+  addr: 127.0.0.1:6379
+  password:
+  db: 0
+nacos_servers:
+  - addr: 127.0.0.1
+    port: 8848
+    context_path: /nacos
+    schema: http

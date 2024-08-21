@@ -28,23 +28,27 @@ type API struct {
 }
 
 // Start initializes the api components and starts them.
-func Start(configer config.Configer) (api *API, shutdown func()) {
+func Start(
+	sc config.Configer[config.ServerConfig],
+	mc config.Configer[config.MatchConfig],
+) (api *API, shutdown func()) {
 	var (
 		groupChannel = make(chan entry.Group, 1024)
 		roomChannel  = make(chan entry.Room, 1024)
 		mgrs         = NewEntryManagers()
 	)
 
-	conf := configer.Get()
+	matchConf := mc.Get()
+	serverConf := sc.Get()
 
 	// init delay timer
-	dt, err := NewDelayTime(conf)
+	dt, err := NewDelayTime(matchConf.DelayTimerType, serverConf.AsynqRedis)
 	if err != nil {
 		panic(err)
 	}
 
 	// init api
-	api = NewAPI(configer, groupChannel, roomChannel, dt, NewGlicko2Matcher(roomChannel, conf, mgrs), mgrs)
+	api = NewAPI(mc, groupChannel, roomChannel, dt, NewGlicko2Matcher(roomChannel, matchConf, mgrs), mgrs)
 
 	// start delay timer and match service
 	go dt.Start()
@@ -56,7 +60,7 @@ func Start(configer config.Configer) (api *API, shutdown func()) {
 	}
 }
 
-func NewAPI(configer config.Configer,
+func NewAPI(configer config.Configer[config.MatchConfig],
 	groupChannel chan entry.Group, roomChannel chan entry.Room,
 	dt timer.Operator[int64], gm *glicko2.Matcher, mgrs *repository.Mgrs) *API {
 
@@ -71,18 +75,18 @@ func NewAPI(configer config.Configer,
 	return api
 }
 
-func NewDelayTime(conf *config.Config) (timer.Operator[int64], error) {
-	switch conf.DelayTimerType {
+func NewDelayTime(t config.DelayTimerType, r *config.RedisOpt) (timer.Operator[int64], error) {
+	switch t {
 	case config.DelayTimerTypeAsynq:
 		return timerasynq.NewTimer[int64](&asynq.RedisClientOpt{
-			Addr:     conf.AsynqRedis.Addr,
-			Password: conf.AsynqRedis.Password,
-			DB:       conf.AsynqRedis.DB,
+			Addr:     r.Addr,
+			Password: r.Password,
+			DB:       r.DB,
 		}), nil
 	case config.DelayTimerTypeNative:
 		return timernative.NewTimer(), nil
 	default:
-		return nil, fmt.Errorf("unsupported delay timer type: %s", conf.DelayTimerType)
+		return nil, fmt.Errorf("unsupported delay timer type: %s", t)
 	}
 }
 
@@ -95,6 +99,6 @@ func NewEntryManagers() *repository.Mgrs {
 	}
 }
 
-func NewGlicko2Matcher(roomChannel chan entry.Room, conf *config.Config, mgrs *repository.Mgrs) *glicko2.Matcher {
+func NewGlicko2Matcher(roomChannel chan entry.Room, conf *config.MatchConfig, mgrs *repository.Mgrs) *glicko2.Matcher {
 	return glicko2.New(roomChannel, conf, conf.MatchInterval(), mgrs)
 }

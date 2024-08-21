@@ -302,7 +302,8 @@ func initServerClientAndCreateGroup(uid string, groupPlayerLimit int, state entr
 func initServerClient(groupPlayerLimit int) (*API, net.Conn, func()) {
 	conf := *zconfig.DefaultConfig
 	conf.TCPPort = int(port.Add(1))
-	api, server, shutdown := SetupTCPServer(newConf(groupPlayerLimit), &conf)
+	sc, mc := newConf(groupPlayerLimit)
+	api, server, shutdown := SetupTCPServer(sc, mc, &conf)
 	time.Sleep(3 * time.Millisecond)
 	client := startClient(conf.TCPPort)
 	return api, client, func() {
@@ -318,8 +319,8 @@ func init() {
 	port.Store(20000)
 }
 
-func newConf(groupPlayerLimit int) config.Configer {
-	return mock.NewConfigerMock(&config.Config{
+func newConf(groupPlayerLimit int) (sc config.Configer[config.ServerConfig], mc config.Configer[config.MatchConfig]) {
+	return mock.NewServerConfigerMock(), mock.NewMatchConfigerMock(&config.MatchConfig{
 		GroupPlayerLimit: groupPlayerLimit,
 		Glicko2: &glicko2.QueueArgs{
 			MatchTimeoutSec: 300,

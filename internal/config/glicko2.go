@@ -6,5 +6,5 @@ import (
 )
 
 type Glicko2 interface {
-	GetQueueArgs(mode constant.GameMode) *glicko2.QueueArgs
+	GetGlicko2QueueArgs(mode constant.GameMode) *glicko2.QueueArgs
 }

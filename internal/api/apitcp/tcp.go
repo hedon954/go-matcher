@@ -10,9 +10,13 @@ import (
 	internalapi "github.com/hedon954/go-matcher/internal/api"
 )
 
-func SetupTCPServer(configer config.Configer, zConf *zconfig.ZConfig) (*API, ziface.IServer, func()) {
+func SetupTCPServer(
+	sc config.Configer[config.ServerConfig],
+	mc config.Configer[config.MatchConfig],
+	zConf *zconfig.ZConfig,
+) (*API, ziface.IServer, func()) {
 	zServer := znet.NewServer(zConf)
-	api, shutdown := internalapi.Start(configer)
+	api, shutdown := internalapi.Start(sc, mc)
 
 	server := &API{api}
 	server.setupRouter(zServer)

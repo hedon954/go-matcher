@@ -12,10 +12,10 @@ import (
 
 // DelayTimerConfig defines the delay timer config.
 type DelayTimerConfig struct {
-	InviteTimeoutMs    int64 `json:"invite_timeout_ms"`
-	MatchTimeoutMs     int64 `json:"match_timeout_ms"`
-	WaitAttrTimeoutMs  int64 `json:"wait_attr_timeout_ms"`
-	ClearRoomTimeoutMs int64 `json:"clear_room_timeout_ms"`
+	InviteTimeoutMs    int64 `yaml:"invite_timeout_ms"`
+	MatchTimeoutMs     int64 `yaml:"match_timeout_ms"`
+	WaitAttrTimeoutMs  int64 `yaml:"wait_attr_timeout_ms"`
+	ClearRoomTimeoutMs int64 `yaml:"clear_room_timeout_ms"`
 }
 
 func (dtc DelayTimerConfig) InviteTimeout() time.Duration {

@@ -14,11 +14,11 @@ const (
 	MatchTimeoutSec = MatchTimeoutMs / 1000
 )
 
-type ConfigerMock struct {
-	config *config.Config
+type MatchConfigerMock struct {
+	mc *config.MatchConfig
 }
 
-func NewConfigerMock(c *config.Config) *ConfigerMock {
+func NewMatchConfigerMock(c *config.MatchConfig) *MatchConfigerMock {
 	if c.GroupPlayerLimit == 0 {
 		c.GroupPlayerLimit = 0
 	}
@@ -43,9 +43,9 @@ func NewConfigerMock(c *config.Config) *ConfigerMock {
 			ClearRoomTimeoutMs: ClearRoomTimeoutMs,
 		}
 	}
-	return &ConfigerMock{config: c}
+	return &MatchConfigerMock{mc: c}
 }
 
-func (cm *ConfigerMock) Get() *config.Config {
-	return cm.config
+func (cm *MatchConfigerMock) Get() *config.MatchConfig {
+	return cm.mc
 }

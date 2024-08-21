@@ -1,0 +1,12 @@
+group_player_limit: 2
+match_interval_ms: 1000
+glicko2:
+  match_timeout_sec: 300
+  team_player_limit: 2
+  room_team_limit: 2
+delay_timer_type: native # asynq, native
+delay_timer_config:
+  invite_timeout_ms: 300000
+  match_timeout_ms: 60000
+  wait_attr_timeout_ms: 1
+  clear_room_timeout_ms: 1800000

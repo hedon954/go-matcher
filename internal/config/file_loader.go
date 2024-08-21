@@ -9,46 +9,46 @@ import (
 )
 
 // FileLoader loads the config from file.
-type FileLoader struct {
+type FileLoader[T any] struct {
 	path string
 
 	sync.RWMutex
-	config *Config
+	c *T
 }
 
-func NewFileLoader(path string) *FileLoader {
-	fl := &FileLoader{path: path}
+func NewFileLoader[T any](path string) *FileLoader[T] {
+	fl := &FileLoader[T]{path: path}
 	fl.load()
 	return fl
 }
 
-func (fl *FileLoader) Get() *Config {
+func (fl *FileLoader[T]) Get() *T {
 	fl.RLock()
 	defer fl.RUnlock()
-	return fl.config
+	return fl.c
 }
 
-func (fl *FileLoader) load() {
-	config, err := load(fl.path)
+func (fl *FileLoader[T]) load() {
+	config, err := load[T](fl.path)
 	if err != nil {
 		panic(err)
 	}
 
 	fl.Lock()
 	defer fl.Unlock()
-	fl.config = config
+	fl.c = config
 }
 
 // load loads the config from file.
-func load(path string) (*Config, error) {
+func load[T any](path string) (*T, error) {
 	bs, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read config file error: %w", err)
 	}
-	c := &Config{}
-	err = yaml.Unmarshal(bs, c)
+	var c T
+	err = yaml.Unmarshal(bs, &c)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal config error: %w", err)
 	}
-	return c, nil
+	return &c, nil
 }

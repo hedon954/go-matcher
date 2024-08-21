@@ -37,7 +37,7 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	gc := make(chan entry.Group, 1024)
 	rc := make(chan entry.Room, 1024)
 
-	configer := mock.NewConfigerMock(&config.Config{
+	configer := mock.NewMatchConfigerMock(&config.MatchConfig{
 		GroupPlayerLimit: playerLimit,
 		DelayTimerConfig: &config.DelayTimerConfig{
 			InviteTimeoutMs:    inviteTimeoutMs,
