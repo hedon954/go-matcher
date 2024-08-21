@@ -44,7 +44,7 @@ func PrepareNacosConfig(addr, dataID, group string, port uint64, config any) (na
 			"namespaceDesc":     {"tmp-ns-for-test"},
 		})
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("create nacos namespace error: %v\n Please check if the Nacos server is running!!!", err))
 	}
 	defer func() { _ = rsp.Body.Close() }()
 	if rsp.StatusCode != http.StatusOK {
