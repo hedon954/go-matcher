@@ -14,6 +14,8 @@ import (
 func main() {
 	defer cmd.StopSafe()
 	mc := config.NewFileLoader[config.ServerConfig]("cmd/server_conf_tmp.yml")
+	cmd.InitLogger(mc.Get().IsOnline())
+
 	_, _, shutdown := apitcp.SetupTCPServer(
 		mc,
 		config.NewNacosLoader(

@@ -3,10 +3,17 @@ package matchimpl
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 )
 
 func (impl *Impl) dissolveGroup(ctx context.Context, g entry.Group) error {
+	logrus.WithFields(logrus.Fields{
+		"group_id":  g.ID(),
+		"game_mode": g.Base().GameMode,
+	}).Debug("dissolve group")
+
 	g.Base().SetState(entry.GroupStateDissolved)
 
 	uids := g.Base().UIDs()

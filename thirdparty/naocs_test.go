@@ -1,8 +1,8 @@
 package thirdparty
 
 import (
-	"fmt"
 	"testing"
+	"time"
 
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 	"github.com/nacos-group/nacos-sdk-go/v2/vo"
@@ -43,6 +43,10 @@ type nacosConfig struct {
 }
 
 func TestNewNacosClient(t *testing.T) {
+	if testing.Short() {
+		t.Skip("because skywalking-go would panic in this case, should just skip it")
+	}
+
 	namespaceID := PrepareNacosConfig(host, dataID, group, port, expected)
 	defer ClearNacosConfig(namespaceID, host, port)
 
@@ -56,11 +60,13 @@ func TestNewNacosClient(t *testing.T) {
 		},
 	})
 	assert.Nil(t, err)
+	assert.NotNil(t, client)
+
+	time.Sleep(time.Second)
 	c, err := client.GetConfig(vo.ConfigParam{
 		DataId: dataID,
 		Group:  group,
 		OnChange: func(namespace, group, dataId, data string) {
-			fmt.Printf("group:%s  dataId:%s  data:%s\n", group, dataId, data)
 		},
 	})
 	assert.Nil(t, err)

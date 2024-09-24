@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -13,8 +15,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
-
-	"google.golang.org/protobuf/proto"
 )
 
 type API struct {
@@ -121,11 +121,13 @@ func (api *API) ChangeRole(request ziface.IRequest) {
 
 func (api *API) Invite(request ziface.IRequest) {
 	param := typeconv.MustFromProto[pb.InviteReq](request.GetData())
-	if param.InviteeUid == "" {
-		api.responseParamError(request, errors.New("lack of invitee uid"))
+	if param.InviteeInfo == nil {
+		api.responseParamError(request, errors.New("lack of invitee info"))
 		return
 	}
-	if err := api.MS.Invite(context.Background(), param.InviterUid, param.InviteeUid); err != nil {
+
+	inviteeInfo := playerInfoFromPBToPTO(param.InviteeInfo)
+	if err := api.MS.Invite(context.Background(), param.InviterUid, &inviteeInfo); err != nil {
 		api.responseError(request, err)
 		return
 	}

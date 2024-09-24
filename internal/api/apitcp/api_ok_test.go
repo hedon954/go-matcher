@@ -12,7 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 
+	internalapi "github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/pb"
@@ -20,10 +22,6 @@ import (
 	"github.com/hedon954/go-matcher/pkg/zinx/zconfig"
 	"github.com/hedon954/go-matcher/pkg/zinx/ziface"
 	"github.com/hedon954/go-matcher/pkg/zinx/znet"
-
-	internalapi "github.com/hedon954/go-matcher/internal/api"
-
-	"google.golang.org/protobuf/proto"
 )
 
 func init() {
@@ -509,8 +507,8 @@ func requestRefuseInvite(conn net.Conn, inviter, invitee string, groupID int64, 
 
 func requestInvite(conn net.Conn, inviter, invitee string, t *testing.T) string {
 	var req = &pb.InviteReq{
-		InviterUid: inviter,
-		InviteeUid: invitee,
+		InviterUid:  inviter,
+		InviteeInfo: newPlayerInfo(invitee),
 	}
 	bs, _ := proto.Marshal(req)
 	msg, err := dp.Pack(znet.NewMsgPackage(uint32(pb.ReqType_REQ_TYPE_INVITE), bs))
@@ -586,6 +584,9 @@ func requestCreateGroupWithModeAndModeVersion(conn net.Conn, uid string, mode co
 }
 
 func newPlayerInfo(uid string) *pb.PlayerInfo {
+	if uid == "" {
+		return nil
+	}
 	return newPlayerInfoWithMode(uid, constant.GameModeGoatGame)
 }
 

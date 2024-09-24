@@ -3,6 +3,9 @@ package api
 import (
 	"fmt"
 
+	_ "github.com/apache/skywalking-go"
+	"github.com/hibiken/asynq"
+
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/matcher"
@@ -11,11 +14,8 @@ import (
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/timer"
-
 	timerasynq "github.com/hedon954/go-matcher/pkg/timer/asynq"
 	timernative "github.com/hedon954/go-matcher/pkg/timer/native"
-
-	"github.com/hibiken/asynq"
 )
 
 type API struct {

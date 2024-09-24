@@ -3,6 +3,8 @@ package matchimpl
 import (
 	"context"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
@@ -25,6 +27,12 @@ func (impl *Impl) checkEnterSourceValidation(g entry.Group, source pto.EnterGrou
 }
 
 func (impl *Impl) enterGroup(ctx context.Context, p entry.Player, g entry.Group) error {
+	logrus.WithFields(logrus.Fields{
+		"uid":       p.UID(),
+		"group_id":  g.ID(),
+		"game_mode": g.Base().GameMode,
+	}).Debug("enter group")
+
 	if err := g.Base().AddPlayer(p); err != nil {
 		return err
 	}

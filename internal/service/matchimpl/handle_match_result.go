@@ -2,14 +2,18 @@ package matchimpl
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/log"
 )
 
 func (impl *Impl) waitForMatchResult() {
+	log.Info().Msg("start waiting for match result")
 	for r := range impl.roomChannel {
-		fmt.Println("new room: ", r.ID())
+		log.Debug().Int64("room_id", r.ID()).Msg("matched new room")
+		logrus.WithField("room_id", r.ID()).Debug("matched new room")
 		impl.HandleMatchResult(r)
 	}
 }
@@ -18,14 +22,19 @@ func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err erro
 	// add room to manager
 	defer func() {
 		if err == nil {
-			fmt.Println("add room to manager: ", r.ID())
 			impl.roomMgr.Add(r.ID(), r)
+			log.Debug().
+				Int64("room_id", r.ID()).
+				Msg("handle match result successfully,add room to manager")
 		}
 	}()
 	// add teams to managers
 	for _, t := range r.Base().GetTeams() {
-		fmt.Printf("add team %d to room: %d\n", t.ID(), r.ID())
 		impl.teamMgr.Add(t.ID(), t)
+		log.Debug().
+			Int64("room_id", r.ID()).
+			Int64("team_id", t.ID()).
+			Msg("add team to manager")
 	}
 
 	// ---------------------------

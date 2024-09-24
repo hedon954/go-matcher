@@ -3,9 +3,10 @@ package log
 import (
 	"context"
 
-	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/hedon954/go-matcher/pkg/response"
 )
 
 // Ctx brings together zerolog and gin.Context
@@ -17,6 +18,7 @@ func Ctx(ctx context.Context) *zerolog.Logger {
 	if traceID, ok := ctx.Value(response.TraceIDKey).(string); ok {
 		logger = logger.Str(response.TraceIDKey, traceID)
 	}
+	logger.Ctx(ctx)
 	l := logger.Logger()
 	return &l
 }

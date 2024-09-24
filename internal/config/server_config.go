@@ -4,8 +4,18 @@ import (
 	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
 )
 
+type Env = string
+
+const (
+	EnvDev    Env = "dev"
+	EnvLocal  Env = "local"
+	EnvPre    Env = "pre"
+	EnvOnline Env = "online"
+)
+
 // ServerConfig defines the server config.
 type ServerConfig struct {
+	Env              Env                  `yaml:"env"`
 	AsynqRedis       *RedisOpt            `yaml:"asynq_redis"`
 	NacosNamespaceID string               `yaml:"nacos_namespace_id"`
 	NacosServers     []*NacosServerConfig `yaml:"nacos_servers"`
@@ -45,4 +55,16 @@ func ToNacosServerConfigs(scs []*NacosServerConfig) []constant.ServerConfig {
 		}
 	}
 	return serverConfigs
+}
+
+func (sc *ServerConfig) IsDev() bool {
+	return sc.Env == EnvDev || sc.Env == EnvLocal
+}
+
+func (sc *ServerConfig) IsPre() bool {
+	return sc.Env == EnvPre
+}
+
+func (sc *ServerConfig) IsOnline() bool {
+	return sc.Env == EnvOnline || sc.Env == EnvPre
 }

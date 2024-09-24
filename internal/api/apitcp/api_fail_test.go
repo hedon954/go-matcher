@@ -176,7 +176,7 @@ func TestAPI_Invite_BadRequest(t *testing.T) {
 	defer shutdown()
 
 	errMsg := requestInvite(client, "uid", "", t)
-	assert.Equal(t, "lack of invitee uid", errMsg)
+	assert.Equal(t, "lack of invitee info", errMsg)
 }
 
 func TestAPI_ChangeRole_BadRequest(t *testing.T) {

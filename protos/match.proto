@@ -135,7 +135,7 @@ message DissolveGroupRsp {}
 // --->[START] Invite
 message InviteReq {
   string inviter_uid = 1;
-  string invitee_uid = 2;
+  PlayerInfo invitee_info = 2;
 }
 message InviteRsp {}
 // <---[END] Invite

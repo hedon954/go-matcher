@@ -21,7 +21,7 @@ type Match interface {
 	DissolveGroup(ctx context.Context, uid string) error
 
 	// Invite invites the invitee to join the group
-	Invite(ctx context.Context, inviterUID, inviteeUID string) error
+	Invite(ctx context.Context, inviterUID string, inviteeInfo *pto.PlayerInfo) error
 
 	// AcceptInvite accepts the invite and enter the group
 	AcceptInvite(ctx context.Context, inviterUID string, inviteeInfo *pto.PlayerInfo, groupID int64) error

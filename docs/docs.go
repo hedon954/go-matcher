@@ -894,12 +894,12 @@ const docTemplate = `{
         "apihttp.InviteReq": {
             "type": "object",
             "required": [
-                "invitee_uid",
+                "invitee_info",
                 "inviter_uid"
             ],
             "properties": {
-                "invitee_uid": {
-                    "type": "string"
+                "invitee_info": {
+                    "$ref": "#/definitions/pto.PlayerInfo"
                 },
                 "inviter_uid": {
                     "type": "string"

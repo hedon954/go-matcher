@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
@@ -92,26 +94,22 @@ func NewDefault(
 	for _, opt := range options {
 		opt(impl)
 	}
-
 	go impl.waitForMatchResult()
 	impl.initDelayTimer()
 	return impl
 }
 
 func (impl *Impl) CreateGroup(ctx context.Context, param *pto.CreateGroup) (entry.Group, error) {
-	log.Ctx(ctx).Info().Str("uid", param.UID).Msg("creating group")
 	p, err := impl.getPlayer(&param.PlayerInfo)
 	if err != nil {
 		return nil, err
 	}
-
 	p.Base().Lock()
 	defer p.Base().Unlock()
 
 	if err := p.Base().CheckOnlineState(entry.PlayerOnlineStateOnline, entry.PlayerOnlineStateInGroup); err != nil {
 		return nil, err
 	}
-
 	g := impl.groupMgr.Get(p.Base().GroupID)
 	if g == nil {
 		// create a group
@@ -122,15 +120,14 @@ func (impl *Impl) CreateGroup(ctx context.Context, param *pto.CreateGroup) (entr
 	} else {
 		g.Base().Lock()
 		defer g.Base().Unlock()
-
 		// check game mode
 		// if game mode is not the same, exits the group and create a new one
 		// if game mode is the same, check if the player is the captain of the group
 		//  if not, exits the group and create a new one
 		//  if yes, return current group
 		if g.GetCaptain() != p || g.Base().GameMode != param.GameMode {
-			if groupEmpty := g.Base().RemovePlayer(p); groupEmpty {
-				impl.groupMgr.Delete(g.ID())
+			if err := impl.exitGroup(ctx, p, g); err != nil {
+				return nil, err
 			}
 			g, err = impl.createGroup(p)
 			if err != nil {
@@ -176,6 +173,12 @@ func (impl *Impl) EnterGroup(ctx context.Context, info *pto.EnterGroup, groupID 
 		if p.Base().GroupID == groupID {
 			// if p can not play together, should exit the origin group
 			if err := g.CanPlayTogether(&info.PlayerInfo); err != nil {
+				logrus.WithFields(logrus.Fields{
+					"uid":         p.UID(),
+					"group_id":    g.ID(),
+					"player_info": info.PlayerInfo,
+					"error":       err,
+				}).Debug("can not play together in current group")
 				if err := impl.exitGroup(ctx, p, g); err != nil {
 					return err
 				}
@@ -183,6 +186,11 @@ func (impl *Impl) EnterGroup(ctx context.Context, info *pto.EnterGroup, groupID 
 				// can play together, refresh the player info and broadcast the group player infos
 				p.Base().PlayerInfo = info.PlayerInfo
 				impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
+				logrus.WithFields(logrus.Fields{
+					"uid":         p.UID(),
+					"group_id":    g.ID(),
+					"player_info": info.PlayerInfo,
+				}).Debug("player can play together in current group, just enter it")
 				return nil
 			}
 		} else {
@@ -192,6 +200,11 @@ func (impl *Impl) EnterGroup(ctx context.Context, info *pto.EnterGroup, groupID 
 			}
 
 			// not in targeted group, should exit the origin group
+			logrus.WithFields(logrus.Fields{
+				"uid":         p.UID(),
+				"group_id":    g.ID(),
+				"player_info": info.PlayerInfo,
+			}).Debug("exit origin group")
 			originGroup := impl.groupMgr.Get(p.Base().GroupID)
 			if originGroup != nil {
 				originGroup.Base().Lock()
@@ -370,8 +383,8 @@ func (impl *Impl) SetRecentJoinGroup(_ context.Context, captainUID string, allow
 	return nil
 }
 
-func (impl *Impl) Invite(ctx context.Context, inviterUID, inviteeUID string) error {
-	if err := impl.checkInviteeState(inviteeUID); err != nil {
+func (impl *Impl) Invite(ctx context.Context, inviterUID string, inviteeInfo *pto.PlayerInfo) error {
+	if err := impl.checkInviteeState(inviteeInfo.UID); err != nil {
 		return err
 	}
 
@@ -391,8 +404,11 @@ func (impl *Impl) Invite(ctx context.Context, inviterUID, inviteeUID string) err
 		return merr.ErrGroupFull
 	}
 
-	// TODO: how to check if can play together?
-	impl.invite(ctx, inviter, inviteeUID, g)
+	if err := g.CanPlayTogether(inviteeInfo); err != nil {
+		return err
+	}
+
+	impl.invite(ctx, inviter, inviteeInfo.UID, g)
 	return nil
 }
 
