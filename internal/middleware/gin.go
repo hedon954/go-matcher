@@ -1,10 +1,10 @@
 package middleware
 
 import (
+	"github.com/gin-gonic/gin"
+
 	"github.com/hedon954/go-matcher/pkg/rand"
 	"github.com/hedon954/go-matcher/pkg/response"
-
-	"github.com/gin-gonic/gin"
 )
 
 func WithRequestAndTrace() func(c *gin.Context) {

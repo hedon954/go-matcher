@@ -36,8 +36,8 @@ type ChangeRoleReq struct {
 }
 
 type InviteReq struct {
-	InviterUID string `json:"inviter_uid" binding:"required"`
-	InviteeUID string `json:"invitee_uid" binding:"required"`
+	InviterUID  string         `json:"inviter_uid" binding:"required"`
+	InviteeInfo pto.PlayerInfo `json:"invitee_info" binding:"required"`
 }
 
 type AcceptInviteReq struct {

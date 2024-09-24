@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	_ "github.com/apache/skywalking-go"
 	"github.com/r3labs/diff/v3"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -49,6 +50,10 @@ var (
 )
 
 func Test_NacosLoader_MatchConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("because skywalking-go would panic in this case, should just skip it")
+	}
+
 	namespaceID := thirdparty.PrepareNacosConfig(addr, dataID, group, port, defaultMC)
 	defer thirdparty.ClearNacosConfig(namespaceID, addr, port)
 	loader := NewNacosLoader(namespaceID, group, dataID, serverConfigs)

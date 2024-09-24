@@ -37,6 +37,9 @@ func (impl *Impl) initDelayTimer() {
 func (impl *Impl) inviteTimeoutHandler(groupID int64) {
 	g := impl.groupMgr.Get(groupID)
 	if g != nil {
+		log.Debug().
+			Int64("group_id", g.Base().GroupID).
+			Msg("invite timeout")
 		g.Base().Lock()
 		defer g.Base().Unlock()
 		if err := impl.dissolveGroup(context.Background(), g); err != nil {
@@ -52,10 +55,13 @@ func (impl *Impl) inviteTimeoutHandler(groupID int64) {
 func (impl *Impl) matchTimeoutHandler(groupID int64) {
 	g := impl.groupMgr.Get(groupID)
 	if g != nil {
+		log.Debug().Int64("group_id", g.Base().GroupID).Msg("match timeout")
+
 		g.Base().Lock()
 		defer g.Base().Unlock()
 		if g.Base().GetState() == entry.GroupStateMatch {
 			impl.cancelMatch(context.Background(), "", g)
+			log.Debug().Int64("group_id", g.Base().GroupID).Msg("cancel match by timeout")
 		}
 	}
 }
@@ -63,6 +69,9 @@ func (impl *Impl) matchTimeoutHandler(groupID int64) {
 func (impl *Impl) waitAttrTimeoutHandler(groupID int64) {
 	g := impl.groupMgr.Get(groupID)
 	if g != nil {
+		log.Debug().
+			Int64("group_id", g.Base().GroupID).
+			Msg("wait attr timeout")
 		g.Base().Lock()
 		defer g.Base().Unlock()
 		if g.Base().GetState() == entry.GroupStateMatch {
@@ -79,6 +88,10 @@ func (impl *Impl) clearRoomTimeoutHandler(roomID int64) {
 			Int64("room_id", roomID).
 			Any("room_info", r).
 			Msg("clear room timeout")
+	} else {
+		log.Debug().
+			Int64("room_id", roomID).
+			Msg("clear room timeout, but room not found")
 	}
 }
 
@@ -91,11 +104,19 @@ func (impl *Impl) addInviteTimer(groupID int64, mode constant.GameMode) {
 			Int("mode", int(mode)).
 			Err(err).
 			Msg("add invite timer error")
+	} else {
+		log.Debug().
+			Int64("group_id", groupID).
+			Int("mode", int(mode)).
+			Msg("add invite timer successfully")
 	}
 }
 
 func (impl *Impl) removeInviteTimer(groupID int64) {
 	_ = impl.delayTimer.Remove(TimerOpTypeGroupInvite, groupID)
+	log.Debug().
+		Int64("group_id", groupID).
+		Msg("remove invite timer successfully")
 }
 
 func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
@@ -107,11 +128,19 @@ func (impl *Impl) addCancelMatchTimer(groupID int64, mode constant.GameMode) {
 			Int("mode", int(mode)).
 			Err(err).
 			Msg("add cancel match timer error")
+	} else {
+		log.Debug().
+			Int64("group_id", groupID).
+			Int("mode", int(mode)).
+			Msg("add cancel match timer successfully")
 	}
 }
 
 func (impl *Impl) removeCancelMatchTimer(groupID int64) {
 	_ = impl.delayTimer.Remove(TimerOpTypeGroupMatch, groupID)
+	log.Debug().
+		Int64("group_id", groupID).
+		Msg("remove cancel match timer successfully")
 }
 
 func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
@@ -123,11 +152,19 @@ func (impl *Impl) addWaitAttrTimer(groupID int64, mode constant.GameMode) {
 			Int("mode", int(mode)).
 			Err(err).
 			Msg("add wait attr timer error")
+	} else {
+		log.Debug().
+			Int64("group_id", groupID).
+			Int("mode", int(mode)).
+			Msg("add wait attr timer successfully")
 	}
 }
 
 func (impl *Impl) removeWaitAttrTimer(groupID int64) {
 	_ = impl.delayTimer.Remove(TimerOpTypeGroupWaitAttr, groupID)
+	log.Debug().
+		Int64("group_id", groupID).
+		Msg("remove wait attr timer successfully")
 }
 
 func (impl *Impl) addClearRoomTimer(roomID int64, mode constant.GameMode) {
@@ -139,9 +176,17 @@ func (impl *Impl) addClearRoomTimer(roomID int64, mode constant.GameMode) {
 			Int("mode", int(mode)).
 			Err(err).
 			Msg("add clear room timer error")
+	} else {
+		log.Debug().
+			Int64("room_id", roomID).
+			Int("mode", int(mode)).
+			Msg("add clear room timer successfully")
 	}
 }
 
 func (impl *Impl) removeClearRoomTimer(roomID int64) {
 	_ = impl.delayTimer.Remove(TimeOpTypeClearRoom, roomID)
+	log.Debug().
+		Int64("room_id", roomID).
+		Msg("remove clear room timer successfully")
 }

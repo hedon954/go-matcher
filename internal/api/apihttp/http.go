@@ -6,17 +6,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 
 	"github.com/hedon954/go-matcher/docs"
+	internalapi "github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/middleware"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/response"
-
-	internalapi "github.com/hedon954/go-matcher/internal/api"
-
-	swaggerfiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // @title           Match Service Swagger API
@@ -238,7 +236,7 @@ func (api *API) Invite(c *gin.Context) {
 		response.GinParamError(c, err)
 		return
 	}
-	if err := api.MS.Invite(c, req.InviterUID, req.InviteeUID); err != nil {
+	if err := api.MS.Invite(c, req.InviterUID, &req.InviteeInfo); err != nil {
 		response.GinError(c, err)
 		return
 	}

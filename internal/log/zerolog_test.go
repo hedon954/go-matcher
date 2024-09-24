@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/hedon954/go-matcher/pkg/response"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/hedon954/go-matcher/pkg/response"
 )
 
 // nolint:staticcheck

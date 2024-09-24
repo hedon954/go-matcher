@@ -52,12 +52,12 @@ definitions:
     type: object
   apihttp.InviteReq:
     properties:
-      invitee_uid:
-        type: string
+      invitee_info:
+        $ref: '#/definitions/pto.PlayerInfo'
       inviter_uid:
         type: string
     required:
-    - invitee_uid
+    - invitee_info
     - inviter_uid
     type: object
   apihttp.KickPlayerReq:

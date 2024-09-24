@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/apache/skywalking-go"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -695,34 +696,34 @@ func TestImpl_Invite(t *testing.T) {
 	_, g := createTempGroup(UID, impl, t)
 
 	// 1. if the inviter is not exists, should return error
-	err := impl.Invite(ctx, UID+"1", UID+"2")
+	err := impl.Invite(ctx, UID+"1", newPlayerInfo(UID+"2"))
 	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 2. if the group is not exists, should return error
 	impl.groupMgr.Delete(g.ID()) // delete temp
-	err = impl.Invite(ctx, UID, UID+"2")
+	err = impl.Invite(ctx, UID, newPlayerInfo(UID+"2"))
 	assert.Equal(t, merr.ErrGroupNotExists, err)
 	impl.groupMgr.Add(g.ID(), g) // add back
 
 	// 3. if the group state is not `invite`, should return error
 	g.Base().SetState(entry.GroupStateMatch)
-	err = impl.Invite(ctx, UID, UID+"2")
+	err = impl.Invite(ctx, UID, newPlayerInfo(UID+"2"))
 	assert.Equal(t, merr.ErrGroupInMatch, err)
 	g.Base().SetState(entry.GroupStateGame)
-	err = impl.Invite(ctx, UID, UID+"2")
+	err = impl.Invite(ctx, UID, newPlayerInfo(UID+"2"))
 	assert.Equal(t, merr.ErrGroupInGame, err)
 	g.Base().SetState(entry.GroupStateDissolved)
-	err = impl.Invite(ctx, UID, UID+"2")
+	err = impl.Invite(ctx, UID, newPlayerInfo(UID+"2"))
 	assert.Equal(t, merr.ErrGroupDissolved, err)
 	g.Base().SetState(entry.GroupStateInvite) // set back
 
 	// 4. if the group is full, should return error
 	p2, _ := createFullGroup(impl, t)
-	err = impl.Invite(ctx, p2.UID(), UID)
+	err = impl.Invite(ctx, p2.UID(), newPlayerInfo(UID))
 	assert.Equal(t, merr.ErrGroupFull, err)
 
 	// 5. invite success and save invite record
-	err = impl.Invite(ctx, UID, UID+"2")
+	err = impl.Invite(ctx, UID, newPlayerInfo(UID+"2"))
 	assert.Nil(t, err)
 	assert.Equal(t, int64(nowSec+entry.InviteExpireSec), g.Base().GetInviteExpireTimeStamp(UID+"2"))
 }
@@ -740,7 +741,7 @@ func TestImpl_RefuseInvite(t *testing.T) {
 	g.Base().SetState(entry.GroupStateInvite) // set back
 
 	// 3. push refuse msg to the inviter and the invite record should be deleted
-	err := impl.Invite(ctx, p.UID(), UID)
+	err := impl.Invite(ctx, p.UID(), newPlayerInfo(UID))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().GetInviteRecords()))
 	impl.RefuseInvite(ctx, p.UID(), UID, g.ID(), "")
@@ -758,7 +759,7 @@ func TestImpl_AcceptInvite(t *testing.T) {
 	})
 
 	inviter, g := createTempGroup(UID, impl, t)
-	err := impl.Invite(ctx, inviter.UID(), inviteeInfo.UID)
+	err := impl.Invite(ctx, inviter.UID(), inviteeInfo)
 	assert.Nil(t, err)
 
 	t.Run("2. if the inviter is not in the group, should return err", func(t *testing.T) {
@@ -801,19 +802,21 @@ func TestImpl_AcceptInvite(t *testing.T) {
 
 	t.Run("5. if invitee can not player with group, should return err", func(t *testing.T) {
 		// 5.1 player version too low
-		err = impl.Invite(ctx, inviter.UID(), invitee.UID())
+		err = impl.Invite(ctx, inviter.UID(), invitee.GetPlayerInfo())
 		assert.Nil(t, err)
 		invitee.Base().ModeVersion = ModeVersion - 1
 		err = impl.AcceptInvite(ctx, inviter.UID(), invitee.GetPlayerInfo(), g.ID())
 		assert.Equal(t, merr.ErrPlayerVersionTooLow, err)
 		// 5.2 group version too low
-		err = impl.Invite(ctx, inviter.UID(), invitee.UID())
+		invitee.Base().ModeVersion = ModeVersion
+		err = impl.Invite(ctx, inviter.UID(), invitee.GetPlayerInfo())
 		assert.Nil(t, err)
 		invitee.Base().ModeVersion = ModeVersion + 1
 		err = impl.AcceptInvite(ctx, inviter.UID(), invitee.GetPlayerInfo(), g.ID())
 		assert.Equal(t, merr.ErrGroupVersionTooLow, err)
 		// 5.3 game mode not match
-		err = impl.Invite(ctx, inviter.UID(), invitee.UID())
+		invitee.Base().ModeVersion = ModeVersion
+		err = impl.Invite(ctx, inviter.UID(), invitee.GetPlayerInfo())
 		assert.Nil(t, err)
 		invitee.Base().GameMode = -1
 		err = impl.AcceptInvite(ctx, inviter.UID(), invitee.GetPlayerInfo(), g.ID())
@@ -836,11 +839,11 @@ func TestImpl_AcceptInvite(t *testing.T) {
 
 	t.Run("7. if the group is full, should return err", func(t *testing.T) {
 		fullGroupInviter, fullGroup := createFullGroup(impl, t) // create a temp full group
-		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo.UID)
+		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo)
 		assert.Equal(t, merr.ErrGroupFull, err)
 		err = impl.ExitGroup(ctx, fullGroupInviter.UID()) // exit one player
 		assert.Nil(t, err)
-		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo.UID) // send invite
+		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo) // send invite
 		assert.Nil(t, err)
 		err = impl.EnterGroup(ctx, newEnterGroupParam(fullGroupInviter.UID()),
 			fullGroup.ID()) // another player enter the group make group full

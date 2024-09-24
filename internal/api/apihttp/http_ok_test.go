@@ -9,6 +9,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/stretchr/testify/assert"
+
+	internalapi "github.com/hedon954/go-matcher/internal/api"
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -16,13 +22,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 	"github.com/hedon954/go-matcher/pkg/response"
-
-	internalapi "github.com/hedon954/go-matcher/internal/api"
-
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/stretchr/testify/assert"
 )
 
 func init() {
@@ -483,8 +482,8 @@ func requestInvite(router *gin.Engine, uid1, uid2 string, t *testing.T) {
 
 func createInviteParam(uid1, uid2 string) []byte {
 	param := &InviteReq{
-		InviterUID: uid1,
-		InviteeUID: uid2,
+		InviterUID:  uid1,
+		InviteeInfo: playerInfo(uid2),
 	}
 	bs, _ := json.Marshal(param)
 	return bs
