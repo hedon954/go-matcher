@@ -83,7 +83,7 @@ linters:
     - misspell
     - nakedret
     - rowserrcheck
-    - exportloopref
+    - copyloopvar
     - staticcheck
     - stylecheck
     - typecheck
