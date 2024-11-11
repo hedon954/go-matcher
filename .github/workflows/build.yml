@@ -36,9 +36,9 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v6.1.1
         with:
-          version: v1.62
+          version: v1.60
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
