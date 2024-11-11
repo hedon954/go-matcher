@@ -6,9 +6,11 @@ import (
 
 // ServerConfig defines the server config.
 type ServerConfig struct {
-	AsynqRedis       *RedisOpt            `yaml:"asynq_redis"`
-	NacosNamespaceID string               `yaml:"nacos_namespace_id"`
-	NacosServers     []*NacosServerConfig `yaml:"nacos_servers"`
+	HTTPPort             uint64               `yaml:"http_port"`
+	OtelExporterEndpoint string               `yaml:"otel_exporter_endpoint"`
+	AsynqRedis           *RedisOpt            `yaml:"asynq_redis"`
+	NacosNamespaceID     string               `yaml:"nacos_namespace_id"`
+	NacosServers         []*NacosServerConfig `yaml:"nacos_servers"`
 }
 
 type RedisOpt struct {

@@ -1,0 +1,17 @@
+### Create a group
+POST http://localhost:5050/match/create_group
+Content-Type: application/json
+X-Request-Id: 123
+
+{
+  "uid": "uid1",
+  "game_mode": 905,
+  "mode_version": 1,
+  "glicko2_info": {
+    "mmr": 1,
+    "rank": 2,
+    "star": 3
+  },
+  "rank": 2,
+  "star": 3
+}

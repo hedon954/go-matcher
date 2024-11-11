@@ -1,0 +1,13 @@
+http_port: 5050
+asynq_redis:
+  addr: matcher-redis:6379
+  password:
+  db: 0
+nacos_servers:
+  - addr: matcher-nacos
+    port: 8848
+    grpc_port: 9848
+    context_path: /nacos
+    schema: http
+nacos_namespace_id: 01f3e9db-ecc2-45df-855d-a818702f250a
+otel_exporter_endpoint: matcher-otel-collector:4317

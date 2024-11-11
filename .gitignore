@@ -14,3 +14,9 @@ match-http
 
 # nacos logs and caches
 .nacos_tmp/
+
+# scripts logs
+scripts/apm/*/logs
+scripts/apm/volumes/*
+scripts/apm/build/*
+scripts/apm/nacos/
