@@ -10,4 +10,4 @@ nacos_servers:
     context_path: /nacos
     schema: http
 nacos_namespace_id: 7d638262-9e51-4822-9333-c3bcca838b7d
-otel_exporter_endpoint: 127.0.0.1:4317
+otel_exporter_endpoint: goapm-otel-collector:4317

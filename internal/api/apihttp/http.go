@@ -1,17 +1,14 @@
 package apihttp
 
 import (
-	"net/http"
-	"time"
-
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog/log"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/hedon954/go-matcher/docs"
-	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/middleware"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/response"
+	"github.com/hedon954/goapm/apm"
 
 	internalapi "github.com/hedon954/go-matcher/internal/api"
 
@@ -26,28 +23,15 @@ import (
 // @host      :5050
 // @BasePath  /
 
-func SetupHTTPServer(
-	sc config.Configer[config.ServerConfig],
-	mc config.Configer[config.MatchConfig],
-) {
-	api, shutdown := internalapi.Start(sc, mc)
-	defer shutdown()
-
-	server := API{api}
-	r := server.setupRouter()
-	srv := &http.Server{
-		Addr:              ":5050",
-		Handler:           r.Handler(),
-		ReadHeaderTimeout: time.Minute,
-	}
-	if err := srv.ListenAndServe(); err != nil {
-		log.Error().Err(err).Msg("error occurs in http server")
-	}
-}
-
 func (api *API) setupRouter() *gin.Engine {
 	r := gin.Default()
-	r.Use(middleware.WithRequestAndTrace())
+	r.Use(apm.GinOtel(), middleware.WithRequestAndTrace())
+
+	// TODO: make this a common tool
+	r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(
+		apm.MetricsReg,
+		promhttp.HandlerOpts{Registry: apm.MetricsReg},
+	)))
 
 	mg := r.Group("/match")
 	{

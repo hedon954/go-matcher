@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/pkg/safe"
 )
@@ -20,4 +22,12 @@ func startSafe() {
 
 func StopSafe() {
 	safe.Wait()
+}
+
+// GetConfigPath returns the config path from environment variable or default path
+func GetConfigPath(envKey, defaultPath string) string {
+	if path := os.Getenv(envKey); path != "" {
+		return path
+	}
+	return defaultPath
 }

@@ -1,0 +1,122 @@
+# if io timeout: https://github.com/docker/for-mac/issues/6621
+
+services:
+  goapm-redis:
+    image: redis:7.4.0
+    container_name: goapm-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./volumes/redis/data:/data
+      - ./volumes/redis/logs:/var/log/redis
+    restart: always
+  goapm-jaeger:
+    image: jaegertracing/all-in-one:1.52
+    container_name: goapm-jaeger
+    restart: always
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+      - COLLECTOR_OTLP_GRPC_HOST_PORT=0.0.0.0:4317
+      - COLLECTOR_OTLP_HTTP_HOST_PORT=0.0.0.0:4318
+      - LOG_LEVEL=debug
+    ports:
+      - 16686:16686
+      - 14268:14268
+      - 14250:14250
+  goapm-otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.111.0
+    container_name: goapm-otel-collector
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
+    ports:
+      - 1888:1888 # pprof extension
+      - 8888:8888 # Prometheus metrics exposed by the Collector
+      - 8889:8889 # Prometheus exporter metrics
+      - 13133:13133 # health_check extension
+      - 4317:4317 # OTLP gRPC receiver
+      - 4318:4318 # OTLP HTTP receiver
+      - 55679:55679 # zpages extension
+  goapm-grafana:
+    image: grafana/grafana:11.2.2
+    container_name: goapm-grafana
+    restart: always
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/data:/var/lib/grafana
+      - ./grafana/logs:/var/log/grafana
+  goapm-prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: goapm-prometheus
+    restart: always
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+  goapm-ubuntu:
+    image: ubuntu:24.04
+    container_name: goapm-ubuntu
+    restart: always
+    volumes:
+      - "./build:/build"
+      - "./start-services.sh:/start-services.sh"
+      - "./volumes/logs:/logs"
+      - "./confs/server_conf_tmp.yml:/etc/server_conf_tmp.yml"
+    ports:
+      - 5050:5050
+    working_dir: /build
+    command: ["/bin/bash", "/start-services.sh"]
+    environment:
+      - MYSQL_HOST=apm-mysql
+      - REDIS_HOST=apm-redis
+    depends_on:
+      - goapm-redis
+      - goapm-jaeger
+      - goapm-otel-collector
+      - goapm-grafana
+      - goapm-prometheus
+  goapm-elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+    container_name: goapm-elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - 9200:9200
+  goapm-kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.2
+    container_name: goapm-kibana
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://goapm-elasticsearch:9200
+    depends_on:
+      - goapm-elasticsearch
+    ports:
+      - 5601:5601
+    volumes:
+      - ./kibana/data:/usr/share/kibana/data
+  goapm-filebeat:
+    image: docker.elastic.co/beats/filebeat:7.14.2
+    container_name: goapm-filebeat
+    user: root
+    restart: always
+    volumes:
+      - ./volumes/logs:/logs
+      - ./logcollect:/logcollect
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+    command: filebeat -e -d "*"
+    depends_on:
+      - goapm-elasticsearch
+  goapm-logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.2
+    container_name: goapm-logstash
+    restart: always
+    volumes:
+      - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    ports:
+      - 5044:5044
+    depends_on:
+      - goapm-elasticsearch
+    mem_reservation: 1000M
+    cpu_count: 1
