@@ -18,7 +18,7 @@ jobs:
     strategy:
       matrix:
         platform: [ubuntu-latest]
-        go-version: ['1.22']
+        go-version: ["1.23"]
     runs-on: ${{ matrix.platform }}
     services:
       nacos:
@@ -38,7 +38,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v6
         with:
-          version: v1.59
+          version: v1.62
       - name: Cache Go modules
         uses: actions/cache@v4
         with:
@@ -69,8 +69,8 @@ jobs:
           name: codecov-umbrella
           fail_ci_if_error: true
           verbose: true
-#      - name: Check test coverage
-#        run: bash ./scripts/ci/check_test_coverage.sh
+      #      - name: Check test coverage
+      #        run: bash ./scripts/ci/check_test_coverage.sh
       - name: Get tags info
         id: get_tag_message
         run: git fetch origin +refs/tags/*:refs/tags/*
