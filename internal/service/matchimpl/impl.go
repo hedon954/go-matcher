@@ -2,8 +2,11 @@ package matchimpl
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
+
+	"github.com/hedon954/goapm/apm"
 
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/config/mock"
@@ -99,6 +102,15 @@ func NewDefault(
 }
 
 func (impl *Impl) CreateGroup(ctx context.Context, param *pto.CreateGroup) (entry.Group, error) {
+	// TODO: just for test
+	apm.Logger.Error(ctx, "creating group error mock", errors.New("mock error"), map[string]any{
+		"uid":          param.UID,
+		"game_mode":    param.GameMode,
+		"mode_version": param.ModeVersion,
+		"glicko2_info": param.Glicko2Info,
+		"rank":         param.Rank,
+		"star":         param.Star,
+	})
 	log.Ctx(ctx).Info().Str("uid", param.UID).Msg("creating group")
 	p, err := impl.getPlayer(&param.PlayerInfo)
 	if err != nil {

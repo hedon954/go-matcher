@@ -17,3 +17,6 @@ match-http
 
 # scripts logs
 scripts/apm/*/logs
+scripts/apm/volumes/*
+scripts/apm/build/*
+scripts/apm/nacos/

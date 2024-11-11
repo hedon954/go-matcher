@@ -54,7 +54,7 @@ processors:
 exporters:
   debug:
   otlp/jaeger:
-    endpoint: goapm-jaeger:4317
+    endpoint: matcher-jaeger:4317
     tls:
       insecure: true
 

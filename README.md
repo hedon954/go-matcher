@@ -10,8 +10,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - `GameMode`: The identifier of each different game, used to define as enum.
 - `MatchStrategy`: The strategy to match players, used to define as interface.
 
-
-
 ## Features
 
 - [ ] API
@@ -40,13 +38,20 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [x] File Loader
   - [x] Nacos Dynamic Loader
 - [ ] AI Generator
+- [x] Open Telemetry
+  - [x] Logger
+  - [x] Tracer
+  - [x] Metric
 
+## Start With Open Telemetry
 
+```bash
+make docker-up
+```
 
 ## Architecture
 
 ![go-matcher architecture](assets/img/architecture.png)
-
 
 ## Smoke flow
 
@@ -75,7 +80,7 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [ ] apollo
   - [ ] consul
 - [ ] tracer
-- [ ] open telemetry
+- [x] open telemetry
 - [ ] repository stats
 - [ ] match queue stats
 - [ ] graceful restart
@@ -83,8 +88,6 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
 - [ ] hot upgrade
 - [ ] horizontal expansion
 - [ ] AI Generator
-
-
 
 ## Schedule
 
@@ -161,6 +164,7 @@ docker-compose -f example/standalone-mysql-8.yaml up
 ```
 
 open nacos website:
+
 ```bash
 open http://localhost:8848/nacos/index.html
 ```

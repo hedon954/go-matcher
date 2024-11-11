@@ -9,4 +9,4 @@ filebeat.config.inputs:
 #   pretty: true
 
 output.logstash:
-  hosts: ["goapm-logstash:5044"]
+  hosts: ["matcher-logstash:5044"]

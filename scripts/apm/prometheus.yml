@@ -5,5 +5,5 @@ scrape_configs:
     scrape_interval: 5s
     metrics_path: /metrics
     static_configs:
-      - targets: ['goapm-ubuntu:5050']
+      - targets: ['matcher-ubuntu:5050']
 
