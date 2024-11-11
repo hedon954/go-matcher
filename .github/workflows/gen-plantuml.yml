@@ -24,6 +24,7 @@ jobs:
           fetch-depth: 0
       - name: plantuml
         id: plantuml
+        continue-on-error: true
         uses: grassedge/generate-plantuml-action@v1.5
         with:
           path: "assets/uml"
