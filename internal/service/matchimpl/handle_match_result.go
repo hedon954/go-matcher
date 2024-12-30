@@ -83,7 +83,7 @@ func (impl *Impl) fillRoomWithAI(r entry.Room) error {
 	return nil
 }
 
-func (impl *Impl) fillTeamWithAI(t entry.Team) error {
+func (impl *Impl) fillTeamWithAI(_ entry.Team) error {
 	// TODO implement AI generator
 	return nil
 }

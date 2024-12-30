@@ -1,6 +1,8 @@
 package glicko2
 
 import (
+	"math"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
@@ -46,7 +48,20 @@ func (r *RoomBaseGlicko2) GetMMR() float64 {
 }
 
 func (r *RoomBaseGlicko2) GetStartMatchTimeSec() int64 {
-	return r.Base().GetTeams()[0].(*TeamBaseGlicko2).Base().GetGroups()[0].(*GroupBaseGlicko2).GetStartMatchTimeSec()
+	res := int64(math.MaxInt64)
+	teams := r.Base().GetTeams()
+	if len(teams) == 0 {
+		return 0
+	}
+	for _, t := range teams {
+		groups := t.Base().GetGroups()
+		for _, g := range groups {
+			if g.GetStartMatchTimeSec() < res {
+				res = g.GetStartMatchTimeSec()
+			}
+		}
+	}
+	return res
 }
 
 func (r *RoomBaseGlicko2) HasAi() bool {

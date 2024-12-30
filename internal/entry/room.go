@@ -9,6 +9,7 @@ import (
 )
 
 type Room interface {
+	Coder
 	Base() *RoomBase
 	ID() int64
 	NeedAI() bool

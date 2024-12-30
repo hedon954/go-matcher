@@ -7,6 +7,7 @@ import (
 )
 
 type Team interface {
+	Coder
 	Base() *TeamBase
 	ID() int64
 }

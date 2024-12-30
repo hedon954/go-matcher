@@ -7,6 +7,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/goat_game"
+	"github.com/hedon954/go-matcher/internal/entry/test_game"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
@@ -36,10 +37,10 @@ func (m *GroupMgr) CreateGroup(playerLimit int, p entry.Player) (
 	base := entry.NewGroupBase(m.GenGroupID(), playerLimit, p.Base())
 
 	switch base.GameMode {
+	case constant.GameModeTest:
+		g = test_game.CreateGroup(base)
 	case constant.GameModeGoatGame:
 		g = goat_game.CreateGroup(base)
-	case constant.GameModeTest:
-		g = base
 	default:
 		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
 	}

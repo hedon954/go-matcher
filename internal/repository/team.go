@@ -7,6 +7,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/goat_game"
+	"github.com/hedon954/go-matcher/internal/entry/test_game"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
@@ -28,10 +29,10 @@ func (m *TeamMgr) CreateTeam(g entry.Group) (t entry.Team, err error) {
 	base := entry.NewTeamBase(m.teamIDIter.Add(1), g)
 
 	switch base.GameMode {
+	case constant.GameModeTest:
+		t = test_game.CreateTeam(base)
 	case constant.GameModeGoatGame:
 		t = goat_game.CreateTeam(base)
-	case constant.GameModeTest:
-		t = base
 	default:
 		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
 	}

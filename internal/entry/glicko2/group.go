@@ -97,16 +97,6 @@ func (g *GroupBaseGlicko2) SetState(state glicko2.GroupState) {
 	}
 }
 
-func (g *GroupBaseGlicko2) GetStartMatchTimeSec() int64 {
-	return g.GetPlayers()[0].GetStartMatchTimeSec()
-}
-
-func (g *GroupBaseGlicko2) SetStartMatchTimeSec(t int64) {
-	for _, p := range g.GetPlayers() {
-		p.SetStartMatchTimeSec(t)
-	}
-}
-
 func (g *GroupBaseGlicko2) GetFinishMatchTimeSec() int64 {
 	return g.GetPlayers()[0].GetFinishMatchTimeSec()
 }

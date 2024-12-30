@@ -9,6 +9,7 @@ import (
 
 // Player represents a player in a Group.
 type Player interface {
+	Coder
 	Base() *PlayerBase
 	UID() string
 	GetPlayerInfo() *pto.PlayerInfo
@@ -105,14 +106,17 @@ func (p *PlayerBase) CheckOnlineState(valids ...PlayerOnlineState) error {
 func (p *PlayerBase) SetOnlineState(s PlayerOnlineState) {
 	p.onlineState = s
 }
+
 func (p *PlayerBase) GetOnlineState() PlayerOnlineState {
 	return p.onlineState
 }
+
 func (p *PlayerBase) SetOnlineStateWithLock(s PlayerOnlineState) {
 	p.Lock()
 	defer p.Unlock()
 	p.onlineState = s
 }
+
 func (p *PlayerBase) GetOnlineStateWithLock() PlayerOnlineState {
 	p.Lock()
 	defer p.Unlock()
@@ -122,6 +126,7 @@ func (p *PlayerBase) GetOnlineStateWithLock() PlayerOnlineState {
 func (p *PlayerBase) SetVoiceState(s PlayerVoiceState) {
 	p.voiceState = s
 }
+
 func (p *PlayerBase) GetVoiceState() PlayerVoiceState {
 	return p.voiceState
 }

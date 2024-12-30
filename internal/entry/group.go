@@ -1,7 +1,6 @@
 package entry
 
 import (
-	"encoding/json"
 	"slices"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -12,6 +11,9 @@ import (
 
 // Group represents a group of players.
 type Group interface {
+	Coder
+	Jsoner
+
 	// ID returns the unique group id.
 	ID() int64
 
@@ -42,9 +44,17 @@ type Group interface {
 	// If you have some special logics, please override this method.
 	CanStartMatch() error
 
+	// GetStartMatchTimeSec returns the start match time of the group.
+	GetStartMatchTimeSec() int64
+
+	// SetStartMatchTimeSec sets the start match time of the group.
+	SetStartMatchTimeSec(sec int64)
+
 	// Json returns the json string of the group.
 	// You may need to lock when marshal it to avoid data race,
 	// even if in print log.
+	//
+	// Note: it should be implemented by the specific game mode entry.
 	// TODO: any other great way?
 	Json() string
 }
@@ -102,6 +112,9 @@ type GroupBase struct {
 
 	// MatchID is a unique id to identify each match action.
 	MatchID string
+
+	// StartMatchTimeSec is the start match time of the group.
+	StartMatchTimeSec int64
 
 	// roles holds the roles of the players in the group.
 	roles map[string]GroupRole
@@ -394,9 +407,10 @@ func (g *GroupBase) Unlock() {
 	g.lock.Unlock()
 }
 
-func (g *GroupBase) Json() string {
-	g.Lock()
-	defer g.Unlock()
-	bs, _ := json.Marshal(g)
-	return string(bs)
+func (g *GroupBase) GetStartMatchTimeSec() int64 {
+	return g.StartMatchTimeSec
+}
+
+func (g *GroupBase) SetStartMatchTimeSec(sec int64) {
+	g.StartMatchTimeSec = sec
 }

@@ -1,6 +1,7 @@
 package goat_game
 
 import (
+	"encoding/gob"
 	"fmt"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -10,6 +11,10 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
+
+func init() {
+	gob.Register(&Player{})
+}
 
 type Player struct {
 	// combined with the struct implementing the matching strategy
@@ -61,4 +66,12 @@ func (p *Player) setGlicko2Attr(extra []byte) error {
 	p.Glicko2Info.Rank = p.Rank
 	p.Glicko2Info.Star = p.Star
 	return nil
+}
+
+func (p *Player) Encode() ([]byte, error) {
+	return entry.Encode(p)
+}
+
+func (p *Player) Decode(data []byte) error {
+	return entry.Decode(data, p)
 }

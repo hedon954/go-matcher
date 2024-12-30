@@ -1,11 +1,15 @@
 package goat_game
 
 import (
-	"encoding/json"
+	"encoding/gob"
 
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
+
+func init() {
+	gob.Register(&Group{})
+}
 
 type Group struct {
 	*glicko2.GroupBaseGlicko2
@@ -28,8 +32,13 @@ func (g *Group) withMatchStrategy(base *entry.GroupBase) {
 }
 
 func (g *Group) Json() string {
-	g.Lock()
-	defer g.Unlock()
-	bs, _ := json.Marshal(g)
-	return string(bs)
+	return entry.Json(g)
+}
+
+func (g *Group) Encode() ([]byte, error) {
+	return entry.Encode(g)
+}
+
+func (g *Group) Decode(data []byte) error {
+	return entry.Decode(data, g)
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/test_game"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/internal/repository"
@@ -467,7 +468,7 @@ func TestImpl_DissolveGroup(t *testing.T) {
 	assert.Equal(t, merr.ErrPlayerNotExists, err)
 
 	// 2. if the group not exists, should return error
-	impl.playerMgr.Add(UID+"3", entry.NewPlayerBase(&pto.PlayerInfo{}))
+	impl.playerMgr.Add(UID+"3", test_game.CreatePlayer(entry.NewPlayerBase(&pto.PlayerInfo{})))
 	err = impl.DissolveGroup(ctx, UID+"3")
 	assert.Equal(t, merr.ErrGroupNotExists, err)
 	impl.playerMgr.Delete(UID + "3") // delete back
@@ -779,7 +780,7 @@ func TestImpl_AcceptInvite(t *testing.T) {
 		g.Base().SetState(entry.GroupStateInvite) // set back
 	})
 
-	impl.playerMgr.Add(UID+"1", entry.NewPlayerBase(newPlayerInfo(UID+"1"))) // add temp player
+	impl.playerMgr.Add(UID+"1", test_game.CreatePlayer(entry.NewPlayerBase(newPlayerInfo(UID+"1")))) // add temp player
 	invitee := impl.playerMgr.Get(UID + "1")
 	assert.NotNil(t, invitee)
 
@@ -992,7 +993,7 @@ func TestImpl_Ready(t *testing.T) {
 	})
 
 	t.Run("2. if group not exists, should return err", func(t *testing.T) {
-		impl.playerMgr.Add(UID, entry.NewPlayerBase(new(pto.PlayerInfo))) // add temp
+		impl.playerMgr.Add(UID, test_game.CreatePlayer(entry.NewPlayerBase(new(pto.PlayerInfo)))) // add temp
 		err := impl.Ready(ctx, UID)
 		assert.Equal(t, merr.ErrGroupNotExists, err)
 		impl.playerMgr.Delete(UID) // delete temp
@@ -1031,7 +1032,7 @@ func TestImpl_Unready(t *testing.T) {
 	})
 
 	t.Run("2. if group not exists, should return err", func(t *testing.T) {
-		impl.playerMgr.Add(UID, entry.NewPlayerBase(new(pto.PlayerInfo))) // add temp
+		impl.playerMgr.Add(UID, test_game.CreatePlayer(entry.NewPlayerBase(new(pto.PlayerInfo)))) // add temp
 		err := impl.Unready(ctx, UID)
 		assert.Equal(t, merr.ErrGroupNotExists, err)
 		impl.playerMgr.Delete(UID) // delete temp

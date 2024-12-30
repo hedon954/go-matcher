@@ -1,10 +1,9 @@
-package goat_game
+package test_game
 
 import (
 	"encoding/gob"
 
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
 
 func init() {
@@ -12,18 +11,13 @@ func init() {
 }
 
 type Team struct {
-	*glicko2.TeamBaseGlicko2
+	*entry.TeamBase
 }
 
 func CreateTeam(base *entry.TeamBase) entry.Team {
-	t := &Team{}
-
-	t.withMatchStrategy(base)
-	return t
-}
-
-func (t *Team) withMatchStrategy(base *entry.TeamBase) {
-	t.TeamBaseGlicko2 = glicko2.CreateTeamBase(base)
+	return &Team{
+		TeamBase: base,
+	}
 }
 
 func (t *Team) Encode() ([]byte, error) {
