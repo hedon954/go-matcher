@@ -15,6 +15,6 @@ func (impl *Impl) checkRole(role entry.GroupRole) error {
 }
 
 func (impl *Impl) handoverCaptain(ctx context.Context, target entry.Player, g entry.Group) {
-	g.SetCaptain(target)
+	g.SetCaptain(target.UID())
 	impl.pushService.PushGroupInfo(ctx, g.Base().UIDs(), g.GetGroupInfo())
 }

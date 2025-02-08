@@ -9,11 +9,19 @@ import (
 
 type RoomBaseGlicko2 struct {
 	*entry.RoomBase
+	glicko2Teams map[int64]glicko2.Team
+	teamMgr      TeamMgr
 }
 
-func CreateRoomBase(base *entry.RoomBase) *RoomBaseGlicko2 {
+type TeamMgr interface {
+	Get(id int64) entry.Team
+}
+
+func CreateRoomBase(base *entry.RoomBase, mgr TeamMgr) *RoomBaseGlicko2 {
 	r := &RoomBaseGlicko2{
-		RoomBase: base,
+		RoomBase:     base,
+		teamMgr:      mgr,
+		glicko2Teams: make(map[int64]glicko2.Team, base.TeamLimit),
 	}
 	return r
 }
@@ -21,18 +29,18 @@ func CreateRoomBase(base *entry.RoomBase) *RoomBaseGlicko2 {
 func (r *RoomBaseGlicko2) GetTeams() []glicko2.Team {
 	r.RLock()
 	defer r.RUnlock()
-	teams := r.Base().GetTeams()
-	res := make([]glicko2.Team, len(teams))
-	for i := 0; i < len(res); i++ {
-		res[i] = teams[i].(glicko2.Team)
+	teams := make([]glicko2.Team, 0, len(r.glicko2Teams))
+	for _, t := range r.glicko2Teams {
+		teams = append(teams, t)
 	}
-	return res
+	return teams
 }
 
 func (r *RoomBaseGlicko2) AddTeam(t glicko2.Team) {
 	r.Lock()
 	defer r.Unlock()
 	r.Base().AddTeam(t.(entry.Team))
+	r.glicko2Teams[t.(entry.Team).ID()] = t
 }
 
 func (r *RoomBaseGlicko2) GetMMR() float64 {
@@ -49,12 +57,8 @@ func (r *RoomBaseGlicko2) GetMMR() float64 {
 
 func (r *RoomBaseGlicko2) GetStartMatchTimeSec() int64 {
 	res := int64(math.MaxInt64)
-	teams := r.Base().GetTeams()
-	if len(teams) == 0 {
-		return 0
-	}
-	for _, t := range teams {
-		groups := t.Base().GetGroups()
+	for _, t := range r.glicko2Teams {
+		groups := t.GetGroups()
 		for _, g := range groups {
 			if g.GetStartMatchTimeSec() < res {
 				res = g.GetStartMatchTimeSec()

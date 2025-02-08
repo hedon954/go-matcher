@@ -26,17 +26,6 @@ type Player struct {
 	TodayPvpCount int64
 }
 
-func CreatePlayer(base *entry.PlayerBase, pInfo *pto.PlayerInfo) (entry.Player, error) {
-	p := &Player{}
-	// ... other common fields
-
-	if pInfo.Glicko2Info == nil {
-		return nil, fmt.Errorf("game[%d] need glicko2 info", base.GameMode)
-	}
-	p.withMatchStrategy(base, pInfo.Glicko2Info)
-	return p, nil
-}
-
 func (p *Player) withMatchStrategy(base *entry.PlayerBase, info *pto.Glicko2Info) {
 	p.PlayerBaseGlicko2 = glicko2.CreatePlayerBase(base, info)
 	// ... other match strategy initialization

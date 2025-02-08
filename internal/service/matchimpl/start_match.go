@@ -19,7 +19,8 @@ func (impl *Impl) startMatch(ctx context.Context, g entry.Group) {
 	impl.pushService.PushGroupState(ctx, uids, g.ID(), base.GetState())
 
 	// update players state
-	for _, p := range base.GetPlayers() {
+	for _, puid := range base.GetPlayers() {
+		p := impl.playerMgr.Get(puid)
 		p.Base().Lock()
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInMatch)
 		p.Base().SetMatchStrategy(base.MatchStrategy)

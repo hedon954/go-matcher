@@ -15,19 +15,11 @@ type Group struct {
 	*glicko2.GroupBaseGlicko2
 }
 
-func CreateGroup(base *entry.GroupBase) entry.Group {
-	g := &Group{}
-	// ... other common fields
-
-	g.withMatchStrategy(base)
-	return g
-}
-
 // withMatchStrategy initializes the parameters related to the match strategy.
 // We do not initialize the parameters according to the match strategy here,
 // because we want to switch the match strategy dynamically without re-initializing the Group object.
-func (g *Group) withMatchStrategy(base *entry.GroupBase) {
-	g.GroupBaseGlicko2 = glicko2.NewGroup(base)
+func (g *Group) withMatchStrategy(base *entry.GroupBase, playerMgr *entry.PlayerMgr) {
+	g.GroupBaseGlicko2 = glicko2.NewGroup(base, playerMgr)
 	// ... other match strategy initialization
 }
 

@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/hedon954/go-matcher/internal/constant"
+	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
 
 type Team interface {
@@ -17,7 +18,7 @@ type TeamBase struct {
 	id            int64 // id is the zconfig unique team id.
 	TeamID        int   // TeamID is the unique team id in one room, start from 1.
 	IsAI          bool
-	groups        map[int64]Group
+	groups        map[int64]struct{}
 	GameMode      constant.GameMode
 	MatchStrategy constant.MatchStrategy
 	ModeVersion   int64
@@ -26,12 +27,12 @@ type TeamBase struct {
 func NewTeamBase(id int64, g Group) *TeamBase {
 	t := &TeamBase{
 		id:            id,
-		groups:        make(map[int64]Group),
+		groups:        make(map[int64]struct{}),
 		GameMode:      g.Base().GameMode,
 		MatchStrategy: g.Base().MatchStrategy,
 		ModeVersion:   g.Base().ModeVersion,
 	}
-	t.groups[g.ID()] = g
+	t.groups[g.ID()] = struct{}{}
 	return t
 }
 
@@ -43,18 +44,12 @@ func (t *TeamBase) ID() int64 {
 	return t.id
 }
 
-func (t *TeamBase) GetGroups() []Group {
-	res := make([]Group, len(t.groups))
-	i := 0
-	for _, g := range t.groups {
-		res[i] = g
-		i++
-	}
-	return res
+func (t *TeamBase) GetGroups() []int64 {
+	return typeconv.MapToSlice(t.groups)
 }
 
 func (t *TeamBase) AddGroup(g Group) {
-	t.groups[g.ID()] = g
+	t.groups[g.ID()] = struct{}{}
 }
 
 func (t *TeamBase) RemoveGroup(id int64) {

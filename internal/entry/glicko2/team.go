@@ -7,11 +7,17 @@ import (
 
 type TeamBaseGlicko2 struct {
 	*entry.TeamBase
+	groupMgr GroupMgr
 }
 
-func CreateTeamBase(base *entry.TeamBase) *TeamBaseGlicko2 {
+type GroupMgr interface {
+	Get(id int64) entry.Group
+}
+
+func CreateTeamBase(base *entry.TeamBase, mgr GroupMgr) *TeamBaseGlicko2 {
 	t := &TeamBaseGlicko2{
 		TeamBase: base,
+		groupMgr: mgr,
 	}
 	return t
 }
@@ -22,7 +28,8 @@ func (t *TeamBaseGlicko2) GetGroups() []glicko2.Group {
 	groups := t.Base().GetGroups()
 	res := make([]glicko2.Group, len(groups))
 	for i := 0; i < len(groups); i++ {
-		res[i] = groups[i].(glicko2.Group)
+		g := t.groupMgr.Get(groups[i])
+		res[i] = g.(glicko2.Group)
 	}
 	return res
 }

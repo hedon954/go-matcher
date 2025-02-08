@@ -42,7 +42,8 @@ func (impl *Impl) handleGameResult(result *pto.GameResult) {
 }
 
 func (impl *Impl) updateStateToSettle(r entry.Room, escapePlayers []string) {
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		impl.updateTeamStateToSettle(t, escapePlayers)
 	}
 }
@@ -50,7 +51,8 @@ func (impl *Impl) updateStateToSettle(r entry.Room, escapePlayers []string) {
 func (impl *Impl) updateTeamStateToSettle(team entry.Team, escapePlayers []string) {
 	team.Base().Lock()
 	defer team.Base().Unlock()
-	for _, g := range team.Base().GetGroups() {
+	for _, groupID := range team.Base().GetGroups() {
+		g := impl.groupMgr.Get(groupID)
 		impl.updateGroupStateToSettle(g, escapePlayers)
 	}
 }
@@ -59,17 +61,19 @@ func (impl *Impl) updateGroupStateToSettle(g entry.Group, escapePlayers []string
 	g.Base().Lock()
 	defer g.Base().Unlock()
 	g.Base().SetState(entry.GroupStateInvite)
-	for _, p := range g.Base().GetPlayers() {
-		if slices.Index(escapePlayers, p.UID()) < 0 {
+	for _, puid := range g.Base().GetPlayers() {
+		if slices.Index(escapePlayers, puid) < 0 {
 			continue
 		}
+		p := impl.playerMgr.Get(puid)
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInSettle)
 		p.Base().SetMatchStrategyWithLock(constant.MatchStrategy(0))
 	}
 }
 
 func (impl *Impl) clearMatchStrategy(r entry.Room, escapePlayers []string) {
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		impl.clearTeamMatchStrategy(t, escapePlayers)
 	}
 }
@@ -77,7 +81,8 @@ func (impl *Impl) clearMatchStrategy(r entry.Room, escapePlayers []string) {
 func (impl *Impl) clearTeamMatchStrategy(team entry.Team, escapePlayers []string) {
 	team.Base().Lock()
 	defer team.Base().Unlock()
-	for _, g := range team.Base().GetGroups() {
+	for _, groupID := range team.Base().GetGroups() {
+		g := impl.groupMgr.Get(groupID)
 		impl.clearGroupMatchStrategy(g, escapePlayers)
 	}
 }
@@ -85,10 +90,11 @@ func (impl *Impl) clearTeamMatchStrategy(team entry.Team, escapePlayers []string
 func (impl *Impl) clearGroupMatchStrategy(g entry.Group, escapePlayers []string) {
 	g.Base().Lock()
 	defer g.Base().Unlock()
-	for _, p := range g.Base().GetPlayers() {
-		if slices.Index(escapePlayers, p.UID()) < 0 {
+	for _, puid := range g.Base().GetPlayers() {
+		if slices.Index(escapePlayers, puid) < 0 {
 			continue
 		}
+		p := impl.playerMgr.Get(puid)
 		p.Base().SetMatchStrategyWithLock(constant.MatchStrategy(0))
 	}
 }

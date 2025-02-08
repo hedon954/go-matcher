@@ -5,7 +5,7 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/pkg/rand"
+	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
 
 type Room interface {
@@ -19,7 +19,7 @@ type Room interface {
 type RoomBase struct {
 	lock      sync.RWMutex
 	id        int64
-	teams     []Team
+	teams     map[int64]struct{}
 	TeamLimit int
 
 	GameMode       constant.GameMode
@@ -36,7 +36,7 @@ func NewRoomBase(id int64, teamLimit int, t Team) *RoomBase {
 	r := &RoomBase{
 		id:            id,
 		TeamLimit:     teamLimit,
-		teams:         make([]Team, 0),
+		teams:         make(map[int64]struct{}),
 		escapePlayer:  make([]string, 0),
 		GameMode:      t.Base().GameMode,
 		MatchStrategy: t.Base().MatchStrategy,
@@ -53,21 +53,16 @@ func (r *RoomBase) ID() int64 {
 	return r.id
 }
 
-func (r *RoomBase) GetTeams() []Team {
-	return r.teams
+func (r *RoomBase) GetTeams() []int64 {
+	return typeconv.MapToSlice(r.teams)
 }
 
 func (r *RoomBase) AddTeam(t Team) {
-	r.teams = append(r.teams, t)
+	r.teams[t.ID()] = struct{}{}
 }
 
 func (r *RoomBase) RemoveTeam(id int64) {
-	for i, t := range r.teams {
-		if t.ID() == id {
-			r.teams = append(r.teams[:i], r.teams[i+1:]...)
-			break
-		}
-	}
+	delete(r.teams, id)
 }
 
 func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
@@ -77,24 +72,6 @@ func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
 
 func (r *RoomBase) NeedAI() bool {
 	return false
-}
-
-func (r *RoomBase) ShuffleTeamOrder() {
-	ids := rand.PermFrom1(len(r.teams))
-	for i := 0; i < len(r.teams); i++ {
-		team := r.teams[i]
-		team.Base().TeamID = ids[i]
-	}
-}
-
-func (r *RoomBase) UIDs() []string {
-	res := make([]string, 0, len(r.teams))
-	for _, t := range r.teams {
-		for _, g := range t.Base().GetGroups() {
-			res = append(res, g.Base().UIDs()...)
-		}
-	}
-	return res
 }
 
 func (r *RoomBase) AddEscapePlayer(uid string) {

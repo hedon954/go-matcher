@@ -5,16 +5,20 @@ import (
 	"fmt"
 
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/matcher/common"
 )
 
 func (impl *Impl) waitForMatchResult() {
 	for r := range impl.roomChannel {
-		fmt.Println("new room: ", r.ID())
+		fmt.Println("new room: ", r.Room.ID())
 		impl.HandleMatchResult(r)
 	}
 }
 
-func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err error) {
+func (impl *Impl) handleMatchResult(ctx context.Context, result common.Result) (err error) {
+	r := result.Room
+	teams := result.Teams
+
 	// add room to manager
 	defer func() {
 		if err == nil {
@@ -23,9 +27,9 @@ func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err erro
 		}
 	}()
 	// add teams to managers
-	for _, t := range r.Base().GetTeams() {
-		fmt.Printf("add team %d to room: %d\n", t.ID(), r.ID())
-		impl.teamMgr.Add(t.ID(), t)
+	for _, team := range teams {
+		fmt.Printf("add team %d to room: %d\n", team.ID(), r.ID())
+		impl.teamMgr.Add(team.ID(), team)
 	}
 
 	// ---------------------------
@@ -42,9 +46,20 @@ func (impl *Impl) handleMatchResult(ctx context.Context, r entry.Room) (err erro
 	if err != nil {
 		return err
 	}
-	impl.pushService.PushMatchInfo(ctx, r.Base().UIDs(), r.GetMatchInfo())
+	impl.pushService.PushMatchInfo(ctx, impl.getRoomUIDs(r), r.GetMatchInfo())
 	impl.addClearRoomTimer(r.ID(), r.Base().GameMode)
 	return nil
+}
+
+func (impl *Impl) getRoomUIDs(r entry.Room) []string {
+	res := make([]string, 0)
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
+		for _, groupID := range t.Base().GetGroups() {
+			res = append(res, impl.groupMgr.Get(groupID).Base().UIDs()...)
+		}
+	}
+	return res
 }
 
 func (impl *Impl) fillRoomInfo(r entry.Room) (err error) {
@@ -59,8 +74,6 @@ func (impl *Impl) fillRoomInfo(r entry.Room) (err error) {
 		return err
 	}
 
-	// shuffle camp order randomly
-	r.Base().ShuffleTeamOrder()
 	return nil
 }
 
@@ -69,7 +82,8 @@ func (impl *Impl) fillRoomWithAI(r entry.Room) error {
 		return nil
 	}
 
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		if err := impl.fillTeamWithAI(t); err != nil {
 			return err
 		}
@@ -94,19 +108,21 @@ func (impl *Impl) createAITeam() entry.Team {
 }
 
 func (impl *Impl) clearDelayTimer(r entry.Room) {
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		t.Base().Lock()
-		for _, g := range t.Base().GetGroups() {
-			impl.removeWaitAttrTimer(g.ID())
-			impl.removeWaitAttrTimer(g.ID())
-			impl.removeCancelMatchTimer(g.ID())
+		for _, groupID := range t.Base().GetGroups() {
+			impl.removeWaitAttrTimer(groupID)
+			impl.removeWaitAttrTimer(groupID)
+			impl.removeCancelMatchTimer(groupID)
 		}
 		t.Base().Unlock()
 	}
 }
 
 func (impl *Impl) updateStateToGame(ctx context.Context, r entry.Room) {
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		impl.updateTeamStateToGame(ctx, t)
 	}
 }
@@ -114,8 +130,8 @@ func (impl *Impl) updateStateToGame(ctx context.Context, r entry.Room) {
 func (impl *Impl) updateTeamStateToGame(ctx context.Context, t entry.Team) {
 	t.Base().Lock()
 	defer t.Base().Unlock()
-	for _, g := range t.Base().GetGroups() {
-		impl.updateGroupStateToGame(ctx, g)
+	for _, groupID := range t.Base().GetGroups() {
+		impl.updateGroupStateToGame(ctx, impl.groupMgr.Get(groupID))
 	}
 }
 
@@ -123,7 +139,8 @@ func (impl *Impl) updateGroupStateToGame(ctx context.Context, g entry.Group) {
 	g.Base().Lock()
 	defer g.Base().Unlock()
 	g.Base().SetState(entry.GroupStateGame)
-	for _, p := range g.Base().GetPlayers() {
+	for _, puid := range g.Base().GetPlayers() {
+		p := impl.playerMgr.Get(puid)
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateInGame)
 	}
 	impl.pushService.PushPlayerOnlineState(ctx, g.Base().UIDs(), entry.PlayerOnlineStateInGame)

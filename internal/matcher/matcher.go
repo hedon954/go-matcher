@@ -1,6 +1,7 @@
 package matcher
 
 import (
+	"fmt"
 	"runtime/debug"
 
 	"github.com/rs/zerolog/log"
@@ -26,6 +27,11 @@ func New(groupChannel chan entry.Group, glicko2Match *glicko2.Matcher) *Matcher 
 }
 
 func (m *Matcher) Start() {
+	log.Info().Msg("start matcher")
+	fmt.Println("start matcher")
+	defer log.Info().Msg("stop matcher")
+	defer fmt.Println("stop matcher")
+
 	for g := range m.groupChannel {
 		m.handle(g)
 	}

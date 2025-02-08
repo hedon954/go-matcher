@@ -80,7 +80,6 @@ func (qm *Matcher) Match(interval time.Duration) {
 			log.Info().Msg("stop glicko2 matcher")
 			return
 		case <-ticker:
-			log.Info().Msg("glicko2 matcher tick")
 			func() {
 				defer func() {
 					if err := recover(); err != nil {

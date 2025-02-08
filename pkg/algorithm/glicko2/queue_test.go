@@ -938,9 +938,6 @@ func (r *RoomMock) GetTeams() []Team {
 }
 
 func (r *RoomMock) AddTeam(t Team) {
-	if t.PlayerCount() != 5 {
-		fmt.Print()
-	}
 	r.teams = append(r.teams, t)
 	tmst := t.GetStartMatchTimeSec()
 	if tmst == 0 {

@@ -14,13 +14,15 @@ import (
 
 type GroupBaseGlicko2 struct {
 	*entry.GroupBase
+	playerMgr *entry.PlayerMgr
 }
 
-func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
+func NewGroup(base *entry.GroupBase, playerMgr *entry.PlayerMgr) *GroupBaseGlicko2 {
 	base.SupportMatchStrategies = append(base.SupportMatchStrategies, constant.MatchStrategyGlicko2)
 
 	g := &GroupBaseGlicko2{
 		GroupBase: base,
+		playerMgr: playerMgr,
 	}
 	return g
 }
@@ -37,7 +39,7 @@ func (g *GroupBaseGlicko2) GetPlayers() []glicko2.Player {
 	players := g.Base().GetPlayers()
 	res := make([]glicko2.Player, len(players))
 	for i := 0; i < len(players); i++ {
-		res[i] = players[i].(glicko2.Player)
+		res[i] = g.playerMgr.Get(players[i]).(glicko2.Player)
 	}
 	return res
 }
@@ -124,7 +126,8 @@ func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
 	g.Lock()
 	defer g.Unlock()
 	g.Base().SetState(entry.GroupStateInvite)
-	for _, p := range g.Base().GetPlayers() {
+	for _, puid := range g.Base().GetPlayers() {
+		p := g.playerMgr.Get(puid)
 		p.Base().Lock()
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
 		p.Base().Unlock()

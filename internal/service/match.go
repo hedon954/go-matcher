@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/matcher/common"
 	"github.com/hedon954/go-matcher/internal/pto"
 )
 
@@ -63,7 +64,7 @@ type Match interface {
 	UploadPlayerAttr(ctx context.Context, uid string, attrs *pto.UploadPlayerAttr) error
 
 	// HandleMatchResult handles the match result
-	HandleMatchResult(r entry.Room)
+	HandleMatchResult(r common.Result)
 
 	// HandleGameResult handles the game result
 	HandleGameResult(result *pto.GameResult) error

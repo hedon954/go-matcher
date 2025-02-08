@@ -26,10 +26,10 @@ type Group interface {
 	IsFull() bool
 
 	// SetCaptain sets the captain of the group.
-	SetCaptain(Player)
+	SetCaptain(string)
 
 	// GetCaptain returns the captain in the group.
-	GetCaptain() Player
+	GetCaptain() string
 
 	// CanPlayTogether checks if the player can play with the group's players.
 	CanPlayTogether(*pto.PlayerInfo) error
@@ -55,7 +55,7 @@ type Group interface {
 	// even if in print log.
 	//
 	// Note: it should be implemented by the specific game mode entry.
-	// TODO: any other great way?
+	// TODO: any other greater way?
 	Json() string
 }
 
@@ -107,8 +107,8 @@ type GroupBase struct {
 	// State is the current state of the group.
 	state GroupState
 
-	// players holds the players in the group.
-	players []Player
+	// players holds the players'ids in the group.
+	players []string
 
 	// MatchID is a unique id to identify each match action.
 	MatchID string
@@ -163,7 +163,7 @@ func NewGroupBase(
 		state:                  GroupStateInvite,
 		GameMode:               playerBase.GameMode,
 		ModeVersion:            playerBase.ModeVersion,
-		players:                make([]Player, 0, playerLimit),
+		players:                make([]string, 0, playerLimit),
 		roles:                  make(map[string]GroupRole, playerLimit),
 		inviteRecords:          make(map[string]int64, playerLimit),
 		SupportMatchStrategies: make([]constant.MatchStrategy, 0),
@@ -191,7 +191,7 @@ func (g *GroupBase) IsFull() bool {
 	return len(g.players) >= g.Configs.PlayerLimit
 }
 
-func (g *GroupBase) GetCaptain() Player {
+func (g *GroupBase) GetCaptain() string {
 	uid := ""
 	for key, role := range g.roles {
 		if role == GroupRoleCaptain {
@@ -199,9 +199,9 @@ func (g *GroupBase) GetCaptain() Player {
 			break
 		}
 	}
-	for _, p := range g.players {
-		if p.UID() == uid {
-			return p
+	for _, puid := range g.players {
+		if puid == uid {
+			return puid
 		}
 	}
 
@@ -230,26 +230,22 @@ func (g *GroupBase) AddPlayer(p Player) error {
 	}
 	p.Base().GroupID = g.ID()
 	p.Base().SetOnlineState(PlayerOnlineStateInGroup)
-	for i, player := range g.players {
-		if player.UID() == p.UID() {
-			g.players[i] = p
+	for i, puid := range g.players {
+		if puid == p.UID() {
+			g.players[i] = p.UID()
 			return nil
 		}
 	}
-	g.players = append(g.players, p)
+	g.players = append(g.players, p.UID())
 	return nil
 }
 
-func (g *GroupBase) GetPlayers() []Player {
+func (g *GroupBase) GetPlayers() []string {
 	return g.players
 }
 
 func (g *GroupBase) UIDs() []string {
-	res := make([]string, 0, len(g.players))
-	for _, p := range g.players {
-		res = append(res, p.UID())
-	}
-	return res
+	return g.players
 }
 
 func (g *GroupBase) PlayerLimit() int {
@@ -257,8 +253,8 @@ func (g *GroupBase) PlayerLimit() int {
 }
 
 func (g *GroupBase) RemovePlayer(p Player) (empty bool) {
-	for index, player := range g.players {
-		if player.UID() == p.UID() {
+	for index, puid := range g.players {
+		if puid == p.UID() {
 			g.players = append(g.players[:index], g.players[index+1:]...)
 			break
 		}
@@ -277,12 +273,12 @@ func (g *GroupBase) RemovePlayer(p Player) (empty bool) {
 }
 
 func (g *GroupBase) ClearPlayers() {
-	g.players = make([]Player, 0)
+	g.players = make([]string, 0)
 }
 
 func (g *GroupBase) PlayerExists(uid string) bool {
-	for _, p := range g.players {
-		if p.UID() == uid {
+	for _, puid := range g.players {
+		if puid == uid {
 			return true
 		}
 	}
@@ -309,13 +305,13 @@ func (g *GroupBase) GetStateWithLock() GroupState {
 	return g.state
 }
 
-func (g *GroupBase) SetCaptain(p Player) {
+func (g *GroupBase) SetCaptain(uid string) {
 	for key, role := range g.roles {
 		if role == GroupRoleCaptain {
 			g.roles[key] = GroupRoleMember
 		}
 	}
-	g.roles[p.UID()] = GroupRoleCaptain
+	g.roles[uid] = GroupRoleCaptain
 }
 
 func (g *GroupBase) CheckState(valids ...GroupState) error {
@@ -354,7 +350,7 @@ func (g *GroupBase) GetGroupInfo() *pto.GroupInfo {
 
 	return &pto.GroupInfo{
 		GroupID:     g.GroupID,
-		Captain:     g.GetCaptain().UID(),
+		Captain:     g.GetCaptain(),
 		GameMode:    g.GameMode,
 		ModeVersion: g.ModeVersion,
 		// TODO: other info

@@ -16,15 +16,17 @@ import (
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/modes"
 	"github.com/hedon954/go-matcher/internal/entry/test_game"
+	"github.com/hedon954/go-matcher/internal/matcher/common"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/pkg/timer/native"
 )
 
 func init() {
 	log.Logger = zerolog.New(io.Discard)
+	modes.Init()
 }
 
 const GameMode = constant.GameModeGoatGame
@@ -36,7 +38,7 @@ var ctx = context.Background()
 
 func defaultImpl(playerLimit int, opts ...Option) *Impl {
 	gc := make(chan entry.Group, 1024)
-	rc := make(chan entry.Room, 1024)
+	rc := make(chan common.Result, 1024)
 
 	configer := mock.NewMatchConfigerMock(&config.MatchConfig{
 		GroupPlayerLimit: playerLimit,
@@ -48,11 +50,11 @@ func defaultImpl(playerLimit int, opts ...Option) *Impl {
 		},
 	})
 
-	return NewDefault(configer, &repository.Mgrs{
-		PlayerMgr: repository.NewPlayerMgr(),
-		GroupMgr:  repository.NewGroupMgr(0),
-		TeamMgr:   repository.NewTeamMgr(0),
-		RoomMgr:   repository.NewRoomMgr(0)},
+	return NewDefault(configer, &entry.Mgrs{
+		PlayerMgr: entry.NewPlayerMgr(),
+		GroupMgr:  entry.NewGroupMgr(0),
+		TeamMgr:   entry.NewTeamMgr(0),
+		RoomMgr:   entry.NewRoomMgr(0)},
 		gc, rc, native.NewTimer(), opts...,
 	)
 }
@@ -113,7 +115,7 @@ func createFullGroup(impl *Impl, t *testing.T) (entry.Player, entry.Group) {
 }
 
 func createTempTeam(impl *Impl, g entry.Group, t *testing.T) entry.Team {
-	team, err := impl.teamMgr.CreateTeam(g)
+	team, err := impl.mgrs.CreateTeam(g)
 	assert.Nil(t, err)
 	assert.Nil(t, impl.teamMgr.Get(team.ID()))
 	impl.teamMgr.Add(team.ID(), team) // we don't add team to manager in CreateTeam.
@@ -123,7 +125,7 @@ func createTempTeam(impl *Impl, g entry.Group, t *testing.T) entry.Team {
 
 func createTempRoom(uid string, impl *Impl, t *testing.T) (entry.Player, entry.Group, entry.Room) {
 	p, g := createTempGroup(uid, impl, t)
-	room, err := impl.roomMgr.CreateRoom(1, createTempTeam(impl, g, t))
+	room, err := impl.mgrs.CreateRoom(1, createTempTeam(impl, g, t))
 	assert.Nil(t, err)
 	assert.Nil(t, impl.roomMgr.Get(room.ID()))
 	impl.roomMgr.Add(room.ID(), room) // we don't add room to manager in CreateRoom.
@@ -143,7 +145,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, g)
 		assert.Equal(t, g.ID(), int64(1))
-		assert.Equal(t, impl.playerMgr.Get(UID), g.GetCaptain())
+		assert.Equal(t, UID, g.GetCaptain())
 		assert.Equal(t, false, g.IsFull())
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 		assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
@@ -156,7 +158,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 		assert.NotNil(t, g2)
 		assert.Equal(t, g2.ID(), int64(1))
 		assert.Equal(t, g, g2)
-		assert.Equal(t, impl.playerMgr.Get(UID), g2.GetCaptain())
+		assert.Equal(t, UID, g2.GetCaptain())
 		assert.Equal(t, false, g2.IsFull())
 	})
 
@@ -169,12 +171,13 @@ func TestImpl_CreateGroup(t *testing.T) {
 		assert.Equal(t, int64(2), g3.ID())
 		assert.NotEqual(t, g, g3)
 		assert.Nil(t, impl.groupMgr.Get(g.ID()))
-		assert.Equal(t, constant.GameModeTest, g3.GetCaptain().Base().GameMode)
+		g3Captain := impl.playerMgr.Get(g3.GetCaptain())
+		assert.Equal(t, constant.GameModeTest, g3Captain.Base().GameMode)
 	})
 
 	var p2 entry.Player
 	t.Run(`4. if the player state is not 'online' or 'group', should return error`, func(t *testing.T) {
-		p2, err = impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
+		p2, err = impl.mgrs.CreatePlayer(newPlayerInfo(UID + "2"))
 		assert.Nil(t, err)
 		p2.Base().SetOnlineState(entry.PlayerOnlineStateOffline)
 		_, err = impl.CreateGroup(ctx, newCreateGroupParam(p2.Base().UID()))
@@ -191,7 +194,7 @@ func TestImpl_CreateGroup(t *testing.T) {
 	})
 
 	// add another player to the group
-	p2, err = impl.playerMgr.CreatePlayer(newPlayerInfo(UID + "2"))
+	p2, err = impl.mgrs.CreatePlayer(newPlayerInfo(UID + "2"))
 	assert.Nil(t, err)
 	err = g3.Base().AddPlayer(p2)
 	p2.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
@@ -200,8 +203,8 @@ func TestImpl_CreateGroup(t *testing.T) {
 
 	t.Run(`5. change the group captain, then create group,
 	should create a new group and exit the old group`, func(t *testing.T) {
-		g3.Base().SetCaptain(p2)
-		assert.Equal(t, p2, g3.GetCaptain())
+		g3.Base().SetCaptain(p2.UID())
+		assert.Equal(t, p2.UID(), g3.GetCaptain())
 		g4, err := impl.CreateGroup(ctx, param)
 		assert.Nil(t, err)
 		assert.Equal(t, int64(3), g4.ID())
@@ -284,7 +287,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 		err = impl.ExitGroup(ctx, UID+"2")
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
-		assert.Equal(t, UID, g.GetCaptain().UID())
+		assert.Equal(t, UID, g.GetCaptain())
 		assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 		assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
@@ -298,7 +301,7 @@ func TestImpl_ExitGroup(t *testing.T) {
 		err = impl.ExitGroup(ctx, UID)
 		assert.Nil(t, err)
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Nil(t, impl.playerMgr.Get(UID))
 		assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID+"2").Base().GetOnlineState())
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
@@ -325,14 +328,14 @@ func TestImpl_EnterGroup(t *testing.T) {
 		err := impl.EnterGroup(ctx, info, GroupID)
 		assert.Equal(t, merr.ErrGroupInMatch, err)
 		g.Base().SetState(entry.GroupStateInvite)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
 	})
 
 	t.Run("3. if the player not exists, should success and create a new player", func(t *testing.T) {
 		err := impl.EnterGroup(ctx, info, GroupID)
 		assert.Nil(t, err)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 2, len(g.Base().GetPlayers()))
 		assert.Equal(t, g.ID(), impl.playerMgr.Get(UID).Base().GroupID)
 		assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
@@ -343,7 +346,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		info.GameMode = constant.GameMode(0)
 		err := impl.EnterGroup(ctx, info, GroupID)
 		assert.Equal(t, merr.ErrGameModeNotMatch, err)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 		assert.Equal(t, int64(0), impl.playerMgr.Get(UID).Base().GroupID)
@@ -355,7 +358,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		info.ModeVersion = ModeVersion + 100
 		err = impl.EnterGroup(ctx, info, GroupID)
 		assert.Equal(t, merr.ErrGroupVersionTooLow, err)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 		assert.Equal(t, int64(0), impl.playerMgr.Get(UID).Base().GroupID)
@@ -367,7 +370,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		info.ModeVersion = ModeVersion - 100
 		err = impl.EnterGroup(ctx, info, GroupID)
 		assert.Equal(t, merr.ErrPlayerVersionTooLow, err)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 1, len(g.Base().GetPlayers()))
 		assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 		assert.Equal(t, int64(0), impl.playerMgr.Get(UID).Base().GroupID)
@@ -385,7 +388,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		assert.NotEqual(t, originPlayer.GetPlayerInfo().ModeVersion, info.ModeVersion)
 		err := impl.EnterGroup(ctx, info, GroupID)
 		assert.Nil(t, err)
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 2, len(g.Base().GetPlayers()))
 		assert.Equal(t, g.ID(), impl.playerMgr.Get(UID).Base().GroupID)
 		assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineState())
@@ -413,7 +416,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		assert.Equal(t, merr.ErrGameModeNotMatch, err)
 		assert.Equal(t, g2.ID(), impl.playerMgr.Get(UID).Base().GroupID)
 		assert.Equal(t, 1, len(g2.Base().GetPlayers()))
-		assert.Equal(t, UID, g2.GetCaptain().UID())
+		assert.Equal(t, UID, g2.GetCaptain())
 	})
 
 	t.Run(`8. if the player exists in other group,and can play together,
@@ -423,7 +426,7 @@ func TestImpl_EnterGroup(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, g.ID(), impl.playerMgr.Get(UID).Base().GroupID)
 		assert.Equal(t, 2, len(g.Base().GetPlayers()))
-		assert.Equal(t, UID+"2", g.GetCaptain().UID())
+		assert.Equal(t, UID+"2", g.GetCaptain())
 		assert.Equal(t, 0, len(g2.Base().GetPlayers()))
 		assert.Nil(t, impl.groupMgr.Get(g2.ID()))
 	})
@@ -532,7 +535,7 @@ func TestImpl_KickPlayer(t *testing.T) {
 	assert.Nil(t, err)
 	err = impl.KickPlayer(ctx, UID, UID+"3")
 	assert.Equal(t, merr.ErrPlayerNotInGroup, err)
-	assert.Equal(t, UID+"3", g2.GetCaptain().UID())
+	assert.Equal(t, UID+"3", g2.GetCaptain())
 
 	// 5. if the group state is not `invite`, should return error
 	g.Base().SetState(entry.GroupStateMatch)
@@ -555,7 +558,7 @@ func TestImpl_KickPlayer(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(g.Base().GetPlayers()))
 	assert.Equal(t, entry.PlayerOnlineStateInGroup, impl.playerMgr.Get(UID).Base().GetOnlineStateWithLock())
-	assert.Equal(t, UID, g.GetCaptain().UID())
+	assert.Equal(t, UID, g.GetCaptain())
 	assert.Nil(t, impl.playerMgr.Get(UID+"2"))
 }
 
@@ -614,7 +617,7 @@ func testImplChangeRoleCaptain(impl *Impl, g entry.Group, t *testing.T) {
 	// 7. success
 	err := impl.ChangeRole(ctx, UID, UID+"2", entry.GroupRoleCaptain)
 	assert.Nil(t, err)
-	assert.Equal(t, UID+"2", g.GetCaptain().UID())
+	assert.Equal(t, UID+"2", g.GetCaptain())
 	assert.Equal(t, 2, len(g.Base().GetPlayers()))
 	assert.Equal(t, entry.GroupStateInvite, g.Base().GetStateWithLock())
 }
@@ -837,16 +840,16 @@ func TestImpl_AcceptInvite(t *testing.T) {
 
 	t.Run("7. if the group is full, should return err", func(t *testing.T) {
 		fullGroupInviter, fullGroup := createFullGroup(impl, t) // create a temp full group
-		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo.UID)
+		err = impl.Invite(ctx, fullGroup.GetCaptain(), inviteeInfo.UID)
 		assert.Equal(t, merr.ErrGroupFull, err)
 		err = impl.ExitGroup(ctx, fullGroupInviter.UID()) // exit one player
 		assert.Nil(t, err)
-		err = impl.Invite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo.UID) // send invite
+		err = impl.Invite(ctx, fullGroup.GetCaptain(), inviteeInfo.UID) // send invite
 		assert.Nil(t, err)
 		err = impl.EnterGroup(ctx, newEnterGroupParam(fullGroupInviter.UID()),
 			fullGroup.ID()) // another player enter the group make group full
 		assert.Nil(t, err)
-		err = impl.AcceptInvite(ctx, fullGroup.GetCaptain().UID(), inviteeInfo,
+		err = impl.AcceptInvite(ctx, fullGroup.GetCaptain(), inviteeInfo,
 			fullGroup.ID()) // now the group is full, so can not accept invite
 		assert.Equal(t, merr.ErrGroupFull, err)
 	})
@@ -1064,7 +1067,14 @@ func TestImpl_HandleMatchResult(t *testing.T) {
 	impl := defaultImpl(PlayerLimit)
 
 	_, _, room := createTempRoom(UID, impl, t)
-	impl.HandleMatchResult(room)
+	teams := make([]entry.Team, 0)
+	for _, teamID := range room.Base().GetTeams() {
+		teams = append(teams, impl.teamMgr.Get(teamID))
+	}
+	impl.HandleMatchResult(common.Result{
+		Room:  room,
+		Teams: teams,
+	})
 
 	room.Base().Lock()
 	defer room.Base().Unlock()
@@ -1076,12 +1086,15 @@ func TestImpl_HandleMatchResult(t *testing.T) {
 		Protocol: constant.KCP,
 	}, room.Base().GameServerInfo)
 
-	for _, team := range room.Base().GetTeams() {
+	for _, teamID := range room.Base().GetTeams() {
+		team := impl.teamMgr.Get(teamID)
 		team.Base().Lock()
-		for _, group := range team.Base().GetGroups() {
+		for _, groupID := range team.Base().GetGroups() {
+			group := impl.groupMgr.Get(groupID)
 			group.Base().Lock()
 			assert.Equal(t, entry.GroupStateGame, group.Base().GetState())
-			for _, p := range group.Base().GetPlayers() {
+			for _, puid := range group.Base().GetPlayers() {
+				p := impl.playerMgr.Get(puid)
 				assert.Equal(t, entry.PlayerOnlineStateInGame, p.Base().GetOnlineStateWithLock())
 			}
 			group.Base().Unlock()
