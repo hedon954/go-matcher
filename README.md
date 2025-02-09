@@ -42,6 +42,10 @@ Go-matcher is a game matcher implement in Go, which supports add game mode and m
   - [x] Logger
   - [x] Tracer
   - [x] Metric
+- [x] Graceful restart
+  - [x] tableflip
+  - [x] save and reload entries
+
 
 ## Start With Open Telemetry
 
@@ -72,38 +76,17 @@ make docker-up
   - [ ] KCP
   - [ ] WebSocket
   - [ ] gRPC
-- [x] static config
-  - [x] yaml
 - [ ] dynamic config
-  - [x] nacos
   - [ ] etcd
   - [ ] apollo
   - [ ] consul
 - [ ] tracer
-- [x] open telemetry
 - [ ] repository stats
 - [ ] match queue stats
 - [ ] graceful restart
 - [ ] repository by redis
 - [ ] hot upgrade
 - [ ] horizontal expansion
-- [ ] AI Generator
-
-## Schedule
-
-- [x] HandleMatchSuccess（8.9）
-- [x] HandleGameResult（8.9）
-- [x] Ready & Unready（8.9）
-- [ ] Push Service by gRPC（8.12）
-- [x] Static Config（8.13）
-- [x] Dynamic Config by nacos（8.13）
-- [ ] repository by redis（8.14）
-- [ ] entry encode & decode（8.14）
-- [ ] zerolog logger & tracer & open telemetry（8.15-8.16）
-- [ ] repository stats & match queue stats（8.19）
-- [x] zinx（8.20-8.23）
-- [x] TCP api（8.26）
-- [ ] WebSocket api（8.27）
 - [ ] AI Generator
 
 ## Help
