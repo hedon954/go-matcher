@@ -1,3 +1,4 @@
+//nolint:dupl
 package entry
 
 import (
@@ -23,8 +24,6 @@ func NewTeamMgr(teamIDStart int64) *TeamMgr {
 }
 
 // Encode encodes all teams into a map of game modes to their encoded bytes.
-//
-//nolint:dupl
 func (m *TeamMgr) Encode() map[constant.GameMode][][]byte {
 	res := make(map[constant.GameMode][][]byte, m.Len())
 	m.Range(func(id int64, t Team) bool {

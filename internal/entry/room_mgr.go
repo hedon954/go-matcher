@@ -1,3 +1,4 @@
+//nolint:dupl
 package entry
 
 import (
@@ -23,8 +24,6 @@ func NewRoomMgr(roomIDStart int64) *RoomMgr {
 }
 
 // Encode encodes all rooms into a map of game modes to room data.
-//
-//nolint:dupl
 func (m *RoomMgr) Encode() map[constant.GameMode][][]byte {
 	res := make(map[constant.GameMode][][]byte, m.Len())
 	m.Range(func(i int64, r Room) bool {
