@@ -109,15 +109,15 @@ func Test_TCP_ShouldWork(t *testing.T) {
 	assert.Equal(t, g2.ID(), ub.Base().GroupID)
 
 	// 9. 'a' change role to 'b'
-	assert.Equal(t, ua, g2.GetCaptain())
+	assert.Equal(t, ua.UID(), g2.GetCaptain())
 	requestChangeRole(conn, UIDA, UIDB, entry.GroupRoleCaptain, t)
-	assert.Equal(t, ub, g2.GetCaptain())
+	assert.Equal(t, ub.UID(), g2.GetCaptain())
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
 
 	// 10. 'b' exit group 'g2'
 	requestExitGroup(conn, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
-	assert.Equal(t, ua, g2.GetCaptain())
+	assert.Equal(t, ua.UID(), g2.GetCaptain())
 	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 11. 'a' invite friend 'b'

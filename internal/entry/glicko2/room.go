@@ -1,17 +1,27 @@
 package glicko2
 
 import (
+	"math"
+
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
 type RoomBaseGlicko2 struct {
 	*entry.RoomBase
+	glicko2Teams map[int64]glicko2.Team `msgpack:"-"`
+	teamMgr      TeamMgr                `msgpack:"-"`
 }
 
-func CreateRoomBase(base *entry.RoomBase) *RoomBaseGlicko2 {
+type TeamMgr interface {
+	Get(id int64) entry.Team
+}
+
+func CreateRoomBase(base *entry.RoomBase, mgr TeamMgr) *RoomBaseGlicko2 {
 	r := &RoomBaseGlicko2{
-		RoomBase: base,
+		RoomBase:     base,
+		teamMgr:      mgr,
+		glicko2Teams: make(map[int64]glicko2.Team, base.TeamLimit),
 	}
 	return r
 }
@@ -19,18 +29,18 @@ func CreateRoomBase(base *entry.RoomBase) *RoomBaseGlicko2 {
 func (r *RoomBaseGlicko2) GetTeams() []glicko2.Team {
 	r.RLock()
 	defer r.RUnlock()
-	teams := r.Base().GetTeams()
-	res := make([]glicko2.Team, len(teams))
-	for i := 0; i < len(res); i++ {
-		res[i] = teams[i].(glicko2.Team)
+	teams := make([]glicko2.Team, 0, len(r.glicko2Teams))
+	for _, t := range r.glicko2Teams {
+		teams = append(teams, t)
 	}
-	return res
+	return teams
 }
 
 func (r *RoomBaseGlicko2) AddTeam(t glicko2.Team) {
 	r.Lock()
 	defer r.Unlock()
 	r.Base().AddTeam(t.(entry.Team))
+	r.glicko2Teams[t.(entry.Team).ID()] = t
 }
 
 func (r *RoomBaseGlicko2) GetMMR() float64 {
@@ -46,7 +56,16 @@ func (r *RoomBaseGlicko2) GetMMR() float64 {
 }
 
 func (r *RoomBaseGlicko2) GetStartMatchTimeSec() int64 {
-	return r.Base().GetTeams()[0].(*TeamBaseGlicko2).Base().GetGroups()[0].(*GroupBaseGlicko2).GetStartMatchTimeSec()
+	res := int64(math.MaxInt64)
+	for _, t := range r.glicko2Teams {
+		groups := t.GetGroups()
+		for _, g := range groups {
+			if g.GetStartMatchTimeSec() < res {
+				res = g.GetStartMatchTimeSec()
+			}
+		}
+	}
+	return res
 }
 
 func (r *RoomBaseGlicko2) HasAi() bool {
@@ -60,4 +79,15 @@ func (r *RoomBaseGlicko2) HasAi() bool {
 		}
 	}
 	return false
+}
+
+func (r *RoomBaseGlicko2) SetTeamMgr(mgr TeamMgr) {
+	r.teamMgr = mgr
+}
+
+func (r *RoomBaseGlicko2) FillGlicko2Teams() {
+	r.glicko2Teams = make(map[int64]glicko2.Team, len(r.Base().Teams))
+	for id := range r.Base().Teams {
+		r.glicko2Teams[id] = r.teamMgr.Get(id).(glicko2.Team)
+	}
 }

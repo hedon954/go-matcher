@@ -5,10 +5,11 @@ import (
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/pkg/rand"
+	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
 
 type Room interface {
+	Coder
 	Base() *RoomBase
 	ID() int64
 	NeedAI() bool
@@ -17,8 +18,8 @@ type Room interface {
 
 type RoomBase struct {
 	lock      sync.RWMutex
-	id        int64
-	teams     []Team
+	RoomID    int64
+	Teams     map[int64]struct{}
 	TeamLimit int
 
 	GameMode       constant.GameMode
@@ -26,17 +27,17 @@ type RoomBase struct {
 	ModeVersion    int64
 	FinishMatchSec int64
 
-	escapePlayer []string
+	EscapePlayer []string
 
 	GameServerInfo pto.GameServerInfo
 }
 
 func NewRoomBase(id int64, teamLimit int, t Team) *RoomBase {
 	r := &RoomBase{
-		id:            id,
+		RoomID:        id,
 		TeamLimit:     teamLimit,
-		teams:         make([]Team, 0),
-		escapePlayer:  make([]string, 0),
+		Teams:         make(map[int64]struct{}),
+		EscapePlayer:  make([]string, 0),
 		GameMode:      t.Base().GameMode,
 		MatchStrategy: t.Base().MatchStrategy,
 		ModeVersion:   t.Base().ModeVersion,
@@ -49,24 +50,19 @@ func (r *RoomBase) Base() *RoomBase {
 }
 
 func (r *RoomBase) ID() int64 {
-	return r.id
+	return r.RoomID
 }
 
-func (r *RoomBase) GetTeams() []Team {
-	return r.teams
+func (r *RoomBase) GetTeams() []int64 {
+	return typeconv.MapToSlice(r.Teams)
 }
 
 func (r *RoomBase) AddTeam(t Team) {
-	r.teams = append(r.teams, t)
+	r.Teams[t.ID()] = struct{}{}
 }
 
 func (r *RoomBase) RemoveTeam(id int64) {
-	for i, t := range r.teams {
-		if t.ID() == id {
-			r.teams = append(r.teams[:i], r.teams[i+1:]...)
-			break
-		}
-	}
+	delete(r.Teams, id)
 }
 
 func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
@@ -78,30 +74,12 @@ func (r *RoomBase) NeedAI() bool {
 	return false
 }
 
-func (r *RoomBase) ShuffleTeamOrder() {
-	ids := rand.PermFrom1(len(r.teams))
-	for i := 0; i < len(r.teams); i++ {
-		team := r.teams[i]
-		team.Base().TeamID = ids[i]
-	}
-}
-
-func (r *RoomBase) UIDs() []string {
-	res := make([]string, 0, len(r.teams))
-	for _, t := range r.teams {
-		for _, g := range t.Base().GetGroups() {
-			res = append(res, g.Base().UIDs()...)
-		}
-	}
-	return res
-}
-
 func (r *RoomBase) AddEscapePlayer(uid string) {
-	r.escapePlayer = append(r.escapePlayer, uid)
+	r.EscapePlayer = append(r.EscapePlayer, uid)
 }
 
 func (r *RoomBase) GetEscapePlayers() []string {
-	return r.escapePlayer
+	return r.EscapePlayer
 }
 
 func (r *RoomBase) Lock() {

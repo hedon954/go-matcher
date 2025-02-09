@@ -35,7 +35,7 @@ func TestImpl_matchTimeoutHandler_shouldWork(t *testing.T) {
 	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
 
-	err = impl.StartMatch(ctx, g.GetCaptain().UID())
+	err = impl.StartMatch(ctx, g.GetCaptain())
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
 	time.Sleep(matchTimeoutMs + 3*time.Millisecond)
@@ -46,7 +46,7 @@ func TestImpl_waitAttrTimeoutHandler_shouldWork(t *testing.T) {
 	impl := defaultImpl(1)
 	g, err := impl.CreateGroup(ctx, newCreateGroupParam(UID))
 	assert.Nil(t, err)
-	err = impl.StartMatch(ctx, g.GetCaptain().UID())
+	err = impl.StartMatch(ctx, g.GetCaptain())
 	assert.Nil(t, err)
 	assert.Equal(t, entry.GroupStateMatch, g.Base().GetStateWithLock())
 	assert.NotNil(t, impl.delayTimer.Get(TimerOpTypeGroupWaitAttr, g.ID()))

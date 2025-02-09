@@ -16,12 +16,12 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 	"github.com/hedon954/go-matcher/pkg/response"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	internalapi "github.com/hedon954/go-matcher/internal/api"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -102,15 +102,15 @@ func Test_HTTP_ShouldWork(t *testing.T) {
 	assert.Equal(t, g2.ID(), ub.Base().GroupID)
 
 	// 9. 'a' change role to 'b'
-	assert.Equal(t, ua, g2.GetCaptain())
+	assert.Equal(t, ua.UID(), g2.GetCaptain())
 	requestChangeRole(router, UIDA, UIDB, entry.GroupRoleCaptain, t)
-	assert.Equal(t, ub, g2.GetCaptain())
+	assert.Equal(t, ub.UID(), g2.GetCaptain())
 	assert.Equal(t, 2, len(g2.Base().GetPlayers()))
 
 	// 10. 'b' exit group 'g2'
 	requestExitGroup(router, UIDB, t)
 	assert.Equal(t, 1, len(g2.Base().GetPlayers()))
-	assert.Equal(t, ua, g2.GetCaptain())
+	assert.Equal(t, ua.UID(), g2.GetCaptain())
 	assert.Nil(t, api.PM.Get(UIDB))
 
 	// 11. 'a' invite friend 'b'

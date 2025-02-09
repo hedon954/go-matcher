@@ -4,23 +4,24 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cast"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
-
-	"github.com/spf13/cast"
 )
 
 type GroupBaseGlicko2 struct {
 	*entry.GroupBase
+	playerMgr *entry.PlayerMgr `msgpack:"-"`
 }
 
-func NewGroup(base *entry.GroupBase) *GroupBaseGlicko2 {
+func NewGroup(base *entry.GroupBase, playerMgr *entry.PlayerMgr) *GroupBaseGlicko2 {
 	base.SupportMatchStrategies = append(base.SupportMatchStrategies, constant.MatchStrategyGlicko2)
 
 	g := &GroupBaseGlicko2{
 		GroupBase: base,
+		playerMgr: playerMgr,
 	}
 	return g
 }
@@ -37,7 +38,7 @@ func (g *GroupBaseGlicko2) GetPlayers() []glicko2.Player {
 	players := g.Base().GetPlayers()
 	res := make([]glicko2.Player, len(players))
 	for i := 0; i < len(players); i++ {
-		res[i] = players[i].(glicko2.Player)
+		res[i] = g.playerMgr.Get(players[i]).(glicko2.Player)
 	}
 	return res
 }
@@ -97,16 +98,6 @@ func (g *GroupBaseGlicko2) SetState(state glicko2.GroupState) {
 	}
 }
 
-func (g *GroupBaseGlicko2) GetStartMatchTimeSec() int64 {
-	return g.GetPlayers()[0].GetStartMatchTimeSec()
-}
-
-func (g *GroupBaseGlicko2) SetStartMatchTimeSec(t int64) {
-	for _, p := range g.GetPlayers() {
-		p.SetStartMatchTimeSec(t)
-	}
-}
-
 func (g *GroupBaseGlicko2) GetFinishMatchTimeSec() int64 {
 	return g.GetPlayers()[0].GetFinishMatchTimeSec()
 }
@@ -134,7 +125,8 @@ func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
 	g.Lock()
 	defer g.Unlock()
 	g.Base().SetState(entry.GroupStateInvite)
-	for _, p := range g.Base().GetPlayers() {
+	for _, puid := range g.Base().GetPlayers() {
+		p := g.playerMgr.Get(puid)
 		p.Base().Lock()
 		p.Base().SetOnlineState(entry.PlayerOnlineStateInGroup)
 		p.Base().Unlock()
@@ -144,4 +136,8 @@ func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
 
 func (g *GroupBaseGlicko2) IsNewer() bool {
 	return false
+}
+
+func (g *GroupBaseGlicko2) SetPlayerMgr(playerMgr *entry.PlayerMgr) {
+	g.playerMgr = playerMgr
 }

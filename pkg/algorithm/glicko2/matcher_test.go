@@ -49,11 +49,10 @@ func Test_Matcher(t *testing.T) {
 	for {
 		select {
 		case tr := <-roomChan:
-			now := time.Now().Unix()
 			rId := roomId.Add(1)
 			if rId%100 == 0 {
-				fmt.Printf("| Room[%d] Match successful, cast time %ds, hasAi: %t, team count: %d\n", rId,
-					now-tr.GetStartMatchTimeSec(), tr.HasAi(), len(tr.GetTeams()))
+				fmt.Printf("| Room[%d] Match successful, hasAi: %t, team count: %d\n", rId,
+					tr.HasAi(), len(tr.GetTeams()))
 			}
 		case err := <-errChan:
 			assert.Nil(t, err)

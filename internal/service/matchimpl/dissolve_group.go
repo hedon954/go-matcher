@@ -10,7 +10,8 @@ func (impl *Impl) dissolveGroup(ctx context.Context, g entry.Group) error {
 	g.Base().SetState(entry.GroupStateDissolved)
 
 	uids := g.Base().UIDs()
-	for _, p := range g.Base().GetPlayers() {
+	for _, puid := range g.Base().GetPlayers() {
+		p := impl.playerMgr.Get(puid)
 		p.Base().SetOnlineStateWithLock(entry.PlayerOnlineStateOnline)
 		impl.playerMgr.Delete(p.UID())
 	}

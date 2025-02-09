@@ -14,13 +14,13 @@ func (impl *Impl) getPlayer(param *pto.PlayerInfo) (entry.Player, error) {
 		return p, nil
 	}
 
-	return impl.playerMgr.CreatePlayer(param)
+	return impl.mgrs.CreatePlayer(param)
 }
 
 // createGroup creates group, and adds the player to it,
 // current play would be the captain of the group.
 func (impl *Impl) createGroup(p entry.Player) (entry.Group, error) {
-	g, err := impl.groupMgr.CreateGroup(impl.Configer.Get().GroupPlayerLimit, p)
+	g, err := impl.mgrs.CreateGroup(impl.Configer.Get().GroupPlayerLimit, p)
 	if err != nil {
 		return nil, err
 	}

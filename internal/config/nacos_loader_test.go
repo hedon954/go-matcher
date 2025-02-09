@@ -49,6 +49,9 @@ var (
 )
 
 func Test_NacosLoader_MatchConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
 	namespaceID := thirdparty.PrepareNacosConfig(addr, dataID, group, port, defaultMC)
 	defer thirdparty.ClearNacosConfig(namespaceID, addr, port)
 	loader := NewNacosLoader(namespaceID, group, dataID, serverConfigs)

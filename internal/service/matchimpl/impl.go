@@ -12,9 +12,9 @@ import (
 	"github.com/hedon954/go-matcher/internal/config/mock"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/log"
+	"github.com/hedon954/go-matcher/internal/matcher/common"
 	"github.com/hedon954/go-matcher/internal/merr"
 	"github.com/hedon954/go-matcher/internal/pto"
-	"github.com/hedon954/go-matcher/internal/repository"
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/servicemock"
 	"github.com/hedon954/go-matcher/pkg/timer"
@@ -39,17 +39,18 @@ type Impl struct {
 	Configer config.Configer[config.MatchConfig]
 	MSConfig config.MatchStrategy
 
-	playerMgr *repository.PlayerMgr
-	groupMgr  *repository.GroupMgr
-	teamMgr   *repository.TeamMgr
-	roomMgr   *repository.RoomMgr
+	mgrs      *entry.Mgrs
+	playerMgr *entry.PlayerMgr
+	groupMgr  *entry.GroupMgr
+	teamMgr   *entry.TeamMgr
+	roomMgr   *entry.RoomMgr
 
 	nowFunc func() int64
 
 	// groupChannel used to send a group to match system.
 	// TODO: if match system is down, we should stop the server.
 	groupChannel chan entry.Group
-	roomChannel  chan entry.Room
+	roomChannel  chan common.Result
 
 	pushService        service.Push
 	gameServerDispatch service.GameServerDispatch
@@ -72,12 +73,13 @@ func WithMatchStrategyConfiger(c config.MatchStrategy) Option {
 }
 
 func NewDefault(
-	configer config.Configer[config.MatchConfig], mgrs *repository.Mgrs,
-	groupChannel chan entry.Group, roomChannel chan entry.Room,
+	configer config.Configer[config.MatchConfig], mgrs *entry.Mgrs,
+	groupChannel chan entry.Group, roomChannel chan common.Result,
 	delayTimer timer.Operator[int64], options ...Option,
 ) *Impl {
 	impl := &Impl{
 		Configer:           configer,
+		mgrs:               mgrs,
 		playerMgr:          mgrs.PlayerMgr,
 		groupMgr:           mgrs.GroupMgr,
 		teamMgr:            mgrs.TeamMgr,
@@ -140,7 +142,7 @@ func (impl *Impl) CreateGroup(ctx context.Context, param *pto.CreateGroup) (entr
 		// if game mode is the same, check if the player is the captain of the group
 		//  if not, exits the group and create a new one
 		//  if yes, return current group
-		if g.GetCaptain() != p || g.Base().GameMode != param.GameMode {
+		if g.GetCaptain() != p.UID() || g.Base().GameMode != param.GameMode {
 			if groupEmpty := g.Base().RemovePlayer(p); groupEmpty {
 				impl.groupMgr.Delete(g.ID())
 			}
@@ -262,7 +264,7 @@ func (impl *Impl) DissolveGroup(ctx context.Context, uid string) error {
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	if g.GetCaptain() != p {
+	if g.GetCaptain() != p.UID() {
 		return merr.ErrOnlyCaptainCanDissolveGroup
 	}
 
@@ -280,7 +282,7 @@ func (impl *Impl) KickPlayer(ctx context.Context, captainUID, kickedUID string) 
 		return merr.ErrKickSelf
 	}
 
-	captain, g, err := impl.getPlayerAndGroup(captainUID)
+	_, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
 	}
@@ -292,7 +294,7 @@ func (impl *Impl) KickPlayer(ctx context.Context, captainUID, kickedUID string) 
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	if g.GetCaptain() != captain {
+	if g.GetCaptain() != captainUID {
 		return merr.ErrOnlyCaptainCanKickPlayer
 	}
 
@@ -320,7 +322,7 @@ func (impl *Impl) ChangeRole(ctx context.Context, captainUID, targetUID string, 
 		return err
 	}
 
-	captain, g, err := impl.getPlayerAndGroup(captainUID)
+	_, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
 	}
@@ -336,7 +338,7 @@ func (impl *Impl) ChangeRole(ctx context.Context, captainUID, targetUID string, 
 		return merr.ErrPlayerNotInGroup
 	}
 
-	if g.GetCaptain() != captain {
+	if g.GetCaptain() != captainUID {
 		return merr.ErrNotCaptain
 	}
 
@@ -349,7 +351,7 @@ func (impl *Impl) ChangeRole(ctx context.Context, captainUID, targetUID string, 
 }
 
 func (impl *Impl) SetNearbyJoinGroup(_ context.Context, captainUID string, allow bool) error {
-	p, g, err := impl.getPlayerAndGroup(captainUID)
+	_, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
 	}
@@ -357,7 +359,7 @@ func (impl *Impl) SetNearbyJoinGroup(_ context.Context, captainUID string, allow
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	if g.GetCaptain() != p {
+	if g.GetCaptain() != captainUID {
 		return merr.ErrPermissionDeny
 	}
 
@@ -366,7 +368,7 @@ func (impl *Impl) SetNearbyJoinGroup(_ context.Context, captainUID string, allow
 }
 
 func (impl *Impl) SetRecentJoinGroup(_ context.Context, captainUID string, allow bool) error {
-	p, g, err := impl.getPlayerAndGroup(captainUID)
+	_, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
 	}
@@ -374,7 +376,7 @@ func (impl *Impl) SetRecentJoinGroup(_ context.Context, captainUID string, allow
 	g.Base().Lock()
 	defer g.Base().Unlock()
 
-	if g.GetCaptain() != p {
+	if g.GetCaptain() != captainUID {
 		return merr.ErrPermissionDeny
 	}
 
@@ -510,7 +512,7 @@ func (impl *Impl) Unready(ctx context.Context, uid string) error {
 }
 
 func (impl *Impl) StartMatch(ctx context.Context, captainUID string) error {
-	p, g, err := impl.getPlayerAndGroup(captainUID)
+	_, g, err := impl.getPlayerAndGroup(captainUID)
 	if err != nil {
 		return err
 	}
@@ -521,7 +523,7 @@ func (impl *Impl) StartMatch(ctx context.Context, captainUID string) error {
 	if err := g.Base().CheckState(entry.GroupStateInvite); err != nil {
 		return err
 	}
-	if g.GetCaptain() != p {
+	if g.GetCaptain() != captainUID {
 		return merr.ErrNotCaptain
 	}
 	if err := g.CanStartMatch(); err != nil {
@@ -568,12 +570,13 @@ func (impl *Impl) ExitGame(ctx context.Context, uid string, roomID int64) error 
 	defer r.Base().Unlock()
 
 	exists := false
-	for _, t := range r.Base().GetTeams() {
+	for _, teamID := range r.Base().GetTeams() {
+		t := impl.teamMgr.Get(teamID)
 		t.Base().Lock()
 		groups := t.Base().GetGroups()
 		t.Base().Unlock()
-		for _, group := range groups {
-			if group.ID() == g.ID() {
+		for _, groupID := range groups {
+			if groupID == g.ID() {
 				exists = true
 				goto OUT
 			}
@@ -629,9 +632,9 @@ func (impl *Impl) UploadPlayerAttr(ctx context.Context, uid string, attr *pto.Up
 	return impl.uploadPlayerAttr(ctx, p, g, attr)
 }
 
-func (impl *Impl) HandleMatchResult(r entry.Room) {
-	r.Base().Lock()
-	defer r.Base().Unlock()
+func (impl *Impl) HandleMatchResult(r common.Result) {
+	r.Room.Base().Lock()
+	defer r.Room.Base().Unlock()
 	if err := impl.handleMatchResult(context.Background(), r); err != nil {
 		log.Error().
 			Any("room", r).

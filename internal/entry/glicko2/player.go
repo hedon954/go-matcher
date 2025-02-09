@@ -9,9 +9,9 @@ type PlayerBaseGlicko2 struct {
 	*entry.PlayerBase
 	MMR            float64
 	Star           int64
-	startMatchSec  int64
-	finishMatchSec int64
-	rank           int64
+	StartMatchSec  int64
+	FinishMatchSec int64
+	Rank           int64
 }
 
 func CreatePlayerBase(p *entry.PlayerBase, info *pto.Glicko2Info) *PlayerBaseGlicko2 {
@@ -19,7 +19,7 @@ func CreatePlayerBase(p *entry.PlayerBase, info *pto.Glicko2Info) *PlayerBaseGli
 		PlayerBase: p,
 		MMR:        info.MMR,
 		Star:       info.Star,
-		rank:       info.Rank,
+		Rank:       info.Rank,
 	}
 }
 
@@ -40,21 +40,21 @@ func (p *PlayerBaseGlicko2) GetStar() int {
 }
 
 func (p *PlayerBaseGlicko2) GetStartMatchTimeSec() int64 {
-	return p.startMatchSec
+	return p.StartMatchSec
 }
 
 func (p *PlayerBaseGlicko2) SetStartMatchTimeSec(t int64) {
-	p.startMatchSec = t
+	p.StartMatchSec = t
 }
 
 func (p *PlayerBaseGlicko2) GetFinishMatchTimeSec() int64 {
-	return p.finishMatchSec
+	return p.FinishMatchSec
 }
 
 func (p *PlayerBaseGlicko2) SetFinishMatchTimeSec(t int64) {
-	p.finishMatchSec = t
+	p.FinishMatchSec = t
 }
 
 func (p *PlayerBaseGlicko2) GetRank() int {
-	return int(p.rank)
+	return int(p.Rank)
 }

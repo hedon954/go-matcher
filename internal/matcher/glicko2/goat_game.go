@@ -22,7 +22,7 @@ func (m *Matcher) goatGameArgs() *glicko2.QueueArgs {
 }
 
 func (m *Matcher) newGoatGameTeam(g glicko2.Group) glicko2.Team {
-	t, err := m.teamMgr.CreateTeam(g.(entry.Group))
+	t, err := m.mgrs.CreateTeam(g.(entry.Group))
 	if err != nil {
 		panic(fmt.Sprintf("create team error: %s", err.Error()))
 	}
@@ -31,11 +31,13 @@ func (m *Matcher) newGoatGameTeam(g glicko2.Group) glicko2.Team {
 
 func (m *Matcher) newGoatGameRoom(t glicko2.Team) glicko2.Room {
 	teamLimit := m.configer.GetGlicko2QueueArgs(constant.GameModeGoatGame).RoomTeamLimit
-	r, err := m.roomMgr.CreateRoom(teamLimit, t.(entry.Team))
+	r, err := m.mgrs.CreateRoom(teamLimit, t.(entry.Team))
 	if err != nil {
 		panic(fmt.Sprintf("create room error: %s", err.Error()))
 	}
-	return r.(glicko2.Room)
+	result := r.(glicko2.Room)
+	result.AddTeam(t)
+	return result
 }
 
 func (m *Matcher) newGoatGameRoomWithAI(t glicko2.Team) glicko2.Room {

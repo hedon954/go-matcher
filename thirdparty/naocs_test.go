@@ -43,6 +43,10 @@ type nacosConfig struct {
 }
 
 func TestNewNacosClient(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skip in short mode")
+	}
+
 	namespaceID := PrepareNacosConfig(host, dataID, group, port, expected)
 	defer ClearNacosConfig(namespaceID, host, port)
 

@@ -11,7 +11,7 @@ import (
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/repository"
+	"github.com/hedon954/go-matcher/internal/matcher/common"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
 )
 
@@ -21,10 +21,11 @@ type Matcher struct {
 
 	configer config.Glicko2
 
-	playerMgr *repository.PlayerMgr
-	groupMgr  *repository.GroupMgr
-	teamMgr   *repository.TeamMgr
-	roomMgr   *repository.RoomMgr
+	mgrs      *entry.Mgrs
+	playerMgr *entry.PlayerMgr
+	groupMgr  *entry.GroupMgr
+	teamMgr   *entry.TeamMgr
+	roomMgr   *entry.RoomMgr
 
 	// matchers is the map of glicko2 matchers.
 	// `key` is used to separate different matching groups.
@@ -38,7 +39,7 @@ type Matcher struct {
 	roomChan chan glicko2.Room
 
 	// roomChannelToService is a channel for send room to service.
-	roomChannelToService chan entry.Room
+	roomChannelToService chan common.Result
 
 	// gameModes is the map of game modes, `value` is the funcs of the mode.
 	gameModes map[constant.GameMode]*Funcs
@@ -59,9 +60,9 @@ type Funcs struct {
 
 // New returns the new glicko2 matcher, and start it.
 func New(
-	roomChannelToService chan entry.Room,
+	roomChannelToService chan common.Result,
 	configer config.Glicko2, matchInterval time.Duration,
-	mgrs *repository.Mgrs,
+	mgrs *entry.Mgrs,
 ) *Matcher {
 	m := &Matcher{
 		matchers:             make(map[string]*glicko2.Matcher, 8),
@@ -69,6 +70,7 @@ func New(
 		roomChan:             make(chan glicko2.Room),
 		roomChannelToService: roomChannelToService,
 		gameModes:            make(map[constant.GameMode]*Funcs, 16),
+		mgrs:                 mgrs,
 		playerMgr:            mgrs.PlayerMgr,
 		groupMgr:             mgrs.GroupMgr,
 		teamMgr:              mgrs.TeamMgr,
@@ -149,6 +151,9 @@ func (m *Matcher) newMatcher(
 }
 
 func (m *Matcher) handleMatchResult() {
+	log.Info().Msg("start glicko2 matcher")
+	fmt.Println("start glicko2 matcher")
+
 	for {
 		select {
 		case err := <-m.errChan:
@@ -167,7 +172,17 @@ func (m *Matcher) handleError(err error) {
 func (m *Matcher) handleSuccess(room glicko2.Room) {
 	m.RoomCount.Add(1)
 	log.Info().Any("room", room).Msg("glicko2 match success")
-	m.roomChannelToService <- room.(entry.Room)
+	fmt.Println("glicko2 match success")
+
+	glicko2Teams := room.GetTeams()
+	teams := make([]entry.Team, len(glicko2Teams))
+	for i := 0; i < len(teams); i++ {
+		teams[i] = glicko2Teams[i].(entry.Team)
+	}
+	m.roomChannelToService <- common.Result{
+		Room:  room.(entry.Room),
+		Teams: teams,
+	}
 }
 
 func (m *Matcher) Lock() {
@@ -201,7 +216,13 @@ func (m *Matcher) Match(g glicko2.Group) {
 			Msg("match by glicko2 error")
 		return
 	}
-	fmt.Println("add a group to glicko matcher: ", g.GetPlayers())
+
+	uids := make([]string, 0)
+	for _, player := range g.GetPlayers() {
+		uids = append(uids, player.GetID())
+	}
+	fmt.Println("add a group to glicko matcher, uids: ", uids)
+
 	if err = matcher.AddGroups(g); err != nil {
 		log.Error().
 			Str("group_id", g.GetID()).

@@ -1,17 +1,15 @@
-package repository
+package entry
 
 import (
-	"fmt"
 	"sync/atomic"
 
 	"github.com/hedon954/go-matcher/internal/constant"
-	"github.com/hedon954/go-matcher/internal/entry"
-	"github.com/hedon954/go-matcher/internal/entry/goat_game"
+	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
 type GroupMgr struct {
-	*collection.Manager[int64, entry.Group]
+	*collection.Manager[int64, Group]
 
 	// groupIDIter is a counter used to generate unique group IDs.
 	// Before we shut down the server, we need to store the current groupID,
@@ -23,32 +21,29 @@ type GroupMgr struct {
 // NewGroupMgr creates a group repository, `groupIDStart`: the starting group ID.
 func NewGroupMgr(groupIDStart int64) *GroupMgr {
 	mgr := &GroupMgr{
-		Manager: collection.New[int64, entry.Group](),
+		Manager: collection.New[int64, Group](),
 	}
 	mgr.groupIDIter.Store(groupIDStart)
 	return mgr
 }
 
-// CreateGroup creates a group according to `pto.PlayerInfo`.
-func (m *GroupMgr) CreateGroup(playerLimit int, p entry.Player) (
-	g entry.Group, err error,
-) {
-	base := entry.NewGroupBase(m.GenGroupID(), playerLimit, p.Base())
-
-	switch base.GameMode {
-	case constant.GameModeGoatGame:
-		g = goat_game.CreateGroup(base)
-	case constant.GameModeTest:
-		g = base
-	default:
-		return nil, fmt.Errorf("unsupported game mode: %d", base.GameMode)
-	}
-
-	_ = g.Base().AddPlayer(p)
-	m.Add(g.ID(), g)
-	return g, nil
-}
-
 func (m *GroupMgr) GenGroupID() int64 {
 	return m.groupIDIter.Add(1)
+}
+
+// Encode encodes all groups into a map of game modes to their encoded bytes.
+//
+//nolint:dupl
+func (m *GroupMgr) Encode() map[constant.GameMode][][]byte {
+	res := make(map[constant.GameMode][][]byte, m.Len())
+	m.Range(func(id int64, g Group) bool {
+		bs, err := g.Encode()
+		if err != nil {
+			log.Error().Any("group", g).Err(err).Msg("failed to encode group")
+			return true
+		}
+		res[g.Base().GameMode] = append(res[g.Base().GameMode], bs)
+		return true
+	})
+	return res
 }
