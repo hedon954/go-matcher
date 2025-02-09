@@ -1,10 +1,10 @@
 package entry
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"reflect"
+
+	"github.com/vmihailenco/msgpack/v5"
 )
 
 // Coder is a interface for encoding and decoding data.
@@ -20,12 +20,7 @@ type Coder interface {
 
 // Encode encodes current object to a byte array with gob
 func Encode(v any) ([]byte, error) {
-	buf := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf)
-	if err := enc.Encode(v); err != nil {
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return msgpack.Marshal(v)
 }
 
 // Decode decodes a byte array to current object
@@ -34,7 +29,5 @@ func Decode(data []byte, v any) error {
 	if reflect.TypeOf(v).Kind() != reflect.Ptr {
 		return errors.New("v must be a pointer")
 	}
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	return dec.Decode(v)
+	return msgpack.Unmarshal(data, v)
 }

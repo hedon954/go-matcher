@@ -9,8 +9,8 @@ import (
 
 type RoomBaseGlicko2 struct {
 	*entry.RoomBase
-	glicko2Teams map[int64]glicko2.Team
-	teamMgr      TeamMgr
+	glicko2Teams map[int64]glicko2.Team `msgpack:"-"`
+	teamMgr      TeamMgr                `msgpack:"-"`
 }
 
 type TeamMgr interface {
@@ -79,4 +79,15 @@ func (r *RoomBaseGlicko2) HasAi() bool {
 		}
 	}
 	return false
+}
+
+func (r *RoomBaseGlicko2) SetTeamMgr(mgr TeamMgr) {
+	r.teamMgr = mgr
+}
+
+func (r *RoomBaseGlicko2) FillGlicko2Teams() {
+	r.glicko2Teams = make(map[int64]glicko2.Team, len(r.Base().Teams))
+	for id := range r.Base().Teams {
+		r.glicko2Teams[id] = r.teamMgr.Get(id).(glicko2.Team)
+	}
 }

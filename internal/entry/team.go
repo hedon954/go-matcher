@@ -15,10 +15,10 @@ type Team interface {
 
 type TeamBase struct {
 	lock          sync.RWMutex
-	id            int64 // id is the zconfig unique team id.
+	UniqueID      int64 // UniqueID is the global unique team id.
 	TeamID        int   // TeamID is the unique team id in one room, start from 1.
 	IsAI          bool
-	groups        map[int64]struct{}
+	Groups        map[int64]struct{}
 	GameMode      constant.GameMode
 	MatchStrategy constant.MatchStrategy
 	ModeVersion   int64
@@ -26,13 +26,13 @@ type TeamBase struct {
 
 func NewTeamBase(id int64, g Group) *TeamBase {
 	t := &TeamBase{
-		id:            id,
-		groups:        make(map[int64]struct{}),
+		UniqueID:      id,
+		Groups:        make(map[int64]struct{}),
 		GameMode:      g.Base().GameMode,
 		MatchStrategy: g.Base().MatchStrategy,
 		ModeVersion:   g.Base().ModeVersion,
 	}
-	t.groups[g.ID()] = struct{}{}
+	t.Groups[g.ID()] = struct{}{}
 	return t
 }
 
@@ -41,19 +41,19 @@ func (t *TeamBase) Base() *TeamBase {
 }
 
 func (t *TeamBase) ID() int64 {
-	return t.id
+	return t.UniqueID
 }
 
 func (t *TeamBase) GetGroups() []int64 {
-	return typeconv.MapToSlice(t.groups)
+	return typeconv.MapToSlice(t.Groups)
 }
 
 func (t *TeamBase) AddGroup(g Group) {
-	t.groups[g.ID()] = struct{}{}
+	t.Groups[g.ID()] = struct{}{}
 }
 
 func (t *TeamBase) RemoveGroup(id int64) {
-	delete(t.groups, id)
+	delete(t.Groups, id)
 }
 
 func (t *TeamBase) Lock() {

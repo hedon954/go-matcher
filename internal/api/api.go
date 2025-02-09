@@ -2,25 +2,28 @@ package api
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 
+	"github.com/hibiken/asynq"
+
 	"github.com/hedon954/go-matcher/internal/config"
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
+	"github.com/hedon954/go-matcher/internal/entry/goat_game"
 	"github.com/hedon954/go-matcher/internal/entry/modes"
+	"github.com/hedon954/go-matcher/internal/entry/test_game"
+	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/internal/matcher"
 	"github.com/hedon954/go-matcher/internal/matcher/common"
 	"github.com/hedon954/go-matcher/internal/matcher/glicko2"
 	"github.com/hedon954/go-matcher/internal/service"
 	"github.com/hedon954/go-matcher/internal/service/matchimpl"
 	"github.com/hedon954/go-matcher/pkg/timer"
-
 	timerasynq "github.com/hedon954/go-matcher/pkg/timer/asynq"
 	timernative "github.com/hedon954/go-matcher/pkg/timer/native"
-
-	"github.com/hibiken/asynq"
 )
 
 func init() {
@@ -59,6 +62,14 @@ func Start(
 	// init api
 	api = NewAPI(mc, groupChannel, roomChannel, dt, NewGlicko2Matcher(roomChannel, matchConf, mgrs), mgrs)
 
+	// if not in testing mode, reload entries
+	// TODO: find a better way.
+	if flag.Lookup("test.v") == nil {
+		if err := api.ReloadEntries(); err != nil {
+			panic(fmt.Errorf("failed to reload entries: %v", err))
+		}
+	}
+
 	// start delay timer and match service
 	go dt.Start()
 	go api.M.Start()
@@ -66,6 +77,13 @@ func Start(
 	return api, func() {
 		dt.Stop()
 		api.M.Stop()
+
+		// TODO: find a better way.
+		if flag.Lookup("test.v") == nil {
+			if err := api.SaveEntries(); err != nil {
+				log.Error().Err(err).Msg("failed to save entries")
+			}
+		}
 	}
 }
 
@@ -113,153 +131,182 @@ func NewGlicko2Matcher(roomChannel chan common.Result, conf *config.MatchConfig,
 
 // SaveEntries saves the entries when the server stops.
 func (api *API) SaveEntries() error {
-	rooms := make(map[constant.GameMode][][]byte)
-	teams := make(map[constant.GameMode][][]byte)
-	groups := make(map[constant.GameMode][][]byte)
-	players := make(map[constant.GameMode][][]byte)
-
-	api.RM.Range(func(id int64, r entry.Room) bool {
-		bs, err := r.Encode()
-		if err != nil {
-			return true
-		}
-		rooms[r.GetMatchInfo().GameMode] = append(rooms[r.GetMatchInfo().GameMode], bs)
-		return true
+	return save(map[string]any{
+		"rooms.json":   api.RM.Encode(),
+		"teams.json":   api.TM.Encode(),
+		"groups.json":  api.GM.Encode(),
+		"players.json": api.PM.Encode(),
 	})
+}
 
-	api.TM.Range(func(id int64, t entry.Team) bool {
-		bs, err := t.Encode()
-		if err != nil {
-			return true
-		}
-		teams[t.Base().GameMode] = append(teams[t.Base().GameMode], bs)
-		return true
-	})
-
-	api.GM.Range(func(id int64, g entry.Group) bool {
-		bs, err := g.Encode()
-		if err != nil {
-			return true
-		}
-		groups[g.Base().GameMode] = append(groups[g.Base().GameMode], bs)
-		return true
-	})
-
-	api.PM.Range(func(id string, p entry.Player) bool {
-		bs, err := p.Encode()
-		if err != nil {
-			return true
-		}
-		players[p.Base().GameMode] = append(players[p.Base().GameMode], bs)
-		return true
-	})
-
-	// create dir and save files
-	dir := filepath.Join(os.TempDir(), "matcher")
+func save(data map[string]any) error {
+	dir := filepath.Join(".", "tmp_entries")
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
-
-	bs, err := json.Marshal(rooms)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(dir, "rooms.json"), bs, 0600); err != nil {
-		return err
-	}
-
-	bs, err = json.Marshal(teams)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(dir, "teams.json"), bs, 0600); err != nil {
-		return err
-	}
-
-	bs, err = json.Marshal(groups)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(dir, "groups.json"), bs, 0600); err != nil {
-		return err
-	}
-
-	bs, err = json.Marshal(players)
-	if err != nil {
-		return err
-	}
-	if err := os.WriteFile(filepath.Join(dir, "players.json"), bs, 0600); err != nil {
-		return err
+	for filename, v := range data {
+		bs, err := json.Marshal(v)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(dir, filename), bs, 0600); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // ReloadEntries reloads the entries when the server starts.
-//
-//nolint:gocyclo
 func (api *API) ReloadEntries() error {
 	// read files
-	dir := filepath.Join(os.TempDir(), "matcher")
+	dir := filepath.Join(".", "tmp_entries")
 
-	files, err := os.ReadDir(dir)
-	if err != nil {
+	playerData := getDatFromFile(filepath.Join(dir, "players.json"))
+	if err := api.reloadPlayers(playerData); err != nil {
 		return err
 	}
 
-	for _, file := range files {
-		bs, err := os.ReadFile(filepath.Join(dir, file.Name()))
-		if err != nil {
-			return err
-		}
-
-		data := make(map[constant.GameMode][][]byte)
-		if err := json.Unmarshal(bs, &data); err != nil {
-			return err
-		}
-
-		switch file.Name() {
-		case "rooms.json":
-			for _, rs := range data {
-				for _, rbs := range rs {
-					var r = new(entry.Room)
-					if err := (*r).Decode(rbs); err != nil {
-						return err
-					}
-					api.RM.Add((*r).ID(), *r)
-				}
-			}
-		case "teams.json":
-			for _, ts := range data {
-				for _, tbs := range ts {
-					var t = new(entry.Team)
-					if err := (*t).Decode(tbs); err != nil {
-						return err
-					}
-					api.TM.Add((*t).ID(), *t)
-				}
-			}
-		case "groups.json":
-			for _, gs := range data {
-				for _, gbs := range gs {
-					var g = new(entry.Group)
-					if err := (*g).Decode(gbs); err != nil {
-						return err
-					}
-					api.GM.Add((*g).ID(), *g)
-				}
-			}
-		case "players.json":
-			for _, ps := range data {
-				for _, pbs := range ps {
-					var p = new(entry.Player)
-					if err := (*p).Decode(pbs); err != nil {
-						return err
-					}
-					api.PM.Add((*p).Base().UID(), *p)
-				}
-			}
-		}
+	groupData := getDatFromFile(filepath.Join(dir, "groups.json"))
+	if err := api.reloadGroups(groupData); err != nil {
+		return err
 	}
 
+	teamData := getDatFromFile(filepath.Join(dir, "teams.json"))
+	if err := api.reloadTeams(teamData); err != nil {
+		return err
+	}
+
+	roomData := getDatFromFile(filepath.Join(dir, "rooms.json"))
+	if err := api.reloadRooms(roomData); err != nil {
+		return err
+	}
+
+	// delete old backup files
+	backupDir := filepath.Join(".", "tmp_entries", "matcher_backup")
+	if err := os.RemoveAll(backupDir); err != nil {
+		return err
+	}
+
+	// move current files to backup
+	backupDir = filepath.Join(".", "tmp_entries", "matcher_backup")
+	if err := os.MkdirAll(backupDir, 0755); err != nil {
+		return err
+	}
+
+	// move files to backup
+	files := []string{"rooms.json", "teams.json", "groups.json", "players.json"}
+	for _, file := range files {
+		_ = os.Rename(filepath.Join(dir, file), filepath.Join(backupDir, file))
+	}
+	return nil
+}
+
+func getDatFromFile(file string) map[constant.GameMode][][]byte {
+	data := make(map[constant.GameMode][][]byte)
+	bs, err := os.ReadFile(file)
+	if err != nil {
+		return nil
+	}
+	if err := json.Unmarshal(bs, &data); err != nil {
+		return nil
+	}
+	return data
+}
+
+//nolint:dupl
+func (api *API) reloadPlayers(playerData map[constant.GameMode][][]byte) error {
+	for mode, ps := range playerData {
+		for _, pbs := range ps {
+			var p entry.Player
+			if mode == constant.GameModeTest {
+				p = &test_game.Player{}
+			} else if mode == constant.GameModeGoatGame {
+				p = &goat_game.Player{}
+			} else {
+				log.Error().Any("mode", mode).Msg("unsupported game mode")
+				continue
+			}
+			if err := p.Decode(pbs); err != nil {
+				return err
+			}
+			api.PM.Add(p.Base().UID(), p)
+		}
+	}
+	return nil
+}
+
+//nolint:dupl
+func (api *API) reloadGroups(groupData map[constant.GameMode][][]byte) error {
+	for mode, gs := range groupData {
+		for _, gbs := range gs {
+			var g entry.Group
+			if mode == constant.GameModeTest {
+				g = &test_game.Group{}
+			} else if mode == constant.GameModeGoatGame {
+				g = &goat_game.Group{}
+			} else {
+				log.Error().Any("mode", mode).Msg("unsupported game mode")
+				continue
+			}
+			if err := g.Decode(gbs); err != nil {
+				return err
+			}
+			if goatGroup, ok := g.(*goat_game.Group); ok {
+				goatGroup.SetPlayerMgr(api.PM)
+			}
+			api.GM.Add(g.ID(), g)
+		}
+	}
+	return nil
+}
+
+//nolint:dupl
+func (api *API) reloadTeams(teamData map[constant.GameMode][][]byte) error {
+	for mode, ts := range teamData {
+		for _, tbs := range ts {
+			var t entry.Team
+			if mode == constant.GameModeTest {
+				t = &test_game.Team{}
+			} else if mode == constant.GameModeGoatGame {
+				t = &goat_game.Team{}
+			} else {
+				log.Error().Any("mode", mode).Msg("unsupported game mode")
+				continue
+			}
+			if err := t.Decode(tbs); err != nil {
+				return err
+			}
+			if goatTeam, ok := t.(*goat_game.Team); ok {
+				goatTeam.SetGroupMgr(api.GM)
+			}
+			api.TM.Add(t.ID(), t)
+		}
+	}
+	return nil
+}
+
+//nolint:dupl
+func (api *API) reloadRooms(roomData map[constant.GameMode][][]byte) error {
+	for mode, rs := range roomData {
+		for _, rbs := range rs {
+			var r entry.Room
+			if mode == constant.GameModeTest {
+				r = &test_game.Room{}
+			} else if mode == constant.GameModeGoatGame {
+				r = &goat_game.Room{}
+			} else {
+				log.Error().Any("mode", mode).Msg("unsupported game mode")
+				continue
+			}
+			if err := r.Decode(rbs); err != nil {
+				return err
+			}
+			if goatRoom, ok := r.(*goat_game.Room); ok {
+				goatRoom.SetTeamMgr(api.TM)
+				goatRoom.FillGlicko2Teams()
+			}
+			api.RM.Add(r.ID(), r)
+		}
+	}
 	return nil
 }

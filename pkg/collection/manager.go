@@ -51,3 +51,25 @@ func (m *Manager[K, T]) Range(f func(K, T) bool) {
 		}
 	}
 }
+
+func (m *Manager[K, T]) Len() int {
+	m.RLock()
+	defer m.RUnlock()
+	return len(m.items)
+}
+
+func (m *Manager[K, T]) All() []T {
+	m.RLock()
+	defer m.RUnlock()
+	slice := make([]T, 0, len(m.items))
+	for _, item := range m.items {
+		slice = append(slice, item)
+	}
+	return slice
+}
+
+func (m *Manager[K, T]) Clear() {
+	m.Lock()
+	defer m.Unlock()
+	m.items = make(map[K]T, 1024)
+}

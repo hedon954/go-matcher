@@ -1,15 +1,9 @@
 package goat_game
 
 import (
-	"encoding/gob"
-
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/internal/entry/glicko2"
 )
-
-func init() {
-	gob.Register(&Team{})
-}
 
 type Team struct {
 	*glicko2.TeamBaseGlicko2

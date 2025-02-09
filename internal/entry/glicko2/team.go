@@ -7,7 +7,7 @@ import (
 
 type TeamBaseGlicko2 struct {
 	*entry.TeamBase
-	groupMgr GroupMgr
+	groupMgr GroupMgr `msgpack:"-"`
 }
 
 type GroupMgr interface {
@@ -112,4 +112,8 @@ func (t *TeamBaseGlicko2) IsNewer() bool {
 		}
 	}
 	return false
+}
+
+func (t *TeamBaseGlicko2) SetGroupMgr(mgr GroupMgr) {
+	t.groupMgr = mgr
 }

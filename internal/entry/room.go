@@ -18,8 +18,8 @@ type Room interface {
 
 type RoomBase struct {
 	lock      sync.RWMutex
-	id        int64
-	teams     map[int64]struct{}
+	RoomID    int64
+	Teams     map[int64]struct{}
 	TeamLimit int
 
 	GameMode       constant.GameMode
@@ -27,17 +27,17 @@ type RoomBase struct {
 	ModeVersion    int64
 	FinishMatchSec int64
 
-	escapePlayer []string
+	EscapePlayer []string
 
 	GameServerInfo pto.GameServerInfo
 }
 
 func NewRoomBase(id int64, teamLimit int, t Team) *RoomBase {
 	r := &RoomBase{
-		id:            id,
+		RoomID:        id,
 		TeamLimit:     teamLimit,
-		teams:         make(map[int64]struct{}),
-		escapePlayer:  make([]string, 0),
+		Teams:         make(map[int64]struct{}),
+		EscapePlayer:  make([]string, 0),
 		GameMode:      t.Base().GameMode,
 		MatchStrategy: t.Base().MatchStrategy,
 		ModeVersion:   t.Base().ModeVersion,
@@ -50,19 +50,19 @@ func (r *RoomBase) Base() *RoomBase {
 }
 
 func (r *RoomBase) ID() int64 {
-	return r.id
+	return r.RoomID
 }
 
 func (r *RoomBase) GetTeams() []int64 {
-	return typeconv.MapToSlice(r.teams)
+	return typeconv.MapToSlice(r.Teams)
 }
 
 func (r *RoomBase) AddTeam(t Team) {
-	r.teams[t.ID()] = struct{}{}
+	r.Teams[t.ID()] = struct{}{}
 }
 
 func (r *RoomBase) RemoveTeam(id int64) {
-	delete(r.teams, id)
+	delete(r.Teams, id)
 }
 
 func (r *RoomBase) GetMatchInfo() *pto.MatchInfo {
@@ -75,11 +75,11 @@ func (r *RoomBase) NeedAI() bool {
 }
 
 func (r *RoomBase) AddEscapePlayer(uid string) {
-	r.escapePlayer = append(r.escapePlayer, uid)
+	r.EscapePlayer = append(r.EscapePlayer, uid)
 }
 
 func (r *RoomBase) GetEscapePlayers() []string {
-	return r.escapePlayer
+	return r.EscapePlayer
 }
 
 func (r *RoomBase) Lock() {

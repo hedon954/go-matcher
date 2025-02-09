@@ -4,17 +4,16 @@ import (
 	"fmt"
 
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/cast"
 
 	"github.com/hedon954/go-matcher/internal/constant"
 	"github.com/hedon954/go-matcher/internal/entry"
 	"github.com/hedon954/go-matcher/pkg/algorithm/glicko2"
-
-	"github.com/spf13/cast"
 )
 
 type GroupBaseGlicko2 struct {
 	*entry.GroupBase
-	playerMgr *entry.PlayerMgr
+	playerMgr *entry.PlayerMgr `msgpack:"-"`
 }
 
 func NewGroup(base *entry.GroupBase, playerMgr *entry.PlayerMgr) *GroupBaseGlicko2 {
@@ -137,4 +136,8 @@ func (g *GroupBaseGlicko2) ForceCancelMatch(reason string, waitSec int64) {
 
 func (g *GroupBaseGlicko2) IsNewer() bool {
 	return false
+}
+
+func (g *GroupBaseGlicko2) SetPlayerMgr(playerMgr *entry.PlayerMgr) {
+	g.playerMgr = playerMgr
 }

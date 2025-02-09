@@ -3,6 +3,8 @@ package entry
 import (
 	"sync/atomic"
 
+	"github.com/hedon954/go-matcher/internal/constant"
+	"github.com/hedon954/go-matcher/internal/log"
 	"github.com/hedon954/go-matcher/pkg/collection"
 )
 
@@ -27,4 +29,21 @@ func NewGroupMgr(groupIDStart int64) *GroupMgr {
 
 func (m *GroupMgr) GenGroupID() int64 {
 	return m.groupIDIter.Add(1)
+}
+
+// Encode encodes all groups into a map of game modes to their encoded bytes.
+//
+//nolint:dupl
+func (m *GroupMgr) Encode() map[constant.GameMode][][]byte {
+	res := make(map[constant.GameMode][][]byte, m.Len())
+	m.Range(func(id int64, g Group) bool {
+		bs, err := g.Encode()
+		if err != nil {
+			log.Error().Any("group", g).Err(err).Msg("failed to encode group")
+			return true
+		}
+		res[g.Base().GameMode] = append(res[g.Base().GameMode], bs)
+		return true
+	})
+	return res
 }

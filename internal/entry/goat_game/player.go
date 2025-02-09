@@ -1,7 +1,6 @@
 package goat_game
 
 import (
-	"encoding/gob"
 	"fmt"
 
 	"github.com/hedon954/go-matcher/internal/constant"
@@ -11,10 +10,6 @@ import (
 	"github.com/hedon954/go-matcher/internal/pto"
 	"github.com/hedon954/go-matcher/pkg/typeconv"
 )
-
-func init() {
-	gob.Register(&Player{})
-}
 
 type Player struct {
 	// combined with the struct implementing the matching strategy

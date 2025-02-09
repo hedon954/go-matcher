@@ -39,16 +39,15 @@ const (
 
 // PlayerBase holds the common fields of a Player for all kinds of game mode and match strategy.
 type PlayerBase struct {
-	// ReentrantLock is a reentrant lock support multiple locks in the same goroutine
+	// ReentrantLock is a reentrant L support multiple locks in the same goroutine
 	// Use it to help avoid deadlock.
-	lock          *concurrent.ReentrantLock
-	uid           string
+	L             *concurrent.ReentrantLock
 	IsAI          bool
 	GroupID       int64
-	matchStrategy constant.MatchStrategy
+	MatchStrategy constant.MatchStrategy
 
-	onlineState PlayerOnlineState
-	voiceState  PlayerVoiceState
+	OnlineState PlayerOnlineState
+	VoiceState  PlayerVoiceState
 
 	// TODO: other common attributes
 	pto.PlayerInfo
@@ -57,10 +56,9 @@ type PlayerBase struct {
 
 func NewPlayerBase(info *pto.PlayerInfo) *PlayerBase {
 	b := &PlayerBase{
-		lock:        new(concurrent.ReentrantLock),
-		uid:         info.UID,
-		onlineState: PlayerOnlineStateOnline,
-		voiceState:  PlayerVoiceStateMute,
+		L:           new(concurrent.ReentrantLock),
+		OnlineState: PlayerOnlineStateOnline,
+		VoiceState:  PlayerVoiceStateMute,
 		PlayerInfo:  *info,
 	}
 
@@ -76,17 +74,17 @@ func (p *PlayerBase) Base() *PlayerBase {
 }
 
 func (p *PlayerBase) UID() string {
-	return p.uid
+	return p.PlayerInfo.UID
 }
 
 // CheckOnlineState checks if the player is in a valid online state.
 func (p *PlayerBase) CheckOnlineState(valids ...PlayerOnlineState) error {
 	for _, vs := range valids {
-		if p.onlineState == vs {
+		if p.OnlineState == vs {
 			return nil
 		}
 	}
-	switch p.onlineState {
+	switch p.OnlineState {
 	case PlayerOnlineStateOffline:
 		return merr.ErrPlayerOffline
 	case PlayerOnlineStateOnline:
@@ -104,31 +102,31 @@ func (p *PlayerBase) CheckOnlineState(valids ...PlayerOnlineState) error {
 }
 
 func (p *PlayerBase) SetOnlineState(s PlayerOnlineState) {
-	p.onlineState = s
+	p.OnlineState = s
 }
 
 func (p *PlayerBase) GetOnlineState() PlayerOnlineState {
-	return p.onlineState
+	return p.OnlineState
 }
 
 func (p *PlayerBase) SetOnlineStateWithLock(s PlayerOnlineState) {
 	p.Lock()
 	defer p.Unlock()
-	p.onlineState = s
+	p.OnlineState = s
 }
 
 func (p *PlayerBase) GetOnlineStateWithLock() PlayerOnlineState {
 	p.Lock()
 	defer p.Unlock()
-	return p.onlineState
+	return p.OnlineState
 }
 
 func (p *PlayerBase) SetVoiceState(s PlayerVoiceState) {
-	p.voiceState = s
+	p.VoiceState = s
 }
 
 func (p *PlayerBase) GetVoiceState() PlayerVoiceState {
-	return p.voiceState
+	return p.VoiceState
 }
 
 func (p *PlayerBase) SetAttr(attr *pto.UploadPlayerAttr) error {
@@ -137,28 +135,28 @@ func (p *PlayerBase) SetAttr(attr *pto.UploadPlayerAttr) error {
 }
 
 func (p *PlayerBase) GetMatchStrategy() constant.MatchStrategy {
-	return p.matchStrategy
+	return p.MatchStrategy
 }
 
 func (p *PlayerBase) SetMatchStrategy(s constant.MatchStrategy) {
-	p.matchStrategy = s
+	p.MatchStrategy = s
 }
 
 func (p *PlayerBase) GetMatchStrategyWithLock() constant.MatchStrategy {
 	p.Lock()
 	defer p.Unlock()
-	return p.matchStrategy
+	return p.MatchStrategy
 }
 
 func (p *PlayerBase) SetMatchStrategyWithLock(s constant.MatchStrategy) {
 	p.Lock()
 	defer p.Unlock()
-	p.matchStrategy = s
+	p.MatchStrategy = s
 }
 
 func (p *PlayerBase) Lock() {
-	p.lock.Lock()
+	p.L.Lock()
 }
 func (p *PlayerBase) Unlock() {
-	p.lock.Unlock()
+	p.L.Unlock()
 }
